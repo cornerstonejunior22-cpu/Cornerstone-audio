@@ -1,104 +1,107 @@
 <!DOCTYPE html>
-<html lang="ht">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cornerstone • Bible Audio</title>
-  <style>
-    body {
-      background-color: #1a1612;
-      color: #e2d7c5;
-      font-family: Georgia, serif;
-      padding: 20px;
-      margin: 0;
-      padding-bottom: 160px;
-    }
-    .header-sub { color: #c59b27; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
-    h1 { color: #f5e9d3; font-size: 26px; margin-top: 5px; }
-    h1 span { color: #c59b27; font-style: italic; }
-    .category-title { color: #c59b27; font-size: 13px; letter-spacing: 1px; border-top: 1px solid #332c25; padding-top: 15px; margin-top: 20px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 10px; }
-    .book-card {
-      padding: 12px;
-      border-radius: 6px;
-      border: 1px solid #3d3328;
-      background-color: #221b14;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .book-card.active { border-color: #c59b27; background-color: #2b231b; }
-    .book-num { font-size: 11px; color: #8c8275; margin-right: 6px; }
-    .book-title { font-weight: bold; font-size: 14px; color: #f5e9d3; }
-    .player-box {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: calc(100% - 40px);
-      max-width: 600px;
-      background-color: #120e0b;
-      border: 1px solid #c59b27;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-      box-sizing: border-box;
-    }
-    audio { width: 100%; height: 40px; margin-top: 8px; filter: invert(0.8); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cornerstone - Bible Audio</title>
+    <style>
+        body {
+            background-color: #1a1612;
+            color: #e4d7cf;
+            font-family: Georgia, serif;
+            padding: 20px;
+            margin: 0;
+            padding-bottom: 160px;
+        }
+        .header-sub { color: #c59b77; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+        h1 { color: #f5a94d; font-size: 24px; margin-top: 5px; }
+        h1 span { color: #c59b77; font-style: italic; }
+        .category-title { color: #c59b77; font-size: 13px; letter-spacing: 1px; border-top: 1px solid #332a25; padding-top: 15px; margin-top: 15px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 10px; }
+        .book-card {
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #332a25;
+            background-color: #221b14;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .book-card.active { border-color: #f5a94d; background-color: #2f271e; }
+        .book-num { font-size: 11px; color: #7c5273; margin-right: 8px; }
+        .book-title { font-weight: bold; font-size: 14px; color: #ff50d3; }
+        .player-box {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 600px;
+            background-color: #f120c0b;
+            border: 1px solid #f50b27;
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+        audio { width: 100%; height: 48px; margin-top: 8px; filter: invert(0.8); }
+    </style>
 </head>
 <body>
 
-  <div class="header-sub">CORNERSTONE • BIBLE AUDIO</div>
-  <h1>Liv <span>Istorik</span> yo.</h1>
+    <div class="header-sub">CORNERSTONE - BIBLE AUDIO</div>
+    <h1><span>Pawol</span> yo.</h1>
 
-  <div class="category-title">0002_LIV ISTORIK YO</div>
-  <div class="grid" id="books-grid"></div>
+    <div class="category-title">OLD TESTAMENT</div>
+    <div class="grid" id="books-grid"></div>
 
-  <div class="player-box">
-    <div style="font-size: 10px; color: #c59b27; text-transform: uppercase;">Liv ki seleksyone</div>
-    <div id="selected-title" style="font-weight: bold; font-size: 16px; color: #f5e9d3;">Jozwe</div>
-    <audio id="audio-player" controls preload="metadata"></audio>
-  </div>
+    <div class="player-box">
+        <div style="font-size: 12px; color: #c59b77; text-transform: uppercase;">M ap koute kounye a:</div>
+        <div id="selected-title" style="font-weight: bold; font-size: 14px; color: #f5a94d; margin: 4px 0;">Chwazi yon liv</div>
+        <audio id="audio-player" controls preload="metadata"></audio>
+    </div>
 
-  <script>
-    const books = [
-      { id: 'jozwe', title: 'Jozwe', number: '01', file: 'audio/jozwe.mp3' },
-      { id: 'jij', title: 'Jij', number: '02', file: 'audio/jij.mp3' },
-      { id: 'rit', title: 'Rit', number: '03', file: 'audio/rit.mp3' },
-      { id: '1samye', title: '1 Samyèl', number: '04', file: 'audio/1samye.mp3' },
-      { id: '2samye', title: '2 Samyèl', number: '05', file: 'audio/2samye.mp3' },
-      { id: '1wa', title: '1 Wa', number: '06', file: 'audio/1wa.mp3' },
-      { id: '2wa', title: '2 Wa', number: '07', file: 'audio/2wa.mp3' },
-      { id: '1istwa', title: '1 Istwa', number: '08', file: 'audio/1istwa.mp3' },
-      { id: '2istwa', title: '2 Istwa', number: '09', file: 'audio/2istwa.mp3' },
-      { id: 'esdras', title: 'Esdras', number: '10', file: 'audio/esdras.mp3' },
-      { id: 'neyemi', title: 'Neyemi', number: '11', file: 'audio/neyemi.mp3' },
-      { id: 'este', title: 'Estè', number: '12', file: 'audio/este.mp3' }
-    ];
+    <script>
+        // Lyen API Vercel ou a
+        const API_URL = "https://cornerstone-audio-app-api-server-v6.vercel.app";
 
-    const grid = document.getElementById('books-grid');
-    const player = document.getElementById('audio-player');
-    const titleDisplay = document.getElementById('selected-title');
+        const books = [
+            { id: 'jenèz', title: 'Jenèz', number: '01', file: 'audio/jenew.mp3' },
+            { id: 'ekzòd', title: 'Ekzòd', number: '02', file: 'audio/ekzod.mp3' },
+            { id: 'levitik', title: 'Levitik', number: '03', file: 'audio/levit.mp3' },
+            { id: 'nonb', title: 'Nonb', number: '04', file: 'audio/nonb.mp3' },
+            { id: 'detewonomi', title: 'Detewonomi', number: '05', file: 'audio/detew.mp3' },
+            { id: 'jozye', title: 'Jozye', number: '06', file: 'audio/jozye.mp3' },
+            { id: ' jij ', title: 'Jij', number: '07', file: 'audio/jij.mp3' },
+            { id: 'rit', title: ' Rit ', number: '08', file: 'audio/rit.mp3' },
+            { id: 'samiyèl1', title: '1 Samiyèl', number: '09', file: 'audio/samiyel.mp3' },
+            { id: 'samiyèl2', title: '2 Samiyèl', number: '10', file: 'audio/samiyel2.mp3' },
+            { id: 'wa1', title: '1 Wa', number: '11', file: 'audio/wa1.mp3' },
+            { id: 'wa2', title: '2 Wa', number: '12', file: 'audio/wa2.mp3' }
+        ];
 
-    function selectBook(book, element) {
-      document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
-      element.classList.add('active');
-      titleDisplay.textContent = book.title;
-      player.src = book.file;
-      player.load();
-    }
+        const grid = document.getElementById('books-grid');
+        const player = document.getElementById('audio-player');
+        const titlingDisplay = document.getElementById('selected-title');
 
-    books.forEach((book, index) => {
-      const card = document.createElement('div');
-      card.className = 'book-card' + (index === 0 ? ' active' : '');
-      card.innerHTML = `<div><span class="book-num">${book.number}</span><span class="book-title">${book.title}</span></div>`;
-      card.onclick = () => selectBook(book, card);
-      grid.appendChild(card);
-    });
+        function selectBook(book, element) {
+            document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            titlingDisplay.textContent = book.title;
+            player.src = book.file;
+            player.play();
+        }
 
-    player.src = books[0].file;
-  </script>
+        books.forEach((book, index) => {
+            const card = document.createElement('div');
+            card.className = 'book-card' + (index === 0 ? ' active' : '');
+            card.innerHTML = `<span class="book-num">${book.number}</span><span class="book-title">${book.title}</span>`;
+            card.onclick = () => selectBook(book, card);
+            grid.appendChild(card);
+        });
+
+        player.src = books[0].file;
+    </script>
 </body>
 </html>
