@@ -56,27 +56,26 @@
   <h1 id="balance-text">Balans pa w (Komisyon Parrenaj): 0 Gdes</h1>
 
   <div class="card-box" id="pay-section">
-    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Aksè Fèmen: Ou bezwen yon Kòd Parrenaj pou antre</div>
-    <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Pa gen kòd nan lyen an! Mande yon zanmi oswa Pwopriyetè a lyen li pou w ka antre.</div>
+    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Aksè Fèmen: Ou bezwen yon Kòd Parrenaj valab pou antre</div>
+    <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Pa gen kòd nan lyen an! Ou dwe jwenn yon lyen parrenaj nan men yon moun ki te achte aplikasyon an deja.</div>
     
     <input type="text" id="referral-input" placeholder="Kòd Parrenaj la ap parèt la a..." readonly style="opacity: 0.7;">
     
     <button class="btn" id="pay-btn" onclick="handlePurchase()" disabled style="opacity: 0.5; cursor: not-allowed;">Peye 1,000 Gdes ak MonCash</button>
-    <button class="btn-outline" onclick="getReferralCode()">Jwenn Kòd Parenn mwen pou m pataje</button>
+    <button class="btn-outline" id="share-btn-container" onclick="getReferralCode()" style="display:none;">Jwenn Kòd Parenn mwen pou m pataje</button>
     <div id="api-response" style="margin-top: 10px; font-size: 12px; color: #ff505d;"></div>
   </div>
 
   <div class="category-title">Liv Istorik Yo (12 Liv)</div>
   <div class="grid" id="books-grid"></div>
 
-  <!-- Bwat Modpas Admin ki kache nèt jiskaske ou desann nan anba epi klike sou ti tèks la -->
+  <!-- Espas Admin kache nan anba pou Pwopriyetè a -->
   <div class="card-box" id="admin-login-box" style="display: none; border-color: #f5a94d; background-color: #2a2015; margin-top: 30px;">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔑 Espas Pwopriyetè (Antre Modpas):</div>
     <input type="password" id="admin-password" placeholder="Tape modpas ou la a...">
     <button class="btn" onclick="verifyOwnerPassword()">Konekte kòm Pwopriyetè</button>
   </div>
 
-  <!-- Ti lyen diskrè nan anba paj la pou w ka rele bwat modpas la lè w bezwen l -->
   <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;">
     <span style="font-size: 11px; color: #554433; cursor: pointer; text-decoration: underline;" onclick="revealAdminBox()">Anviwònman Pwopriyetè</span>
   </div>
@@ -109,19 +108,25 @@
     const titlingDisplay = document.getElementById('selected-title');
 
     window.onload = function() {
-      // Tcheke si telefòn sa a te deja anrejistre kòm Pwopriyetè anvan
+      // 1. Tcheke si se Pwopriyetè a ki konekte sou aparèy sa a deja
       if (localStorage.getItem('cornerstone_owner') === 'true') {
         activateOwnerMode();
         return;
       }
 
-      // Si se yon kliyan nòmal, tcheke si li gen kòd parrenaj nan lyen li
+      // 2. Tcheke si yon itilizatè nòmal gen yon kòd parrenaj nan lyen li
       const urlParams = new URLSearchParams(window.location.search);
       const refCode = urlParams.get('ref');
       const inputField = document.getElementById('referral-input');
       const payBtn = document.getElementById('pay-btn');
       const warningMsg = document.getElementById('warning-msg');
       const accessStatus = document.getElementById('access-status');
+
+      // Tcheke si itilizatè sa a te deja peye epi debloke kont pa l anvan sou telefòn sa a
+      if (localStorage.getItem('cornerstone_client_unlocked') === 'true') {
+        activateClientUnlockedMode();
+        return;
+      }
 
       if (refCode && refCode.trim() !== "") {
         inputField.value = refCode;
@@ -155,13 +160,33 @@
       document.getElementById('access-status').textContent = "🔓 Mòd Pwopriyetè / Admin Aktif";
       document.getElementById('warning-msg').style.display = "none";
       const payBtn = document.getElementById('pay-btn');
-      payBtn.disabled = false;
-      payBtn.style.opacity = "1";
-      payBtn.style.cursor = "pointer";
+      payBtn.style.display = "none"; // Pwopriyetè pa bezwen peye
       document.getElementById('referral-input').value = "CORNERSTONE-OWNER";
+      document.getElementById('share-btn-container').style.display = "block";
+      
       const responseDiv = document.getElementById('api-response');
       responseDiv.style.color = "#97c373";
       responseDiv.textContent = "✔ Ou konekte kòm Pwopriyetè sou aparèy sa a. Tout liv yo debloke!";
+    }
+
+    function activateClientUnlockedMode() {
+      isUnlocked = true;
+      document.getElementById('admin-login-box').style.display = "none";
+      document.getElementById('access-status').textContent = "🔓 Kont ou a Debloke nèt!";
+      document.getElementById('warning-msg').style.display = "none";
+      document.getElementById('pay-btn').style.display = "none";
+      document.getElementById('share-btn-container').style.display = "block";
+      
+      let savedMyCode = localStorage.getItem('my_personal_ref_code');
+      if(!savedMyCode) {
+        savedMyCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
+        localStorage.setItem('my_personal_ref_code', savedMyCode);
+      }
+      document.getElementById('referral-input').value = savedMyCode;
+
+      const responseDiv = document.getElementById('api-response');
+      responseDiv.style.color = "#97c373";
+      responseDiv.textContent = "✔ Ou deja peye epi kont ou debloke. Ou ka pataje lyen pa w la tou!";
     }
 
     function renderBooks() {
@@ -173,7 +198,7 @@
         
         card.onclick = () => {
           if (!isUnlocked) {
-            alert("Tanpri antre nan chèn nan ak yon kòd parrenaj an premye!");
+            alert("Aksè a fèmen! Ou dwe gen yon kòd parrenaj epi peye pou w ka koute liv yo.");
             return;
           }
           document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
@@ -191,7 +216,7 @@
     renderBooks();
 
     function handlePurchase() {
-      if (localStorage.getItem('cornerstone_owner') === 'true') {
+      if (localStorage.getItem('cornerstone_owner'] === 'true') {
         alert("Ou se Pwopriyetè a! Ou pa bezwen peye.");
         return;
       }
@@ -201,24 +226,28 @@
       
       if (codeInput === "") {
         responseDiv.style.color = "#ff505d";
-        responseDiv.textContent = "⚠️ Ou dwe gen yon kòd parrenaj nan lyen ou an.";
+        responseDiv.textContent = "⚠️ Ou dwe gen yon kòd parrenaj valab nan lyen ou an pou w ka peye.";
         return;
       }
 
-      isUnlocked = true;
+      // Sove estati peman an ak kòd pèsonèl nouvo itilizatè a pou chèn lan ka kontinye grandi
+      localStorage.setItem('cornerstone_client_unlocked', 'true');
+      let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
+      localStorage.setItem('my_personal_ref_code', myNewCode);
+
+      activateClientUnlockedMode();
       responseDiv.style.color = "#97c373";
-      responseDiv.textContent = "✔ Peman reyisi! 750 Gdes pou Pwopriyetè, 250 Gdes pou Parenn (" + codeInput + "). Liv yo debloke!";
-      document.getElementById('access-status').textContent = "🔓 Tout Liv yo Debloke";
+      responseDiv.textContent = "✔ Peman reyisi anba parenn (" + codeInput + ")! Liv yo debloke, epi kounye a ou vin gen pwòp kòd parrenaj pa w tou pou w pataje!";
     }
 
     function getReferralCode() {
       let myCode = "CORNERSTONE-OWNER";
       if (localStorage.getItem('cornerstone_owner') !== 'true') {
-        if (!isUnlocked) {
-          alert("Ou dwe gen kont ou debloke an premye anvan ou ka jwenn lyen parrenaj pa w!");
+        myCode = localStorage.getItem('my_personal_ref_code');
+        if (!myCode) {
+          alert("Ou dwe gen kont ou debloke an premye!");
           return;
         }
-        myCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
       }
       
       const currentUrl = window.location.origin + window.location.pathname;
@@ -226,7 +255,7 @@
 
       const responseDiv = document.getElementById('api-response');
       responseDiv.style.color = "#f5a94d";
-      responseDiv.innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a ak zanmi w:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
+      responseDiv.innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a ak lòt moun pou fè chèn nan grandi:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
     }
   </script>
 </body>
