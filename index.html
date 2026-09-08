@@ -13,7 +13,7 @@
       margin: 0;
       padding-bottom: 160px;
     }
-    .header-sub { color: #f5a94d; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+    .header-sub { color: #f5a94d; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; user-select: none; }
     h1 { color: #f5a94d; font-size: 22px; margin-top: 5px; }
     .card-box { background-color: #221b14; border: 1px solid #332025; padding: 15px; border-radius: 8px; margin-top: 15px; }
     .category-title { color: #f9c077; font-size: 13px; letter-spacing: 1px; border-bottom: 1px solid #332025; padding-top: 15px; margin-bottom: 10px; }
@@ -52,14 +52,15 @@
 </head>
 <body>
 
-  <div class="header-sub">Cornerstone Audio Player</div>
+  <!-- Si ou klike 3 fwa sou tit sa a rapidman, li aktive mòd Pwopriyetè a an kachèt! -->
+  <div class="header-sub" onclick="secretAdminActivation()">Cornerstone Audio Player (Klike la 3 fwa pou Admin)</div>
   <h1 id="balance-text">Balans pa w (Komisyon Parrenaj): 0 Gdes</h1>
 
   <div class="card-box" id="pay-section">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Debloke 12 Liv Istorik Yo (1,000 Gdes)</div>
-    <div style="font-size: 12px; color: #b5a79f; margin-top: 4px;">Antre kòd parrenaj ou an oswa kòd ADMIN2026:</div>
-    <input type="text" id="referral-input" placeholder="Egz: R15105 oswa ADMIN2026">
-    <button class="btn" onclick="handlePurchase()">Achte Aksè a (Peye 1,000 Gdes)</button>
+    <div style="font-size: 12px; color: #b5a79f; margin-top: 4px;">Antre kòd parrenaj ou an si w gen youn (opsyonèl):</div>
+    <input type="text" id="referral-input" placeholder="Egz: R15105">
+    <button class="btn" onclick="handlePurchase()">Peye 1,000 Gdes ak MonCash</button>
     <button class="btn-outline" onclick="getReferralCode()">Jwenn Kòd Parenn mwen</button>
     <div id="api-response" style="margin-top: 10px; font-size: 12px; color: #ff505d;"></div>
   </div>
@@ -74,7 +75,6 @@
   </div>
 
   <script>
-    // 12 Lyen Archive.org egzak ou te bay yo
     const books = [
       { id: 'jozye', title: 'JOZYÉ', file: 'https://archive.org/download/e-ste-1-12-1/06_JOZYE.mp3' },
       { id: 'jij', title: 'JIJ', file: 'https://archive.org/download/e-ste-1-12-1/07_JIJ.mp3' },
@@ -91,9 +91,22 @@
     ];
 
     let isUnlocked = false;
+    let clickCount = 0;
     const grid = document.getElementById('books-grid');
     const player = document.getElementById('audio-player');
     const titlingDisplay = document.getElementById('selected-title');
+
+    // Metòd sekrè: Klike 3 fwa sou tèt la pou aktive admin san pèson pa wè l nan koòdone a
+    function secretAdminActivation() {
+      clickCount++;
+      if (clickCount >= 3) {
+        isUnlocked = true;
+        const responseDiv = document.getElementById('api-response');
+        responseDiv.style.color = "#97c373";
+        responseDiv.textContent = "✔ Mòd Pwopriyetè / Admin an kachèt aktif!";
+        document.getElementById('access-status').textContent = "🔓 Kont Pwopriyetè Debloke";
+      }
+    }
 
     function renderBooks() {
       grid.innerHTML = '';
@@ -104,7 +117,7 @@
         
         card.onclick = () => {
           if (!isUnlocked) {
-            alert("Tanpri debloke liv yo an premye lè w antre kòd ou oswa ADMIN2026!");
+            alert("Tanpri peye 1,000 Gdes yo pou debloke liv yo an premye!");
             return;
           }
           document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
@@ -125,15 +138,17 @@
       const codeInput = document.getElementById('referral-input').value.trim();
       const responseDiv = document.getElementById('api-response');
       
+      // Si yon itilizatè tape kòd admin lan pa erè (si li te konnen l), men kounye a li kache, 
+      // men nou toujou kite l verifye nan kòd la an kachèt si sa nesesè.
       if (codeInput === "ADMIN2026") {
         isUnlocked = true;
         responseDiv.style.color = "#97c373";
-        responseDiv.textContent = "✔ Mode Pwopriyetè / Admin aktif! Tout 12 liv yo debloke.";
+        responseDiv.textContent = "✔ Mode Pwopriyetè aktif!";
         document.getElementById('access-status').textContent = "🔓 Kont Pwopriyetè Debloke";
         return;
       }
 
-      // Aksyon acha pou itilizatè regilye yo
+      // Pou lòt kliyan nòmal yo ki peye 1000 Gdes
       isUnlocked = true;
       responseDiv.style.color = "#97c373";
       responseDiv.textContent = "Acha a reyisi! 750 Gdes pou Pwopriyetè, 250 Gdes pou Parenn.";
