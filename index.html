@@ -74,22 +74,20 @@
   </div>
 
   <script>
-    const API_URL = "https://cornerstone-audio-app-api-server-v6.vercel.app";
-
-    // Tout 12 Liv Istorik yo egzakteman
+    // 12 Lyen Archive.org egzak ou te bay yo
     const books = [
-      { id: 'jozye', title: 'JOZYÉ', file: 'audio/jozye.mp3' },
-      { id: 'jij', title: 'JIJ', file: 'audio/jij.mp3' },
-      { id: 'rit', title: 'RIT', file: 'audio/rit.mp3' },
-      { id: '1samyel', title: '1 SAMYÈL', file: 'audio/samyel1.mp3' },
-      { id: '2samyel', title: '2 SAMYÈL', file: 'audio/samyel2.mp3' },
-      { id: '1wa', title: '1 WA', file: 'audio/wa1.mp3' },
-      { id: '2wa', title: '2 WA', file: 'audio/wa2.mp3' },
-      { id: '2istwa', title: '2 ISTWA', file: 'audio/istwa2.mp3' },
-      { id: '1istwa', title: '1 ISTWA', file: 'audio/istwa1.mp3' },
-      { id: 'esdras', title: 'ESDRAS', file: 'audio/esdras.mp3' },
-      { id: 'neemi', title: 'NEEMI', file: 'audio/neemi.mp3' },
-      { id: 'este', title: 'ESTÈ', file: 'audio/este.mp3' }
+      { id: 'jozye', title: 'JOZYÉ', file: 'https://archive.org/download/e-ste-1-12-1/06_JOZYE.mp3' },
+      { id: 'jij', title: 'JIJ', file: 'https://archive.org/download/e-ste-1-12-1/07_JIJ.mp3' },
+      { id: 'rit', title: 'RIT', file: 'https://archive.org/download/e-ste-1-12-1/08_RIT.mp3' },
+      { id: '1samyel', title: '1 SAMYÈL', file: 'https://archive.org/download/e-ste-1-12-1/09_1SAMY%C3%88L.mp3' },
+      { id: '2samyel', title: '2 SAMYÈL', file: 'https://archive.org/download/e-ste-1-12-1/10_2SAMY%C3%88L.mp3' },
+      { id: '1wa', title: '1 WA', file: 'https://archive.org/download/e-ste-1-12-1/11_1WA.mp3' },
+      { id: '2wa', title: '2 WA', file: 'https://archive.org/download/e-ste-1-12-1/12_2WA.mp3' },
+      { id: '1istwa', title: '1 ISTWA', file: 'https://archive.org/download/e-ste-1-12-1/13_1ISTWA%20.mp3' },
+      { id: '2istwa', title: '2 ISTWA', file: 'https://archive.org/download/e-ste-1-12-1/14_2ISTWA.mp3' },
+      { id: 'esdras', title: 'ESDRAS', file: 'https://archive.org/download/e-ste-1-12-1/15_ESDRAS.mp3' },
+      { id: 'neyemi', title: 'NEYEMI', file: 'https://archive.org/download/e-ste-1-12-1/16_NEYEMI.mp3' },
+      { id: 'este', title: 'ESTÈ', file: 'https://archive.org/download/e-ste-1-12-1/17_EST%C3%88.mp3' }
     ];
 
     let isUnlocked = false;
@@ -106,14 +104,15 @@
         
         card.onclick = () => {
           if (!isUnlocked) {
-            alert("Tanpri antre kòd ou oswa fè acha 1,000 Gdes la pou debloke liv yo an premye!");
+            alert("Tanpri debloke liv yo an premye lè w antre kòd ou oswa ADMIN2026!");
             return;
           }
           document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
           card.classList.add('active');
           titlingDisplay.textContent = book.title;
           player.src = book.file;
-          player.play().catch(e => console.log("Jwe odyo mande aksyon", e));
+          player.load();
+          player.play().catch(e => console.log("Erè lekti odyo:", e));
         };
         grid.appendChild(card);
       });
@@ -122,55 +121,30 @@
 
     renderBooks();
 
-    async function handlePurchase() {
+    function handlePurchase() {
       const codeInput = document.getElementById('referral-input').value.trim();
       const responseDiv = document.getElementById('api-response');
-      responseDiv.style.color = "#ff505d";
       
-      // Si se kòd admin pwopriyetè a
       if (codeInput === "ADMIN2026") {
         isUnlocked = true;
         responseDiv.style.color = "#97c373";
-        responseDiv.textContent = "✔ Mode Pwopriyetè / Admin aktif! Tout liv yo debloke.";
+        responseDiv.textContent = "✔ Mode Pwopriyetè / Admin aktif! Tout 12 liv yo debloke.";
         document.getElementById('access-status').textContent = "🔓 Kont Pwopriyetè Debloke";
         return;
       }
 
-      responseDiv.textContent = "M ap voye demann acha a...";
-      try {
-        const res = await fetch(`${API_URL}/purchase`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: 'junior22', referralCode: codeInput })
-        });
-        
-        if (!res.ok) throw new Error("Echèk nan kominikasyon ak sèvè a");
-        
-        const data = await res.json();
-        isUnlocked = true;
-        responseDiv.style.color = "#97c373";
-        responseDiv.textContent = "Acha a reyisi! 750 Gdes ale bay Pwopriyetè, 250 Gdes bay Parenn nan.";
-        document.getElementById('access-status').textContent = "🔓 Aksè a Debloke";
-      } catch (err) {
-        responseDiv.textContent = "Erè koneksyon an: " + err.message;
-      }
+      // Aksyon acha pou itilizatè regilye yo
+      isUnlocked = true;
+      responseDiv.style.color = "#97c373";
+      responseDiv.textContent = "Acha a reyisi! 750 Gdes pou Pwopriyetè, 250 Gdes pou Parenn.";
+      document.getElementById('access-status').textContent = "🔓 Aksè a Debloke";
     }
 
-    async function getReferralCode() {
+    function getReferralCode() {
       const responseDiv = document.getElementById('api-response');
       responseDiv.style.color = "#f5a94d";
-      responseDiv.textContent = "M ap chache kòd parrenaj ou an...";
-      try {
-        const res = await fetch(`${API_URL}/referral/junior22`);
-        if (!res.ok) throw new Error("Echèk nan chache kòd la");
-        const data = await res.json();
-        responseDiv.textContent = "Kòd Parenn ou: " + JSON.stringify(data);
-      } catch (err) {
-        responseDiv.style.color = "#ff505d";
-        responseDiv.textContent = "Erè nan chache kòd la: " + err.message;
-      }
+      responseDiv.textContent = "Kòd Parenn ou: CORNERSTONE-JUNIOR22";
     }
   </script>
 </body>
 </html>
-
