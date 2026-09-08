@@ -45,7 +45,7 @@
       box-sizing: border-box;
     }
     audio { width: 100%; height: 40px; margin-top: 8px; filter: invert(0.8); }
-    input[type="text"] { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
+    input[type="text"], input[type="password"] { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
     .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     .btn-outline { background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
   </style>
@@ -68,6 +68,18 @@
 
   <div class="category-title">Liv Istorik Yo (12 Liv)</div>
   <div class="grid" id="books-grid"></div>
+
+  <!-- Bwat Modpas Admin ki kache nèt jiskaske ou desann nan anba epi klike sou ti tèks la -->
+  <div class="card-box" id="admin-login-box" style="display: none; border-color: #f5a94d; background-color: #2a2015; margin-top: 30px;">
+    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔑 Espas Pwopriyetè (Antre Modpas):</div>
+    <input type="password" id="admin-password" placeholder="Tape modpas ou la a...">
+    <button class="btn" onclick="verifyOwnerPassword()">Konekte kòm Pwopriyetè</button>
+  </div>
+
+  <!-- Ti lyen diskrè nan anba paj la pou w ka rele bwat modpas la lè w bezwen l -->
+  <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;">
+    <span style="font-size: 11px; color: #554433; cursor: pointer; text-decoration: underline;" onclick="revealAdminBox()">Anviwònman Pwopriyetè</span>
+  </div>
 
   <div class="player-box">
     <div style="font-size: 11px; color: #c59b77; text-transform: uppercase;">M ap koute kounye a:</div>
@@ -97,14 +109,6 @@
     const titlingDisplay = document.getElementById('selected-title');
 
     window.onload = function() {
-      const urlParams = new URLSearchParams(window.location.search);
-
-      // Tcheke si se ou menm ki mete adrès admin lan sou telefòn ou pou premye fwa
-      if (urlParams.get('admin') === 'cornerstone2026') {
-        activateOwnerMode();
-        return;
-      }
-
       // Tcheke si telefòn sa a te deja anrejistre kòm Pwopriyetè anvan
       if (localStorage.getItem('cornerstone_owner') === 'true') {
         activateOwnerMode();
@@ -112,6 +116,7 @@
       }
 
       // Si se yon kliyan nòmal, tcheke si li gen kòd parrenaj nan lyen li
+      const urlParams = new URLSearchParams(window.location.search);
       const refCode = urlParams.get('ref');
       const inputField = document.getElementById('referral-input');
       const payBtn = document.getElementById('pay-btn');
@@ -128,9 +133,25 @@
       }
     };
 
+    function revealAdminBox() {
+      document.getElementById('admin-login-box').style.display = "block";
+      document.getElementById('admin-password').focus();
+    }
+
+    function verifyOwnerPassword() {
+      const pass = document.getElementById('admin-password').value.trim();
+      if (pass === "CORNERSTONE2026") {
+        activateOwnerMode();
+        alert("Byenveni Pwopriyetè! Tout bagay debloke.");
+      } else {
+        alert("Modpas la pa bon!");
+      }
+    }
+
     function activateOwnerMode() {
       isUnlocked = true;
       localStorage.setItem('cornerstone_owner', 'true');
+      document.getElementById('admin-login-box').style.display = "none";
       document.getElementById('access-status').textContent = "🔓 Mòd Pwopriyetè / Admin Aktif";
       document.getElementById('warning-msg').style.display = "none";
       const payBtn = document.getElementById('pay-btn');
