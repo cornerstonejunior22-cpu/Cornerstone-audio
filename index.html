@@ -57,7 +57,7 @@
 
   <div class="card-box" id="pay-section">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Aksè Fèmen: Ou bezwen yon Kòd Parrenaj valab pou antre</div>
-    <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Pa gen kòd nan lyen an! Ou dwe jwenn yon lyen parrenaj nan men yon moun ki te achte aplikasyon an deja.</div>
+    <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Pa gen kòd nan lyen an! Ou dwe jwenn yon lyen parrenaj nan men Pwopriyetè a oswa yon lòt moun ki te achte l deja.</div>
     
     <input type="text" id="referral-input" placeholder="Kòd Parrenaj la ap parèt la a..." readonly style="opacity: 0.7;">
     
@@ -108,21 +108,18 @@
     const titlingDisplay = document.getElementById('selected-title');
 
     window.onload = function() {
-      // 1. Tcheke si se Pwopriyetè a ki konekte sou aparèy sa a deja
       if (localStorage.getItem('cornerstone_owner') === 'true') {
         activateOwnerMode();
         renderBooks();
         return;
       }
 
-      // 2. Tcheke si itilizatè sa a te deja peye epi debloke kont pa l anvan sou telefòn sa a
       if (localStorage.getItem('cornerstone_client_unlocked') === 'true') {
         activateClientUnlockedMode();
         renderBooks();
         return;
       }
 
-      // 3. Tcheke si yon itilizatè nòmal gen yon kòd parrenaj nan lyen li
       const urlParams = new URLSearchParams(window.location.search);
       const refCode = urlParams.get('ref');
       const inputField = document.getElementById('referral-input');
@@ -203,7 +200,7 @@
         
         card.onclick = () => {
           if (!isUnlocked) {
-            alert("Aksè a fèmen! Ou dwe antre nan anviwònman an pou w debloke l (oswa sèvi ak yon kòd parrenaj epi peye).");
+            alert("Aksè a fèmen! Ou dwe gen yon kòd parrenaj epi peye pou w ka koute liv yo.");
             return;
           }
           document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
@@ -239,8 +236,15 @@
 
       activateClientUnlockedMode();
       renderBooks();
-      responseDiv.style.color = "#97c373";
-      responseDiv.textContent = "✔ Peman reyisi anba parenn (" + codeInput + ")! Liv yo debloke, epi kounye a ou vin gen pwòp kòd parrenaj pa w tou pou w pataje!";
+
+      // Tcheke si se Pwopriyetè a dirèk ki te bay kòd la (CORNERSTONE-OWNER)
+      if (codeInput === "CORNERSTONE-OWNER") {
+        responseDiv.style.color = "#97c373";
+        responseDiv.textContent = "✔ Peman reyisi anba Pwopriyetè a! Tout 1,000 Gdes yo ale dirèk pou Pwopriyetè a. Liv yo debloke!";
+      } else {
+        responseDiv.style.color = "#97c373";
+        responseDiv.textContent = "✔ Peman reyisi anba parenn (" + codeInput + ")! 750 Gdes pou Pwopriyetè, 250 Gdes pou Parenn. Liv yo debloke!";
+      }
     }
 
     function getReferralCode() {
