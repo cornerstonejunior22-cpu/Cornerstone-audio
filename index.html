@@ -1,147 +1,139 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cornerstone - Bible Audio</title>
-    <style>
-        body {
-            background-color: #1a1612;
-            color: #e4d7cf;
-            font-family: Georgia, serif;
-            padding: 20px;
-            margin: 0;
-            padding-bottom: 160px;
-        }
-        .header-sub { color: #c59b77; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
-        h1 { color: #f5a94d; font-size: 24px; margin-top: 5px; }
-        h1 span { color: #c59b77; font-style: italic; }
-        .category-title { color: #c59b77; font-size: 13px; letter-spacing: 1px; border-top: 1px solid #332a25; padding-top: 15px; margin-top: 15px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 10px; }
-        .book-card {
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #332a25;
-            background-color: #221b14;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .book-card.active { border-color: #f5a94d; background-color: #2f271e; }
-        .book-num { font-size: 11px; color: #7c5273; margin-right: 8px; }
-        .book-title { font-weight: bold; font-size: 14px; color: #ff50d3; }
-        .player-box {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 40px);
-            max-width: 600px;
-            background-color: #f120c0b;
-            border: 1px solid #f50b27;
-            padding: 12px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            box-sizing: border-box;
-        }
-        audio { width: 100%; height: 48px; margin-top: 8px; filter: invert(0.8); }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cornerstone - Bible Audio</title>
+  <style>
+    body {
+      background-color: #1f1b14;
+      color: #f4d7cf;
+      font-family: Georgia, serif;
+      padding: 10px;
+      margin: 0;
+      padding-bottom: 160px;
+    }
+    .header-sub { color: #f5a94d; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+    h1 { color: #f5a94d; font-size: 24px; margin-top: 5px; }
+    h1 span { color: #f9c077; font-style: italic; }
+    .category-title { color: #f9c077; font-size: 13px; letter-spacing: 1px; border-bottom: 1px solid #332025; padding-top: 10px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; margin-top: 10px; }
+    .book-card {
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #332025;
+      background-color: #221b14;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .book-card.active { border-color: #f5a94d; background-color: #27271c; }
+    .book-num { font-size: 11px; color: #97c373; margin-right: 6px; }
+    .book-title { font-weight: bold; font-size: 14px; color: #ff505d; }
+    .player-box {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 40px);
+      max-width: 600px;
+      background-color: #1f1b0b;
+      border: 1px solid #f50b27;
+      padding: 12px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      box-sizing: border-box;
+    }
+    audio { width: 100%; height: 40px; margin-top: 8px; filter: invert(0.8); }
+  </style>
 </head>
 <body>
 
-    <div class="header-sub">CORNERSTONE - BIBLE AUDIO</div>
-    <h1><span>Pawol</span> yo.</h1>
+  <div class="header-sub">CORNERSTONE - BIBLE AUDIO</div>
+  <h1>Pawol <span>yo.</span></h1>
 
-    <div class="category-title">OLD TESTAMENT</div>
-    <div class="grid" id="books-grid"></div>
-    <!-- Seksyon Acha ak Parenn -->
-    <div style="margin-top: 25px; padding: 15px; background-color: #221b14; border: 1px solid #332a25; border-radius: 8px;">
-        <h3 style="color: #f5a94d; font-size: 14px; margin-top: 0;">Jesyon Acha & Parenn</h3>
-        <button onclick="handlePurchase()" style="background-color: #f5a94d; color: #1a1612; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-right: 10px;">Achte Aksè a</button>
-        <button onclick="getReferralCode()" style="background-color: transparent; color: #c59b77; border: 1px solid #c59b77; padding: 10px 15px; border-radius: 5px; cursor: pointer;">Jwenn Kòd Parenn mwen</button>
-        <div id="api-response" style="margin-top: 10px; font-size: 12px; color: #e4d7cf;"></div>
-    </div>
-    
-    <div class="player-box">
-        <div style="font-size: 12px; color: #c59b77; text-transform: uppercase;">M ap koute kounye a:</div>
-        <div id="selected-title" style="font-weight: bold; font-size: 14px; color: #f5a94d; margin: 4px 0;">Chwazi yon liv</div>
-        <audio id="audio-player" controls preload="metadata"></audio>
-    </div>
+  <div style="margin-top: 25px; padding: 15px; background-color: #221b14; border: 1px solid #332025; border-radius: 8px;">
+    <h3 style="color: #f5a94d; font-size: 14px; margin-top: 0;">Jesyon Acha & Parenn</h3>
+    <button onclick="handlePurchase()" style="background-color: #f5a94d; border: none; color: #221b14; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-right: 10px;">Achte Aksè a</button>
+    <button onclick="getReferralCode()" style="background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">Jwenn Kòd Parenn mwen</button>
+    <div id="api-response" style="margin-top: 10px; font-size: 12px; color: #e4d7cf;"></div>
+  </div>
 
-    <script>
-        // Lyen API Vercel ou a
-        const API_URL = "https://cornerstone-audio-app-api-server-v6.vercel.app";
-        
+  <div class="category-title">OLD TESTAMENT</div>
+  <div class="grid" id="books-grid"></div>
 
-        const books = [
-            { id: 'jenèz', title: 'Jenèz', number: '01', file: 'audio/jenew.mp3' },
-            { id: 'ekzòd', title: 'Ekzòd', number: '02', file: 'audio/ekzod.mp3' },
-            { id: 'levitik', title: 'Levitik', number: '03', file: 'audio/levit.mp3' },
-            { id: 'nonb', title: 'Nonb', number: '04', file: 'audio/nonb.mp3' },
-            { id: 'detewonomi', title: 'Detewonomi', number: '05', file: 'audio/detew.mp3' },
-            { id: 'jozye', title: 'Jozye', number: '06', file: 'audio/jozye.mp3' },
-            { id: ' jij ', title: 'Jij', number: '07', file: 'audio/jij.mp3' },
-            { id: 'rit', title: ' Rit ', number: '08', file: 'audio/rit.mp3' },
-            { id: 'samiyèl1', title: '1 Samiyèl', number: '09', file: 'audio/samiyel.mp3' },
-            { id: 'samiyèl2', title: '2 Samiyèl', number: '10', file: 'audio/samiyel2.mp3' },
-            { id: 'wa1', title: '1 Wa', number: '11', file: 'audio/wa1.mp3' },
-            { id: 'wa2', title: '2 Wa', number: '12', file: 'audio/wa2.mp3' }
-        ];
+  <div class="player-box">
+    <div style="font-size: 12px; color: #c59b77; text-transform: uppercase;">M ap koute kounye a:</div>
+    <div id="selected-title" style="font-weight: bold; font-size: 14px; color: #f5a94d; margin: 4px 0;">Chwazi yon liv</div>
+    <audio id="audio-player" controls preload="metadata"></audio>
+  </div>
 
-        const grid = document.getElementById('books-grid');
-        const player = document.getElementById('audio-player');
-        const titlingDisplay = document.getElementById('selected-title');
+  <script>
+    const API_URL = "https://cornerstone-audio-app-api-server-v6.vercel.app";
 
-        function selectBook(book, element) {
-            document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            titlingDisplay.textContent = book.title;
-            player.src = book.file;
-            player.play();
-        }
+    const books = [
+      { id: 'jozye', title: 'JOZYÉ', number: '01', file: 'audio/jozye.mp3' },
+      { id: 'jij', title: 'Jij', number: '02', file: 'audio/jij.mp3' },
+      { id: 'rit', title: 'RIT', number: '03', file: 'audio/rit.mp3' },
+      { id: '1samyel', title: '1 SAMYÈL', number: '04', file: 'audio/samyel1.mp3' },
+      { id: '2samyel', title: '2 SAMYÈL', number: '05', file: 'audio/samyel2.mp3' },
+      { id: '1wa', title: '1 WA', number: '06', file: 'audio/wa1.mp3' },
+      { id: '2wa', title: '2 WA', number: '07', file: 'audio/wa2.mp3' },
+      { id: '2istwa', title: '2 ISTWA', number: '08', file: 'audio/istwa2.mp3' },
+      { id: '1istwa', title: '1 ISTWA', number: '09', file: 'audio/istwa1.mp3' }
+    ];
 
-        
-            
+    const grid = document.getElementById('books-grid');
+    const player = document.getElementById('audio-player');
+    const titlingDisplay = document.getElementById('selected-title');
 
-            
-        
+    function selectBook(book, element) {
+      document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
+      element.classList.add('active');
+      titlingDisplay.textContent = book.title;
+      player.src = book.file;
+      player.play();
+    }
 
-            card.className = 'book-card' + (index === 0 ? ' active' : '');
-            card.innerHTML = `<span class="book-num">${book.number}</span><span class="book-title">${book.title}</span>`;
-            card.onclick = () => selectBook(book, card);
-            grid.appendChild(card);
+    books.forEach((book, index) => {
+      const card = document.createElement('div');
+      card.className = 'book-card' + (index === 0 ? ' active' : '');
+      card.innerHTML = `<span class="book-num">${book.number}</span><span class="book-title">${book.title}</span>`;
+      card.onclick = () => selectBook(book, card);
+      grid.appendChild(card);
+    });
+
+    player.src = books[0].file;
+
+    async function handlePurchase() {
+      const responseDiv = document.getElementById('api-response');
+      responseDiv.textContent = "M ap voye demann acha a...";
+      try {
+        const res = await fetch(`${API_URL}/purchase`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: 'junior22', referralCode: 'R15105' })
         });
+        const data = await res.json();
+        responseDiv.textContent = "Acha: " + JSON.stringify(data);
+      } catch (err) {
+        responseDiv.textContent = "Erè koneksyon an: " + err.message;
+      }
+    }
 
-        player.src = books[0].file;     
-        async function handlePurchase() {
-            const responseDiv = document.getElementById('api-response');
-            responseDiv.textContent = "Ap voye demann acha a...";
-            try {
-                const res = await fetch(`${API_URL}/purchase`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: 'itilizatè_tès', amount: 10, referralCode: 'TEST123' })
-                });
-                const data = await res.json();
-                responseDiv.textContent = "Siksè: " + JSON.stringify(data);
-            } catch (err) {
-                responseDiv.textContent = "Erè nan koneksyon an: " + err.message;
-            }
-        }
-
-        async function getReferralCode() {
-            const responseDiv = document.getElementById('api-response');
-            responseDiv.textContent = "Ap chache kòd parenn ou...";
-            try {
-                const res = await fetch(`${API_URL}/referral/itilizatè_tès`);
-                const data = await res.json();
-                responseDiv.textContent = "Kòd Parenn: " + JSON.stringify(data);
-            } catch (err) {
-                responseDiv.textContent = "Erè nan chache kòd la: " + err.message;
-            }
-        }
-        
-    </script>
+    async function getReferralCode() {
+      const responseDiv = document.getElementById('api-response');
+      responseDiv.textContent = "M ap chache kòd la...";
+      try {
+        const res = await fetch(`${API_URL}/referral/junior22`);
+        const data = await res.json();
+        responseDiv.textContent = "Kòd Parenn: " + JSON.stringify(data);
+      } catch (err) {
+        responseDiv.textContent = "Erè nan chache kòd la: " + err.message;
+      }
+    }
+  </script>
 </body>
 </html>
+
