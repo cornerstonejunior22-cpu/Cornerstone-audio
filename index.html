@@ -111,22 +111,24 @@
       // 1. Tcheke si se Pwopriyetè a ki konekte sou aparèy sa a deja
       if (localStorage.getItem('cornerstone_owner') === 'true') {
         activateOwnerMode();
+        renderBooks();
         return;
       }
 
-      // 2. Tcheke si yon itilizatè nòmal gen yon kòd parrenaj nan lyen li
+      // 2. Tcheke si itilizatè sa a te deja peye epi debloke kont pa l anvan sou telefòn sa a
+      if (localStorage.getItem('cornerstone_client_unlocked') === 'true') {
+        activateClientUnlockedMode();
+        renderBooks();
+        return;
+      }
+
+      // 3. Tcheke si yon itilizatè nòmal gen yon kòd parrenaj nan lyen li
       const urlParams = new URLSearchParams(window.location.search);
       const refCode = urlParams.get('ref');
       const inputField = document.getElementById('referral-input');
       const payBtn = document.getElementById('pay-btn');
       const warningMsg = document.getElementById('warning-msg');
       const accessStatus = document.getElementById('access-status');
-
-      // Tcheke si itilizatè sa a te deja peye epi debloke kont pa l anvan sou telefòn sa a
-      if (localStorage.getItem('cornerstone_client_unlocked') === 'true') {
-        activateClientUnlockedMode();
-        return;
-      }
 
       if (refCode && refCode.trim() !== "") {
         inputField.value = refCode;
@@ -136,6 +138,8 @@
         payBtn.style.opacity = "1";
         payBtn.style.cursor = "pointer";
       }
+
+      renderBooks();
     };
 
     function revealAdminBox() {
@@ -147,7 +151,8 @@
       const pass = document.getElementById('admin-password').value.trim();
       if (pass === "CORNERSTONE2026") {
         activateOwnerMode();
-        alert("Byenveni Pwopriyetè! Tout bagay debloke.");
+        renderBooks();
+        alert("Byenveni Pwopriyetè! Tout liv yo parèt epi yo debloke.");
       } else {
         alert("Modpas la pa bon!");
       }
@@ -160,7 +165,7 @@
       document.getElementById('access-status').textContent = "🔓 Mòd Pwopriyetè / Admin Aktif";
       document.getElementById('warning-msg').style.display = "none";
       const payBtn = document.getElementById('pay-btn');
-      payBtn.style.display = "none"; // Pwopriyetè pa bezwen peye
+      payBtn.style.display = "none";
       document.getElementById('referral-input').value = "CORNERSTONE-OWNER";
       document.getElementById('share-btn-container').style.display = "block";
       
@@ -198,7 +203,7 @@
         
         card.onclick = () => {
           if (!isUnlocked) {
-            alert("Aksè a fèmen! Ou dwe gen yon kòd parrenaj epi peye pou w ka koute liv yo.");
+            alert("Aksè a fèmen! Ou dwe antre nan anviwònman an pou w debloke l (oswa sèvi ak yon kòd parrenaj epi peye).");
             return;
           }
           document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
@@ -213,10 +218,8 @@
       player.src = books[0].file;
     }
 
-    renderBooks();
-
     function handlePurchase() {
-      if (localStorage.getItem('cornerstone_owner'] === 'true') {
+      if (localStorage.getItem('cornerstone_owner') === 'true') {
         alert("Ou se Pwopriyetè a! Ou pa bezwen peye.");
         return;
       }
@@ -230,12 +233,12 @@
         return;
       }
 
-      // Sove estati peman an ak kòd pèsonèl nouvo itilizatè a pou chèn lan ka kontinye grandi
       localStorage.setItem('cornerstone_client_unlocked', 'true');
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
       localStorage.setItem('my_personal_ref_code', myNewCode);
 
       activateClientUnlockedMode();
+      renderBooks();
       responseDiv.style.color = "#97c373";
       responseDiv.textContent = "✔ Peman reyisi anba parenn (" + codeInput + ")! Liv yo debloke, epi kounye a ou vin gen pwòp kòd parrenaj pa w tou pou w pataje!";
     }
