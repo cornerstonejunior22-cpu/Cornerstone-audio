@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cornerstone - Bible Audio</title>
+  <title>Cornerstone Audio Player</title>
   <style>
     body {
       background-color: #1f1b14;
@@ -14,12 +14,12 @@
       padding-bottom: 160px;
     }
     .header-sub { color: #f5a94d; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
-    h1 { color: #f5a94d; font-size: 24px; margin-top: 5px; }
-    h1 span { color: #f9c077; font-style: italic; }
-    .category-title { color: #f9c077; font-size: 13px; letter-spacing: 1px; border-bottom: 1px solid #332025; padding-top: 10px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; margin-top: 10px; }
+    h1 { color: #f5a94d; font-size: 22px; margin-top: 5px; }
+    .card-box { background-color: #221b14; border: 1px solid #332025; padding: 15px; border-radius: 8px; margin-top: 15px; }
+    .category-title { color: #f9c077; font-size: 13px; letter-spacing: 1px; border-bottom: 1px solid #332025; padding-top: 15px; margin-bottom: 10px; }
+    .grid { display: flex; flex-direction: column; gap: 8px; }
     .book-card {
-      padding: 12px;
+      padding: 14px;
       border-radius: 6px;
       border: 1px solid #332025;
       background-color: #221b14;
@@ -29,111 +29,121 @@
       justify-content: space-between;
     }
     .book-card.active { border-color: #f5a94d; background-color: #27271c; }
-    .book-num { font-size: 11px; color: #97c373; margin-right: 6px; }
-    .book-title { font-weight: bold; font-size: 14px; color: #ff505d; }
+    .book-title { font-weight: bold; font-size: 15px; color: #f4d7cf; }
     .player-box {
       position: fixed;
-      bottom: 20px;
+      bottom: 10px;
       left: 50%;
       transform: translateX(-50%);
-      width: calc(100% - 40px);
+      width: calc(100% - 20px);
       max-width: 600px;
       background-color: #1f1b0b;
-      border: 1px solid #f50b27;
+      border: 1px solid #f5a94d;
       padding: 12px;
       border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.8);
       box-sizing: border-box;
     }
     audio { width: 100%; height: 40px; margin-top: 8px; filter: invert(0.8); }
+    input[type="text"] { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
+    .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
   </style>
 </head>
 <body>
 
-  <div class="header-sub">CORNERSTONE - BIBLE AUDIO</div>
-  <h1>Pawol <span>yo.</span></h1>
+  <div class="header-sub">Cornerstone Audio Player</div>
+  <h1 id="balance-text">Balans pa w (Komisyon Parrenaj): 0 Gdes</h1>
 
-  <div style="margin-top: 25px; padding: 15px; background-color: #221b14; border: 1px solid #332025; border-radius: 8px;">
-    <h3 style="color: #f5a94d; font-size: 14px; margin-top: 0;">Jesyon Acha & Parenn</h3>
-    <button onclick="handlePurchase()" style="background-color: #f5a94d; border: none; color: #221b14; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-right: 10px;">Achte Aksè a</button>
-    <button onclick="getReferralCode()" style="background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">Jwenn Kòd Parenn mwen</button>
-    <div id="api-response" style="margin-top: 10px; font-size: 12px; color: #e4d7cf;"></div>
+  <div class="card-box" id="pay-section">
+    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Debloke 12 Liv Istorik Yo (1,000 Gdes)</div>
+    <div style="font-size: 12px; color: #b5a79f; margin-top: 4px;">Antre yon kòd parrenaj si w gen en (opsyonèl) oswa kòd admin ou an:</div>
+    <input type="text" id="referral-input" placeholder="Egz: TEST1234 oswa ADMIN2026">
+    <button class="btn" onclick="handlePurchase()">Peye 1,000 Gdes ak MonCash</button>
+    <div id="api-response" style="margin-top: 10px; font-size: 12px; color: #ff505d;"></div>
   </div>
 
-  <div class="category-title">OLD TESTAMENT</div>
+  <div class="category-title">Liv Istorik Yo</div>
   <div class="grid" id="books-grid"></div>
 
   <div class="player-box">
-    <div style="font-size: 12px; color: #c59b77; text-transform: uppercase;">M ap koute kounye a:</div>
-    <div id="selected-title" style="font-weight: bold; font-size: 14px; color: #f5a94d; margin: 4px 0;">Chwazi yon liv</div>
+    <div style="font-size: 11px; color: #c59b77; text-transform: uppercase;">M ap koute kounye a:</div>
+    <div id="selected-title" style="font-weight: bold; font-size: 14px; color: #f5a94d; margin: 2px 0;">Chwazi yon liv</div>
     <audio id="audio-player" controls preload="metadata"></audio>
   </div>
 
   <script>
     const API_URL = "https://cornerstone-audio-app-api-server-v6.vercel.app";
 
+    // Tout 12 Liv yo egzakteman jan yo te ye a
     const books = [
-      { id: 'jozye', title: 'JOZYÉ', number: '01', file: 'audio/jozye.mp3' },
-      { id: 'jij', title: 'Jij', number: '02', file: 'audio/jij.mp3' },
-      { id: 'rit', title: 'RIT', number: '03', file: 'audio/rit.mp3' },
-      { id: '1samyel', title: '1 SAMYÈL', number: '04', file: 'audio/samyel1.mp3' },
-      { id: '2samyel', title: '2 SAMYÈL', number: '05', file: 'audio/samyel2.mp3' },
-      { id: '1wa', title: '1 WA', number: '06', file: 'audio/wa1.mp3' },
-      { id: '2wa', title: '2 WA', number: '07', file: 'audio/wa2.mp3' },
-      { id: '2istwa', title: '2 ISTWA', number: '08', file: 'audio/istwa2.mp3' },
-      { id: '1istwa', title: '1 ISTWA', number: '09', file: 'audio/istwa1.mp3' }
+      { id: 'jozye', title: 'JOZYÉ', file: 'audio/jozye.mp3' },
+      { id: 'jij', title: 'jij', file: 'audio/jij.mp3' },
+      { id: 'rit', title: 'RIT', file: 'audio/rit.mp3' },
+      { id: '1samyel', title: '1 SAMYÈL', file: 'audio/samyel1.mp3' },
+      { id: '2samyel', title: '2 SAMYÈL', file: 'audio/samyel2.mp3' },
+      { id: '1wa', title: '1 WA', file: 'audio/wa1.mp3' },
+      { id: '2wa', title: '2 WA', file: 'audio/wa2.mp3' },
+      { id: '2istwa', title: '2 ISTWA', file: 'audio/istwa2.mp3' },
+      { id: '1istwa', title: '1 ISTWA', file: 'audio/istwa1.mp3' },
+      { id: 'esdras', title: 'ESDRAS', file: 'audio/esdras.mp3' },
+      { id: 'neemi', title: 'NEEMI', file: 'audio/neemi.mp3' },
+      { id: 'este', title: 'ESTÈ', file: 'audio/este.mp3' }
     ];
 
+    let isUnlocked = false;
     const grid = document.getElementById('books-grid');
     const player = document.getElementById('audio-player');
     const titlingDisplay = document.getElementById('selected-title');
 
-    function selectBook(book, element) {
-      document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
-      element.classList.add('active');
-      titlingDisplay.textContent = book.title;
-      player.src = book.file;
-      player.play();
+    function renderBooks() {
+      grid.innerHTML = '';
+      books.forEach((book, index) => {
+        const card = document.createElement('div');
+        card.className = 'book-card' + (index === 0 ? ' active' : '');
+        card.innerHTML = `<span class="book-title">${book.title}</span> <span style="color: #f5a94d;">🔊</span>`;
+        
+        card.onclick = () => {
+          document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
+          card.classList.add('active');
+          titlingDisplay.textContent = book.title;
+          player.src = book.file;
+          player.play().catch(e => console.log("Jwe odyo mande aksyon", e));
+        };
+        grid.appendChild(card);
+      });
+      player.src = books[0].file;
     }
 
-    books.forEach((book, index) => {
-      const card = document.createElement('div');
-      card.className = 'book-card' + (index === 0 ? ' active' : '');
-      card.innerHTML = `<span class="book-num">${book.number}</span><span class="book-title">${book.title}</span>`;
-      card.onclick = () => selectBook(book, card);
-      grid.appendChild(card);
-    });
-
-    player.src = books[0].file;
+    renderBooks();
 
     async function handlePurchase() {
+      const codeInput = document.getElementById('referral-input').value.trim();
       const responseDiv = document.getElementById('api-response');
-      responseDiv.textContent = "M ap voye demann acha a...";
+      
+      // Si se ou menm kòm admin ki mete kòd espesyal la
+      if (codeInput === "ADMIN2026") {
+        isUnlocked = true;
+        document.getElementById('pay-section').innerHTML = `<div style="color: #97c373; font-weight: bold; font-size: 14px;">Kont ou aktif. Ou gen aksè ak tout liv yo! (Admin Mode)</div>`;
+        return;
+      }
+
+      responseDiv.textContent = "M ap konekte ak sèvè a...";
       try {
         const res = await fetch(`${API_URL}/purchase`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: 'junior22', referralCode: 'R15105' })
+          body: JSON.stringify({ userId: 'junior22', referralCode: codeInput })
         });
+        
+        if (!res.ok) throw new Error("Sèvè a pa reponn kòrèkteman");
+        
         const data = await res.json();
-        responseDiv.textContent = "Acha: " + JSON.stringify(data);
+        isUnlocked = true;
+        document.getElementById('pay-section').innerHTML = `<div style="color: #97c373; font-weight: bold;">Acha a reyisi! Tout liv yo debloke.</div>`;
       } catch (err) {
-        responseDiv.textContent = "Erè koneksyon an: " + err.message;
-      }
-    }
-
-    async function getReferralCode() {
-      const responseDiv = document.getElementById('api-response');
-      responseDiv.textContent = "M ap chache kòd la...";
-      try {
-        const res = await fetch(`${API_URL}/referral/junior22`);
-        const data = await res.json();
-        responseDiv.textContent = "Kòd Parenn: " + JSON.stringify(data);
-      } catch (err) {
-        responseDiv.textContent = "Erè nan chache kòd la: " + err.message;
+        responseDiv.textContent = "Erè koneksyon an: " + err.message + " (Asire w Vercel aktif)";
       }
     }
   </script>
 </body>
 </html>
-
