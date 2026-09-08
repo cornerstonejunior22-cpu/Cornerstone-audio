@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cornerstone Audio Player</title>
+  <title>Cornerstone - Bible Audio</title>
   <style>
     body {
       background-color: #1f1b14;
@@ -47,6 +47,7 @@
     audio { width: 100%; height: 40px; margin-top: 8px; filter: invert(0.8); }
     input[type="text"] { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
     .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    .btn-outline { background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -56,13 +57,14 @@
 
   <div class="card-box" id="pay-section">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Debloke 12 Liv Istorik Yo (1,000 Gdes)</div>
-    <div style="font-size: 12px; color: #b5a79f; margin-top: 4px;">Antre yon kòd parrenaj si w gen en (opsyonèl) oswa kòd admin ou an:</div>
-    <input type="text" id="referral-input" placeholder="Egz: TEST1234 oswa ADMIN2026">
-    <button class="btn" onclick="handlePurchase()">Peye 1,000 Gdes ak MonCash</button>
+    <div style="font-size: 12px; color: #b5a79f; margin-top: 4px;">Antre kòd parrenaj ou an oswa kòd ADMIN2026:</div>
+    <input type="text" id="referral-input" placeholder="Egz: R15105 oswa ADMIN2026">
+    <button class="btn" onclick="handlePurchase()">Achte Aksè a (Peye 1,000 Gdes)</button>
+    <button class="btn-outline" onclick="getReferralCode()">Jwenn Kòd Parenn mwen</button>
     <div id="api-response" style="margin-top: 10px; font-size: 12px; color: #ff505d;"></div>
   </div>
 
-  <div class="category-title">Liv Istorik Yo</div>
+  <div class="category-title">Liv Istorik Yo (12 Liv)</div>
   <div class="grid" id="books-grid"></div>
 
   <div class="player-box">
@@ -74,10 +76,10 @@
   <script>
     const API_URL = "https://cornerstone-audio-app-api-server-v6.vercel.app";
 
-    // Tout 12 Liv yo egzakteman jan yo te ye a
+    // Tout 12 Liv Istorik yo egzakteman
     const books = [
       { id: 'jozye', title: 'JOZYÉ', file: 'audio/jozye.mp3' },
-      { id: 'jij', title: 'jij', file: 'audio/jij.mp3' },
+      { id: 'jij', title: 'JIJ', file: 'audio/jij.mp3' },
       { id: 'rit', title: 'RIT', file: 'audio/rit.mp3' },
       { id: '1samyel', title: '1 SAMYÈL', file: 'audio/samyel1.mp3' },
       { id: '2samyel', title: '2 SAMYÈL', file: 'audio/samyel2.mp3' },
@@ -103,6 +105,10 @@
         card.innerHTML = `<span class="book-title">${book.title}</span> <span style="color: #f5a94d;">🔊</span>`;
         
         card.onclick = () => {
+          if (!isUnlocked) {
+            alert("Tanpri antre kòd ou oswa fè acha 1,000 Gdes la pou debloke liv yo an premye!");
+            return;
+          }
           document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
           card.classList.add('active');
           titlingDisplay.textContent = book.title;
@@ -119,15 +125,18 @@
     async function handlePurchase() {
       const codeInput = document.getElementById('referral-input').value.trim();
       const responseDiv = document.getElementById('api-response');
+      responseDiv.style.color = "#ff505d";
       
-      // Si se ou menm kòm admin ki mete kòd espesyal la
+      // Si se kòd admin pwopriyetè a
       if (codeInput === "ADMIN2026") {
         isUnlocked = true;
-        document.getElementById('pay-section').innerHTML = `<div style="color: #97c373; font-weight: bold; font-size: 14px;">Kont ou aktif. Ou gen aksè ak tout liv yo! (Admin Mode)</div>`;
+        responseDiv.style.color = "#97c373";
+        responseDiv.textContent = "✔ Mode Pwopriyetè / Admin aktif! Tout liv yo debloke.";
+        document.getElementById('access-status').textContent = "🔓 Kont Pwopriyetè Debloke";
         return;
       }
 
-      responseDiv.textContent = "M ap konekte ak sèvè a...";
+      responseDiv.textContent = "M ap voye demann acha a...";
       try {
         const res = await fetch(`${API_URL}/purchase`, {
           method: 'POST',
@@ -135,13 +144,30 @@
           body: JSON.stringify({ userId: 'junior22', referralCode: codeInput })
         });
         
-        if (!res.ok) throw new Error("Sèvè a pa reponn kòrèkteman");
+        if (!res.ok) throw new Error("Echèk nan kominikasyon ak sèvè a");
         
         const data = await res.json();
         isUnlocked = true;
-        document.getElementById('pay-section').innerHTML = `<div style="color: #97c373; font-weight: bold;">Acha a reyisi! Tout liv yo debloke.</div>`;
+        responseDiv.style.color = "#97c373";
+        responseDiv.textContent = "Acha a reyisi! 750 Gdes ale bay Pwopriyetè, 250 Gdes bay Parenn nan.";
+        document.getElementById('access-status').textContent = "🔓 Aksè a Debloke";
       } catch (err) {
-        responseDiv.textContent = "Erè koneksyon an: " + err.message + " (Asire w Vercel aktif)";
+        responseDiv.textContent = "Erè koneksyon an: " + err.message;
+      }
+    }
+
+    async function getReferralCode() {
+      const responseDiv = document.getElementById('api-response');
+      responseDiv.style.color = "#f5a94d";
+      responseDiv.textContent = "M ap chache kòd parrenaj ou an...";
+      try {
+        const res = await fetch(`${API_URL}/referral/junior22`);
+        if (!res.ok) throw new Error("Echèk nan chache kòd la");
+        const data = await res.json();
+        responseDiv.textContent = "Kòd Parenn ou: " + JSON.stringify(data);
+      } catch (err) {
+        responseDiv.style.color = "#ff505d";
+        responseDiv.textContent = "Erè nan chache kòd la: " + err.message;
       }
     }
   </script>
