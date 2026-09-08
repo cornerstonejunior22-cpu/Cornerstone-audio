@@ -13,7 +13,7 @@
       margin: 0;
       padding-bottom: 160px;
     }
-    .header-sub { color: #f5a94d; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; user-select: none; }
+    .header-sub { color: #f5a94d; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; user-select: none; }
     h1 { color: #f5a94d; font-size: 22px; margin-top: 5px; }
     .card-box { background-color: #221b14; border: 1px solid #332025; padding: 15px; border-radius: 8px; margin-top: 15px; }
     .category-title { color: #f9c077; font-size: 13px; letter-spacing: 1px; border-bottom: 1px solid #332025; padding-top: 15px; margin-bottom: 10px; }
@@ -45,15 +45,14 @@
       box-sizing: border-box;
     }
     audio { width: 100%; height: 40px; margin-top: 8px; filter: invert(0.8); }
-    input[type="text"], input[type="password"] { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
+    input[type="text"] { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
     .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     .btn-outline { background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
   </style>
 </head>
 <body>
 
-  <!-- Klike 3 fwa rapid sou tit sa a pou mande modpas Pwopriyetè a -->
-  <div class="header-sub" onclick="secretAdminActivation()">Cornerstone Audio Player</div>
+  <div class="header-sub">Cornerstone Audio Player</div>
   <h1 id="balance-text">Balans pa w (Komisyon Parrenaj): 0 Gdes</h1>
 
   <div class="card-box" id="pay-section">
@@ -93,20 +92,26 @@
     ];
 
     let isUnlocked = false;
-    let clickCount = 0;
     const grid = document.getElementById('books-grid');
     const player = document.getElementById('audio-player');
     const titlingDisplay = document.getElementById('selected-title');
 
     window.onload = function() {
-      // Tcheke si ou deja konekte kòm Pwopriyetè sou telefòn sa a anvan
+      const urlParams = new URLSearchParams(window.location.search);
+
+      // Tcheke si se ou menm ki mete adrès admin lan sou telefòn ou pou premye fwa
+      if (urlParams.get('admin') === 'cornerstone2026') {
+        activateOwnerMode();
+        return;
+      }
+
+      // Tcheke si telefòn sa a te deja anrejistre kòm Pwopriyetè anvan
       if (localStorage.getItem('cornerstone_owner') === 'true') {
         activateOwnerMode();
         return;
       }
 
-      // Si se yon kliyan nòmal
-      const urlParams = new URLSearchParams(window.location.search);
+      // Si se yon kliyan nòmal, tcheke si li gen kòd parrenaj nan lyen li
       const refCode = urlParams.get('ref');
       const inputField = document.getElementById('referral-input');
       const payBtn = document.getElementById('pay-btn');
@@ -135,21 +140,7 @@
       document.getElementById('referral-input').value = "CORNERSTONE-OWNER";
       const responseDiv = document.getElementById('api-response');
       responseDiv.style.color = "#97c373";
-      responseDiv.textContent = "✔ Ou konekte kòm Pwopriyetè. Tout liv yo debloke!";
-    }
-
-    function secretAdminActivation() {
-      clickCount++;
-      if (clickCount >= 3) {
-        clickCount = 0; // Reyajiste konte a
-        let password = prompt("Mòd Pwopriyetè detekte! Antre modpas sekrè a:");
-        // Modpas sekrè ou a se: CORNERSTONE2026 (Ou ka chanje l si w vle)
-        if (password === "CORNERSTONE2026") {
-          activateOwnerMode();
-        } else if (password !== null) {
-          alert("Modpas la pa bon! Pèsonn pa ka kontourne sistèm nan.");
-        }
-      }
+      responseDiv.textContent = "✔ Ou konekte kòm Pwopriyetè sou aparèy sa a. Tout liv yo debloke!";
     }
 
     function renderBooks() {
