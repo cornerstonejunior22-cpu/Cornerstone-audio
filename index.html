@@ -4,6 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cornerstone - Bible Audio</title>
+  
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAV07bab01c879c608f54086287953032",
+      authDomain: "bible-audio-205e4.firebaseapp.com",
+      projectId: "bible-audio-205e4",
+      storageBucket: "bible-audio-205e4.appspot.com",
+      messagingSenderId: "879530329111",
+      appId: "1:879530329111:web:07bab01c879c608f540862"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window.db = db;
+    window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, increment };
+  </script>
+
   <style>
     body {
       background-color: #1f1b14;
@@ -53,7 +74,7 @@
 <body>
 
   <div class="header-sub">Cornerstone Audio Player</div>
-  <h1 id="balance-text">Balans pa w (Komisyon Parrenaj): 0 Gdes</h1>
+  <h1 id="balance-text">Balans pa w: 0 Gdes</h1>
 
   <div class="card-box" id="pay-section">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Aksè Fèmen: Ou bezwen yon Kòd Parrenaj valab pou antre</div>
@@ -107,16 +128,16 @@
     const player = document.getElementById('audio-player');
     const titlingDisplay = document.getElementById('selected-title');
 
-    window.onload = function() {
+    window.onload = async function() {
+      renderBooks();
+
       if (localStorage.getItem('cornerstone_owner') === 'true') {
         activateOwnerMode();
-        renderBooks();
         return;
       }
 
       if (localStorage.getItem('cornerstone_client_unlocked') === 'true') {
         activateClientUnlockedMode();
-        renderBooks();
         return;
       }
 
@@ -135,8 +156,6 @@
         payBtn.style.opacity = "1";
         payBtn.style.cursor = "pointer";
       }
-
-      renderBooks();
     };
 
     function revealAdminBox() {
@@ -144,18 +163,17 @@
       document.getElementById('admin-password').focus();
     }
 
-    function verifyOwnerPassword() {
+    async function verifyOwnerPassword() {
       const pass = document.getElementById('admin-password').value.trim();
       if (pass === "CORNERSTONE2026") {
         activateOwnerMode();
-        renderBooks();
-        alert("Byenveni Pwopriyetè! Tout liv yo parèt epi yo debloke.");
+        alert("Byenveni Pwopriyetè! Tout liv yo debloke nan baz done a.");
       } else {
         alert("Modpas la pa bon!");
       }
     }
 
-    function activateOwnerMode() {
+    async function activateOwnerMode() {
       isUnlocked = true;
       localStorage.setItem('cornerstone_owner', 'true');
       document.getElementById('admin-login-box').style.display = "none";
@@ -166,12 +184,25 @@
       document.getElementById('referral-input').value = "CORNERSTONE-OWNER";
       document.getElementById('share-btn-container').style.display = "block";
       
+      try {
+        const db = window.db;
+        const { doc, getDoc, setDoc } = window.FirestoreMethods;
+        const ownerRef = doc(db, "users", "CORNERSTONE-OWNER");
+        const ownerSnap = await getDoc(ownerRef);
+        
+        if (!ownerSnap.exists()) {
+          await setDoc(ownerRef, { balance: 0, role: "owner" });
+        } else {
+          document.getElementById('balance-text').textContent = "Balans pa w: " + (ownerSnap.data().balance || 0) + " Gdes";
+        }
+      } catch(e) { console.log("Firebase sync note:", e); }
+
       const responseDiv = document.getElementById('api-response');
       responseDiv.style.color = "#97c373";
-      responseDiv.textContent = "✔ Ou konekte kòm Pwopriyetè sou aparèy sa a. Tout liv yo debloke!";
+      responseDiv.textContent = "✔ Ou konekte kòm Pwopriyetè. Done yo lye ak Firebase!";
     }
 
-    function activateClientUnlockedMode() {
+    async function activateClientUnlockedMode() {
       isUnlocked = true;
       document.getElementById('admin-login-box').style.display = "none";
       document.getElementById('access-status').textContent = "🔓 Kont ou a Debloke nèt!";
@@ -186,9 +217,19 @@
       }
       document.getElementById('referral-input').value = savedMyCode;
 
+      try {
+        const db = window.db;
+        const { doc, getDoc } = window.FirestoreMethods;
+        const userRef = doc(db, "users", savedMyCode);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          document.getElementById('balance-text').textContent = "Balans pa w: " + (userSnap.data().balance || 0) + " Gdes";
+        }
+      } catch(e) { console.log("Firebase sync note:", e); }
+
       const responseDiv = document.getElementById('api-response');
       responseDiv.style.color = "#97c373";
-      responseDiv.textContent = "✔ Ou deja peye epi kont ou debloke. Ou ka pataje lyen pa w la tou!";
+      responseDiv.textContent = "✔ Ou deja peye epi kont ou debloke nan baz done a.";
     }
 
     function renderBooks() {
@@ -200,7 +241,7 @@
         
         card.onclick = () => {
           if (!isUnlocked) {
-            alert("Aksè a fèmen! Ou dwe gen yon kòd parrenaj epi peye pou w ka koute liv yo.");
+            alert("Aksè a fèmen! Ou dwe antre yon kòd parrenaj epi peye pou w ka koute liv yo.");
             return;
           }
           document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
@@ -215,7 +256,7 @@
       player.src = books[0].file;
     }
 
-    function handlePurchase() {
+    async function handlePurchase() {
       if (localStorage.getItem('cornerstone_owner') === 'true') {
         alert("Ou se Pwopriyetè a! Ou pa bezwen peye.");
         return;
@@ -234,16 +275,50 @@
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
       localStorage.setItem('my_personal_ref_code', myNewCode);
 
-      activateClientUnlockedMode();
-      renderBooks();
+      try {
+        const db = window.db;
+        const { doc, getDoc, setDoc, updateDoc, increment } = window.FirestoreMethods;
 
-      // Tcheke si se Pwopriyetè a dirèk ki te bay kòd la (CORNERSTONE-OWNER)
+        const newUserRef = doc(db, "users", myNewCode);
+        await setDoc(newUserRef, { balance: 0, parentRef: codeInput, createdAt: new Date() }, { merge: true });
+
+        if (codeInput === "CORNERSTONE-OWNER") {
+          const ownerRef = doc(db, "users", "CORNERSTONE-OWNER");
+          const ownerSnap = await getDoc(ownerRef);
+          if (ownerSnap.exists()) {
+            await updateDoc(ownerRef, { balance: increment(1000) });
+          } else {
+            await setDoc(ownerRef, { balance: 1000, role: "owner" });
+          }
+        } else {
+          const ownerRef = doc(db, "users", "CORNERSTONE-OWNER");
+          const ownerSnap = await getDoc(ownerRef);
+          if (ownerSnap.exists()) {
+            await updateDoc(ownerRef, { balance: increment(750) });
+          } else {
+            await setDoc(ownerRef, { balance: 750, role: "owner" });
+          }
+
+          const parentRef = doc(db, "users", codeInput);
+          const parentSnap = await getDoc(parentRef);
+          if (parentSnap.exists()) {
+            await updateDoc(parentRef, { balance: increment(250) });
+          } else {
+            await setDoc(parentRef, { balance: 250 });
+          }
+        }
+      } catch(e) {
+        console.log("Erè baz done:", e);
+      }
+
+      activateClientUnlockedMode();
+
       if (codeInput === "CORNERSTONE-OWNER") {
         responseDiv.style.color = "#97c373";
-        responseDiv.textContent = "✔ Peman reyisi anba Pwopriyetè a! Tout 1,000 Gdes yo ale dirèk pou Pwopriyetè a. Liv yo debloke!";
+        responseDiv.textContent = "✔ Peman anrejistre nan Firebase! Tout 1,000 Gdes yo ale pou Pwopriyetè a. Liv yo debloke!";
       } else {
         responseDiv.style.color = "#97c373";
-        responseDiv.textContent = "✔ Peman reyisi anba parenn (" + codeInput + ")! 750 Gdes pou Pwopriyetè, 250 Gdes pou Parenn. Liv yo debloke!";
+        responseDiv.textContent = "✔ Peman anrejistre nan Firebase! 750 Gdes pou Pwopriyetè, 250 Gdes pou Parenn (" + codeInput + "). Liv yo debloke!";
       }
     }
 
