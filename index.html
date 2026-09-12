@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cornerstone - Bible Audio</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="512x512" href="512.png">
   
   <!-- Firebase SDKs -->
   <script type="module">
@@ -108,19 +110,20 @@
   </div>
 
   <script>
+    // Ansye bon lyen lokal yo k ap jwe bèl son orijinal yo san pwoblèm
     const books = [
-      { id: 'jozye', title: 'JOZYÉ', file: 'https://archive.org/download/e-ste-1-12-1/06_JOZYE.mp3' },
-      { id: 'jij', title: 'JIJ', file: 'https://archive.org/download/e-ste-1-12-1/07_JIJ.mp3' },
-      { id: 'rit', title: 'RIT', file: 'https://archive.org/download/e-ste-1-12-1/08_RIT.mp3' },
-      { id: '1samyel', title: '1 SAMYÈL', file: 'https://archive.org/download/e-ste-1-12-1/09_1SAMY%C3%88L.mp3' },
-      { id: '2samyel', title: '2 SAMYÈL', file: 'https://archive.org/download/e-ste-1-12-1/10_2SAMY%C3%88L.mp3' },
-      { id: '1wa', title: '1 WA', file: 'https://archive.org/download/e-ste-1-12-1/11_1WA.mp3' },
-      { id: '2wa', title: '2 WA', file: 'https://archive.org/download/e-ste-1-12-1/12_2WA.mp3' },
-      { id: '1istwa', title: '1 ISTWA', file: 'https://archive.org/download/e-ste-1-12-1/13_1ISTWA%20.mp3' },
-      { id: '2istwa', title: '2 ISTWA', file: 'https://archive.org/download/e-ste-1-12-1/14_2ISTWA.mp3' },
-      { id: 'esdras', title: 'ESDRAS', file: 'https://archive.org/download/e-ste-1-12-1/15_ESDRAS.mp3' },
-      { id: 'neyemi', title: 'NEYEMI', file: 'https://archive.org/download/e-ste-1-12-1/16_NEYEMI.mp3' },
-      { id: 'este', title: 'ESTÈ', file: 'https://archive.org/download/e-ste-1-12-1/17_EST%C3%88.mp3' }
+      { id: 'jozye', title: 'JOZYÉ', file: 'audio/jozye.mp3' },
+      { id: 'jij', title: 'JIJ', file: 'audio/jij.mp3' },
+      { id: 'rit', title: 'RIT', file: 'audio/rit.mp3' },
+      { id: '1samyel', title: '1 SAMYÈL', file: 'audio/1samyel.mp3' },
+      { id: '2samyel', title: '2 SAMYÈL', file: 'audio/2samyel.mp3' },
+      { id: '1wa', title: '1 WA', file: 'audio/1wa.mp3' },
+      { id: '2wa', title: '2 WA', file: 'audio/2wa.mp3' },
+      { id: '1krawnik', title: '1 KRAWNIK', file: 'audio/1krawnik.mp3' },
+      { id: '2krawnik', title: '2 KRAWNIK', file: 'audio/2krawnik.mp3' },
+      { id: 'eztra', title: 'EZTRA', file: 'audio/eztra.mp3' },
+      { id: 'nechemi', title: 'NECHEMI', file: 'audio/nechemi.mp3' },
+      { id: 'este', title: 'ESTÈ', file: 'audio/este.mp3' }
     ];
 
     let isUnlocked = false;
