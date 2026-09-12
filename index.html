@@ -106,24 +106,24 @@
   <div class="player-box">
     <div style="font-size: 11px; color: #c59b77; text-transform: uppercase;">M ap koute kounye a:</div>
     <div id="selected-title" style="font-weight: bold; font-size: 14px; color: #f5a94d; margin: 2px 0;">Chwazi yon liv</div>
-    <audio id="audio-player" controls preload="metadata"></audio>
+    <audio id="audio-player" controls preload="auto"></audio>
   </div>
 
   <script>
-    // Ansye bon lyen lokal yo k ap jwe bèl son orijinal yo san pwoblèm
+    // Egzakteman 12 liv yo ak bon lyen Archive.org yo mete nan bon lòd yo
     const books = [
-      { id: 'jozye', title: 'JOZYÉ', file: 'audio/jozye.mp3' },
-      { id: 'jij', title: 'JIJ', file: 'audio/jij.mp3' },
-      { id: 'rit', title: 'RIT', file: 'audio/rit.mp3' },
-      { id: '1samyel', title: '1 SAMYÈL', file: 'audio/1samyel.mp3' },
-      { id: '2samyel', title: '2 SAMYÈL', file: 'audio/2samyel.mp3' },
-      { id: '1wa', title: '1 WA', file: 'audio/1wa.mp3' },
-      { id: '2wa', title: '2 WA', file: 'audio/2wa.mp3' },
-      { id: '1krawnik', title: '1 KRAWNIK', file: 'audio/1krawnik.mp3' },
-      { id: '2krawnik', title: '2 KRAWNIK', file: 'audio/2krawnik.mp3' },
-      { id: 'eztra', title: 'EZTRA', file: 'audio/eztra.mp3' },
-      { id: 'nechemi', title: 'NECHEMI', file: 'audio/nechemi.mp3' },
-      { id: 'este', title: 'ESTÈ', file: 'audio/este.mp3' }
+      { id: 'jozye', title: 'JOZYÉ', file: 'https://archive.org/download/e-ste-1-12-1/06_JOZYE.mp3' },
+      { id: 'jij', title: 'JIJ', file: 'https://archive.org/download/e-ste-1-12-1/07_JIJ.mp3' },
+      { id: 'rit', title: 'RIT', file: 'https://archive.org/download/e-ste-1-12-1/08_RIT.mp3' },
+      { id: '1samyel', title: '1 SAMYÈL', file: 'https://archive.org/download/e-ste-1-12-1/09_1SAMY%C3%88L.mp3' },
+      { id: '2samyel', title: '2 SAMYÈL', file: 'https://archive.org/download/e-ste-1-12-1/10_2SAMY%C3%88L.mp3' },
+      { id: '1wa', title: '1 WA', file: 'https://archive.org/download/e-ste-1-12-1/11_1WA.mp3' },
+      { id: '2wa', title: '2 WA', file: 'https://archive.org/download/e-ste-1-12-1/12_2WA.mp3' },
+      { id: '1istwa', title: '1 ISTWA', file: 'https://archive.org/download/e-ste-1-12-1/13_1ISTWA%20.mp3' },
+      { id: '2istwa', title: '2 ISTWA', file: 'https://archive.org/download/e-ste-1-12-1/14_2ISTWA.mp3' },
+      { id: 'esdras', title: 'ESDRAS', file: 'https://archive.org/download/e-ste-1-12-1/15_ESDRAS.mp3' },
+      { id: 'neyemi', title: 'NEYEMI', file: 'https://archive.org/download/e-ste-1-12-1/16_NEYEMI.mp3' },
+      { id: 'este', title: 'ESTÈ', file: 'https://archive.org/download/e-ste-1-12-1/17_EST%C3%88.mp3' }
     ];
 
     let isUnlocked = false;
@@ -250,13 +250,19 @@
           document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
           card.classList.add('active');
           titlingDisplay.textContent = book.title;
+          
           player.src = book.file;
           player.load();
-          player.play().catch(e => console.log("Erè lekti odyo:", e));
+          player.play().catch(e => {
+            console.log("Otomatik jwe mande entèraksyon:", e);
+          });
         };
         grid.appendChild(card);
       });
+      
+      // Chaje premye liv la depi nan kòmansman
       player.src = books[0].file;
+      player.load();
     }
 
     async function handlePurchase() {
