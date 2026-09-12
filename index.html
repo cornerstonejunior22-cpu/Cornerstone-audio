@@ -76,15 +76,15 @@
 <body>
 
   <div class="header-sub">Cornerstone Audio Player</div>
-  <h1 id="balance-text">Balans pa w: 0 Gdes</h1>
+  <h1 id="balance-text">Balans pa w (Komisyon): 0 Gdes</h1>
 
   <div class="card-box" id="pay-section">
-    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Aksè Fèmen: Ou bezwen yon Kòd Parrenaj valab pou antre</div>
-    <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Pa gen kòd nan lyen an! Ou dwe jwenn yon lyen parrenaj nan men Pwopriyetè a oswa yon lòt moun ki te achte l deja.</div>
+    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Debloke 12 Liv Istorik Yo (1,000 Gdes)</div>
+    <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Antre yon kòd parrenaj oswa itilize lyen yon entèmedyè pou kontinye.</div>
     
-    <input type="text" id="referral-input" placeholder="Kòd Parrenaj la ap parèt la a..." readonly style="opacity: 0.7;">
+    <input type="text" id="referral-input" placeholder="Tape kòd parrenaj la la a...">
     
-    <button class="btn" id="pay-btn" onclick="handlePurchase()" disabled style="opacity: 0.5; cursor: not-allowed;">Peye 1,000 Gdes ak MonCash</button>
+    <button class="btn" id="pay-btn" onclick="handlePurchase()">Peye 1,000 Gdes (Konfime Peman)</button>
     <button class="btn-outline" id="share-btn-container" onclick="getReferralCode()" style="display:none;">Jwenn Kòd Parenn mwen pou m pataje</button>
     <div id="api-response" style="margin-top: 10px; font-size: 12px; color: #ff505d;"></div>
   </div>
@@ -107,7 +107,6 @@
     <div style="font-size: 11px; color: #c59b77; text-transform: uppercase;">M ap koute kounye a:</div>
     <div id="selected-title" style="font-weight: bold; font-size: 14px; color: #f5a94d; margin: 2px 0;">Chwazi yon liv</div>
     
-    <!-- Itilize yon baliz <source> pou navigatè a rekonèt fòma MP3 a pi byen -->
     <audio id="audio-player" controls preload="auto">
       <source id="audio-source" src="" type="audio/mpeg">
       Navigatè w la pa sipòte baliz odyo a.
@@ -152,17 +151,11 @@
       const urlParams = new URLSearchParams(window.location.search);
       const refCode = urlParams.get('ref');
       const inputField = document.getElementById('referral-input');
-      const payBtn = document.getElementById('pay-btn');
-      const warningMsg = document.getElementById('warning-msg');
-      const accessStatus = document.getElementById('access-status');
 
       if (refCode && refCode.trim() !== "") {
         inputField.value = refCode;
-        warningMsg.style.display = "none";
-        accessStatus.textContent = "🔒 Debloke 12 Liv Istorik Yo (1,000 Gdes)";
-        payBtn.disabled = false;
-        payBtn.style.opacity = "1";
-        payBtn.style.cursor = "pointer";
+      } else {
+        inputField.value = "CORNERSTONE-OWNER"; // Pa defo si pa gen moun
       }
     };
 
@@ -175,7 +168,7 @@
       const pass = document.getElementById('admin-password').value.trim();
       if (pass === "CORNERSTONE2026") {
         activateOwnerMode();
-        alert("Byenveni Pwopriyetè! Tout liv yo debloke nan baz done a.");
+        alert("Byenveni Pwopriyetè! Tout balans ak liv yo anba kontwòl ou.");
       } else {
         alert("Modpas la pa bon!");
       }
@@ -187,9 +180,7 @@
       document.getElementById('admin-login-box').style.display = "none";
       document.getElementById('access-status').textContent = "🔓 Mòd Pwopriyetè / Admin Aktif";
       document.getElementById('warning-msg').style.display = "none";
-      const payBtn = document.getElementById('pay-btn');
-      payBtn.style.display = "none";
-      document.getElementById('referral-input').value = "CORNERSTONE-OWNER";
+      document.getElementById('pay-section').style.display = "none"; // Admin pa bezwen peye
       document.getElementById('share-btn-container').style.display = "block";
       
       try {
@@ -201,21 +192,17 @@
         if (!ownerSnap.exists()) {
           await setDoc(ownerRef, { balance: 0, role: "owner" });
         } else {
-          document.getElementById('balance-text').textContent = "Balans pa w: " + (ownerSnap.data().balance || 0) + " Gdes";
+          document.getElementById('balance-text').textContent = "Balans Pwopriyetè: " + (ownerSnap.data().balance || 0) + " Gdes";
         }
       } catch(e) { console.log("Firebase sync note:", e); }
-
-      const responseDiv = document.getElementById('api-response');
-      responseDiv.style.color = "#97c373";
-      responseDiv.textContent = "✔ Ou konekte kòm Pwopriyetè. Done yo lye ak Firebase!";
     }
 
     async function activateClientUnlockedMode() {
       isUnlocked = true;
-      document.getElementById('admin-login-box').style.display = "none";
       document.getElementById('access-status').textContent = "🔓 Kont ou a Debloke nèt!";
       document.getElementById('warning-msg').style.display = "none";
       document.getElementById('pay-btn').style.display = "none";
+      document.getElementById('referral-input').style.display = "none";
       document.getElementById('share-btn-container').style.display = "block";
       
       let savedMyCode = localStorage.getItem('my_personal_ref_code');
@@ -223,7 +210,6 @@
         savedMyCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
         localStorage.setItem('my_personal_ref_code', savedMyCode);
       }
-      document.getElementById('referral-input').value = savedMyCode;
 
       try {
         const db = window.db;
@@ -231,13 +217,9 @@
         const userRef = doc(db, "users", savedMyCode);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
-          document.getElementById('balance-text').textContent = "Balans pa w: " + (userSnap.data().balance || 0) + " Gdes";
+          document.getElementById('balance-text').textContent = "Balans Komisyon pa w: " + (userSnap.data().balance || 0) + " Gdes";
         }
       } catch(e) { console.log("Firebase sync note:", e); }
-
-      const responseDiv = document.getElementById('api-response');
-      responseDiv.style.color = "#97c373";
-      responseDiv.textContent = "✔ Ou deja peye epi kont ou debloke nan baz done a.";
     }
 
     function renderBooks() {
@@ -249,7 +231,7 @@
         
         card.onclick = () => {
           if (!isUnlocked) {
-            alert("Aksè a fèmen! Ou dwe antre yon kòd parrenaj epi peye pou w ka koute liv yo.");
+            alert("Aksè a fèmen! Ou dwe klike sou peye 1,000 Gdes pou w ka koute liv yo.");
             return;
           }
           document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
@@ -259,32 +241,20 @@
           audioSource.src = book.file;
           player.load();
           player.play().catch(e => {
-            console.log("Otomatik jwe mande entèraksyon:", e);
+            console.log("Jwe mande entèraksyon:", e);
           });
         };
         grid.appendChild(card);
       });
       
-      // Chaje premye liv la
       audioSource.src = books[0].file;
       player.load();
     }
 
     async function handlePurchase() {
-      if (localStorage.getItem('cornerstone_owner') === 'true') {
-        alert("Ou se Pwopriyetè a! Ou pa bezwen peye.");
-        return;
-      }
-
-      const codeInput = document.getElementById('referral-input').value.trim();
+      const codeInput = document.getElementById('referral-input').value.trim() || "CORNERSTONE-OWNER";
       const responseDiv = document.getElementById('api-response');
       
-      if (codeInput === "") {
-        responseDiv.style.color = "#ff505d";
-        responseDiv.textContent = "⚠️ Ou dwe gen yon kòd parrenaj valab nan lyen ou an pou w ka peye.";
-        return;
-      }
-
       localStorage.setItem('cornerstone_client_unlocked', 'true');
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
       localStorage.setItem('my_personal_ref_code', myNewCode);
@@ -293,9 +263,11 @@
         const db = window.db;
         const { doc, getDoc, setDoc, updateDoc, increment } = window.FirestoreMethods;
 
+        // Anrejistre nouvo kliyan an
         const newUserRef = doc(db, "users", myNewCode);
         await setDoc(newUserRef, { balance: 0, parentRef: codeInput, createdAt: new Date() }, { merge: true });
 
+        // Si se Pwopriyetè a ki te bay lyen an dirèk
         if (codeInput === "CORNERSTONE-OWNER") {
           const ownerRef = doc(db, "users", "CORNERSTONE-OWNER");
           const ownerSnap = await getDoc(ownerRef);
@@ -305,6 +277,7 @@
             await setDoc(ownerRef, { balance: 1000, role: "owner" });
           }
         } else {
+          // Si se yon entèmedyè ki te pote l: Pwopriyetè pran 750, Entèmedyè pran 250
           const ownerRef = doc(db, "users", "CORNERSTONE-OWNER");
           const ownerSnap = await getDoc(ownerRef);
           if (ownerSnap.exists()) {
@@ -326,14 +299,8 @@
       }
 
       activateClientUnlockedMode();
-
-      if (codeInput === "CORNERSTONE-OWNER") {
-        responseDiv.style.color = "#97c373";
-        responseDiv.textContent = "✔ Peman anrejistre nan Firebase! Tout 1,000 Gdes yo ale pou Pwopriyetè a. Liv yo debloke!";
-      } else {
-        responseDiv.style.color = "#97c373";
-        responseDiv.textContent = "✔ Peman anrejistre nan Firebase! 750 Gdes pou Pwopriyetè, 250 Gdes pou Parenn (" + codeInput + "). Liv yo debloke!";
-      }
+      responseDiv.style.color = "#97c373";
+      responseDiv.textContent = "✔ Peman anrejistre avèk siksè! Tout liv yo debloke pou ou kounye a.";
     }
 
     function getReferralCode() {
@@ -351,9 +318,8 @@
 
       const responseDiv = document.getElementById('api-response');
       responseDiv.style.color = "#f5a94d";
-      responseDiv.innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a ak lòt moun pou fè chèn nan grandi:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
+      responseDiv.innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a ak lòt moun pou lajan yo antre nan kont ou otomatikman:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
     }
   </script>
 </body>
 </html>
-
