@@ -26,7 +26,6 @@
     window.db = db;
     window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, increment };
     
-    // Konfime ke Firebase chaje epi li done yo
     window.initFirebaseDone = true;
     if (typeof window.checkFirebaseAndUser === "function") {
       window.checkFirebaseAndUser();
@@ -114,9 +113,20 @@
   </div>
 
   <script>
+    // Lis liv yo ak lyen odyo respektif yo (ou ka mete lyen MP3 w yo la a)
     const BOOKS = [
-      "JOZYÉ", "JIJ", "RIT", "1 SAMYÈL", "2 SAMYÈL", "1 WA", 
-      "2 WA", "1 KRAWNIK", "2 KRAWNIK", "EZTRA", "NECHEMI", "ESTÈ"
+      { title: "JOZYÉ", audioUrl: "audio/jozye.mp3" },
+      { title: "JIJ", audioUrl: "audio/jij.mp3" },
+      { title: "RIT", audioUrl: "audio/rit.mp3" },
+      { title: "1 SAMYÈL", audioUrl: "audio/1samyel.mp3" },
+      { title: "2 SAMYÈL", audioUrl: "audio/2samyel.mp3" },
+      { title: "1 WA", audioUrl: "audio/1wa.mp3" },
+      { title: "2 WA", audioUrl: "audio/2wa.mp3" },
+      { title: "1 KRAWNIK", audioUrl: "audio/1krawnik.mp3" },
+      { title: "2 KRAWNIK", audioUrl: "audio/2krawnik.mp3" },
+      { title: "EZTRA", audioUrl: "audio/eztra.mp3" },
+      { title: "NECHEMI", audioUrl: "audio/nechemi.mp3" },
+      { title: "ESTÈ", audioUrl: "audio/este.mp3" }
     ];
 
     function getQueryParam(param) {
@@ -129,20 +139,19 @@
 
     document.getElementById("my-ref-code").innerText = "Kòd Parèy ou a: " + userCode;
 
-    // Afiche liv yo imedyatman yon fwa paj la chaje
     function renderBooks() {
       const container = document.getElementById("books-container");
       container.innerHTML = "";
-      BOOKS.forEach((book, index) => {
+      BOOKS.forEach((bookObj, index) => {
         const div = document.createElement("div");
         const canPlay = (index < 2 || isUnlocked);
         div.className = "book-card " + (canPlay ? "" : "locked");
         div.innerHTML = `
-          <span>${book}</span>
+          <span>${bookObj.title}</span>
           <span>${canPlay ? "🔊" : "🔒"}</span>
         `;
         if (canPlay) {
-          div.onclick = () => playBook(book);
+          div.onclick = () => playBook(bookObj.title, bookObj.audioUrl);
         }
         container.appendChild(div);
       });
@@ -154,11 +163,11 @@
       }
     }
 
-    function playBook(title) {
+    function playBook(title, audioUrl) {
       document.getElementById("current-playing-title").innerText = title;
       const audio = document.getElementById("audio-element");
-      audio.src = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
-      audio.play();
+      audio.src = audioUrl;
+      audio.play().catch(e => console.log("Jè odyo mande aksyon:", e));
     }
 
     function copierLien() {
@@ -168,7 +177,7 @@
     }
 
     window.checkFirebaseAndUser = async function() {
-      renderBooks(); // Afiche liv yo Touswit pou pa kite paj la vid
+      renderBooks();
 
       if (!window.db) return;
       try {
@@ -217,7 +226,6 @@
       location.reload();
     }
 
-    // Lanse renderBooks depi nan kòmansman an
     renderBooks();
     if (window.initFirebaseDone) {
       window.checkFirebaseAndUser();
