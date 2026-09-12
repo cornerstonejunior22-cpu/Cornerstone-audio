@@ -3,10 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cornerstone Bible Audio</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" sizes="512x512" href="512.png">
-
+  <title>Cornerstone - Bible Audio</title>
+  
   <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -17,189 +15,330 @@
       authDomain: "bible-audio-205e4.firebaseapp.com",
       projectId: "bible-audio-205e4",
       storageBucket: "bible-audio-205e4.appspot.com",
-      messagingSenderId: "87953029111",
-      appId: "1:87953029111:web:07bab01c879c608f540862"
+      messagingSenderId: "879530329111",
+      appId: "1:879530329111:web:07bab01c879c608f540862"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     window.db = db;
     window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, increment };
-    
-    window.initFirebaseDone = true;
-    if (typeof window.checkFirebaseAndUser === "function") {
-      window.checkFirebaseAndUser();
-    }
   </script>
 
   <style>
     body {
-      background-color: #111b14;
+      background-color: #1f1b14;
       color: #f4d7cf;
       font-family: Georgia, serif;
       padding: 10px;
       margin: 0;
       padding-bottom: 160px;
     }
-    .header-sub { color: #f5a94d; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+    .header-sub { color: #f5a94d; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; user-select: none; }
     h1 { color: #f5a94d; font-size: 22px; margin-top: 5px; }
-    .card-box { background-color: #221b14; border: 1px solid #332025; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
-    .category-title { color: #f9c077; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .card-box { background-color: #221b14; border: 1px solid #332025; padding: 15px; border-radius: 8px; margin-top: 15px; }
+    .category-title { color: #f9c077; font-size: 13px; letter-spacing: 1px; border-bottom: 1px solid #332025; padding-top: 15px; margin-bottom: 10px; }
+    .grid { display: flex; flex-direction: column; gap: 8px; }
     .book-card {
       padding: 14px;
       border-radius: 6px;
-      background-color: #1a140f;
-      margin-bottom: 8px;
-      border: 1px solid #3a281e;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      border: 1px solid #332025;
+      background-color: #221b14;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .locked { opacity: 0.5; filter: grayscale(50%); cursor: not-allowed; }
-    input, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 8px;
-      margin-bottom: 8px;
-      border-radius: 6px;
+    .book-card.active { border-color: #f5a94d; background-color: #27271c; }
+    .book-title { font-weight: bold; font-size: 15px; color: #f4d7cf; }
+    .player-box {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 20px);
+      max-width: 600px;
+      background-color: #1f1b0b;
       border: 1px solid #f5a94d;
-      background: #111b14;
-      color: #f4d7cf;
-      font-family: Georgia, serif;
+      padding: 12px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.8);
       box-sizing: border-box;
     }
-    button {
-      background-color: #f5a94d;
-      color: #111b14;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .player-bar {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: #1a140f;
-      border-top: 1px solid #f5a94d;
-      padding: 12px;
-    }
+    audio { width: 100%; height: 40px; margin-top: 8px; filter: invert(0.8); }
+    input[type="text"], input[type="password"] { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
+    .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    .btn-outline { background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
   </style>
 </head>
 <body>
 
   <div class="header-sub">Cornerstone Audio Player</div>
-  <h1 id="user-balance">Balans pa w: 0 Gdes</h1>
+  <h1 id="balance-text">Balans pa w: 0 Gdes</h1>
 
-  <div class="card-box" id="admin-panel">
-    <div class="category-title">🔒 Mod Pwopriyetè / Kontwòl</div>
-    <div id="my-ref-code" style="font-weight: bold; color: #f5a94d; margin-bottom: 8px;">Kòd: ...</div>
-    <button onclick="copierLien()">Jwenn Kòd Paran mwen pou m pataje</button>
+  <div class="card-box" id="pay-section">
+    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Aksè Fèmen: Ou bezwen yon Kòd Parrenaj valab pou antre</div>
+    <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Pa gen kòd nan lyen an! Ou dwe jwenn yon lyen parrenaj nan men Pwopriyetè a oswa yon lòt moun ki te achte l deja.</div>
+    
+    <input type="text" id="referral-input" placeholder="Kòd Parrenaj la ap parèt la a..." readonly style="opacity: 0.7;">
+    
+    <button class="btn" id="pay-btn" onclick="handlePurchase()" disabled style="opacity: 0.5; cursor: not-allowed;">Peye 1,000 Gdes ak MonCash</button>
+    <button class="btn-outline" id="share-btn-container" onclick="getReferralCode()" style="display:none;">Jwenn Kòd Parenn mwen pou m pataje</button>
+    <div id="api-response" style="margin-top: 10px; font-size: 12px; color: #ff505d;"></div>
   </div>
 
   <div class="category-title">Liv Istorik Yo (12 Liv)</div>
-  <div id="books-container"></div>
+  <div class="grid" id="books-grid"></div>
 
-  <div class="player-bar">
-    <div style="font-size: 11px; color: #f5a94d; text-transform: uppercase;">M ap koute kounye a:</div>
-    <div id="current-playing-title" style="font-weight: bold; margin-bottom: 6px;">Chwazi yon liv</div>
-    <audio id="audio-element" controls style="width: 100%;"></audio>
+  <!-- Espas Admin kache nan anba pou Pwopriyetè a -->
+  <div class="card-box" id="admin-login-box" style="display: none; border-color: #f5a94d; background-color: #2a2015; margin-top: 30px;">
+    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔑 Espas Pwopriyetè (Antre Modpas):</div>
+    <input type="password" id="admin-password" placeholder="Tape modpas ou la a...">
+    <button class="btn" onclick="verifyOwnerPassword()">Konekte kòm Pwopriyetè</button>
+  </div>
+
+  <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;">
+    <span style="font-size: 11px; color: #554433; cursor: pointer; text-decoration: underline;" onclick="revealAdminBox()">Anviwònman Pwopriyetè</span>
+  </div>
+
+  <div class="player-box">
+    <div style="font-size: 11px; color: #c59b77; text-transform: uppercase;">M ap koute kounye a:</div>
+    <div id="selected-title" style="font-weight: bold; font-size: 14px; color: #f5a94d; margin: 2px 0;">Chwazi yon liv</div>
+    <audio id="audio-player" controls preload="metadata"></audio>
   </div>
 
   <script>
-    const BOOKS = [
-      { title: "JOZYÉ", audioUrl: "audio/jozye.mp3" },
-      { title: "JIJ", audioUrl: "audio/jij.mp3" },
-      { title: "RIT", audioUrl: "audio/rit.mp3" },
-      { title: "1 SAMYÈL", audioUrl: "audio/1samyel.mp3" },
-      { title: "2 SAMYÈL", audioUrl: "audio/2samyel.mp3" },
-      { title: "1 WA", audioUrl: "audio/1wa.mp3" },
-      { title: "2 WA", audioUrl: "audio/2wa.mp3" },
-      { title: "1 KRAWNIK", audioUrl: "audio/1krawnik.mp3" },
-      { title: "2 KRAWNIK", audioUrl: "audio/2krawnik.mp3" },
-      { title: "EZTRA", audioUrl: "audio/eztra.mp3" },
-      { title: "NECHEMI", audioUrl: "audio/nechemi.mp3" },
-      { title: "ESTÈ", audioUrl: "audio/este.mp3" }
+    const books = [
+      { id: 'jozye', title: 'JOZYÉ', file: 'https://archive.org/download/e-ste-1-12-1/06_JOZYE.mp3' },
+      { id: 'jij', title: 'JIJ', file: 'https://archive.org/download/e-ste-1-12-1/07_JIJ.mp3' },
+      { id: 'rit', title: 'RIT', file: 'https://archive.org/download/e-ste-1-12-1/08_RIT.mp3' },
+      { id: '1samyel', title: '1 SAMYÈL', file: 'https://archive.org/download/e-ste-1-12-1/09_1SAMY%C3%88L.mp3' },
+      { id: '2samyel', title: '2 SAMYÈL', file: 'https://archive.org/download/e-ste-1-12-1/10_2SAMY%C3%88L.mp3' },
+      { id: '1wa', title: '1 WA', file: 'https://archive.org/download/e-ste-1-12-1/11_1WA.mp3' },
+      { id: '2wa', title: '2 WA', file: 'https://archive.org/download/e-ste-1-12-1/12_2WA.mp3' },
+      { id: '1istwa', title: '1 ISTWA', file: 'https://archive.org/download/e-ste-1-12-1/13_1ISTWA%20.mp3' },
+      { id: '2istwa', title: '2 ISTWA', file: 'https://archive.org/download/e-ste-1-12-1/14_2ISTWA.mp3' },
+      { id: 'esdras', title: 'ESDRAS', file: 'https://archive.org/download/e-ste-1-12-1/15_ESDRAS.mp3' },
+      { id: 'neyemi', title: 'NEYEMI', file: 'https://archive.org/download/e-ste-1-12-1/16_NEYEMI.mp3' },
+      { id: 'este', title: 'ESTÈ', file: 'https://archive.org/download/e-ste-1-12-1/17_EST%C3%88.mp3' }
     ];
 
-    function getQueryParam(param) {
+    let isUnlocked = false;
+    const grid = document.getElementById('books-grid');
+    const player = document.getElementById('audio-player');
+    const titlingDisplay = document.getElementById('selected-title');
+
+    window.onload = async function() {
+      renderBooks();
+
+      if (localStorage.getItem('cornerstone_owner') === 'true') {
+        activateOwnerMode();
+        return;
+      }
+
+      if (localStorage.getItem('cornerstone_client_unlocked') === 'true') {
+        activateClientUnlockedMode();
+        return;
+      }
+
       const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param);
-    }
+      const refCode = urlParams.get('ref');
+      const inputField = document.getElementById('referral-input');
+      const payBtn = document.getElementById('pay-btn');
+      const warningMsg = document.getElementById('warning-msg');
+      const accessStatus = document.getElementById('access-status');
 
-    let userCode = getQueryParam("ref") || "CORNERSTONE-OWNER";
-    let isUnlocked = (userCode === "CORNERSTONE-OWNER");
-
-    document.getElementById("my-ref-code").innerText = "Kòd Parèy ou a: " + userCode;
-
-    function renderBooks() {
-      const container = document.getElementById("books-container");
-      container.innerHTML = "";
-      BOOKS.forEach((bookObj, index) => {
-        const div = document.createElement("div");
-        const canPlay = (index < 2 || isUnlocked);
-        div.className = "book-card " + (canPlay ? "" : "locked");
-        div.innerHTML = `
-          <span>${bookObj.title}</span>
-          <span>${canPlay ? "🔊" : "🔒"}</span>
-        `;
-        if (canPlay) {
-          div.onclick = () => playBook(bookObj.title, bookObj.audioUrl);
-        }
-        container.appendChild(div);
-      });
-    }
-
-    function playBook(title, audioUrl) {
-      document.getElementById("current-playing-title").innerText = title;
-      const audio = document.getElementById("audio-element");
-      audio.src = audioUrl;
-      audio.play().catch(e => console.log("Jè odyo mande aksyon:", e));
-    }
-
-    function copierLien() {
-      const shareUrl = window.location.origin + window.location.pathname + "?ref=" + userCode;
-      navigator.clipboard.writeText(shareUrl);
-      alert("Lyèn pataje w la kopye nan memwa telefòn nan!");
-    }
-
-    window.checkFirebaseAndUser = async function() {
-      renderBooks(); // Asire liv yo parèt dirèk
-
-      if (!window.db) return;
-      try {
-        const { doc, getDoc } = window.FirestoreMethods;
-        const userDocRef = doc(window.db, "users", userCode);
-        const userSnap = await getDoc(userDocRef);
-
-        let balance = 0;
-        if (userSnap.exists()) {
-          const data = userSnap.data();
-          balance = data.balance || 0;
-          if (data.unlocked) {
-            isUnlocked = true;
-          }
-        } else if (userCode === "CORNERSTONE-OWNER") {
-          isUnlocked = true;
-        }
-
-        document.getElementById("user-balance").innerText = "Balans pa w: " + balance + " Gdes";
-        renderBooks();
-      } catch (e) {
-        console.log("Erè koneksyon Firebase:", e);
+      if (refCode && refCode.trim() !== "") {
+        inputField.value = refCode;
+        warningMsg.style.display = "none";
+        accessStatus.textContent = "🔒 Debloke 12 Liv Istorik Yo (1,000 Gdes)";
+        payBtn.disabled = false;
+        payBtn.style.opacity = "1";
+        payBtn.style.cursor = "pointer";
       }
     };
 
-    // Afiche liv yo menm anvan Firebase reponn pou evite ekran vid
-    renderBooks();
-    if (window.initFirebaseDone) {
-      window.checkFirebaseAndUser();
-    } else {
-      setTimeout(() => {
-        if (typeof window.checkFirebaseAndUser === "function") {
-          window.checkFirebaseAndUser();
+    function revealAdminBox() {
+      document.getElementById('admin-login-box').style.display = "block";
+      document.getElementById('admin-password').focus();
+    }
+
+    async function verifyOwnerPassword() {
+      const pass = document.getElementById('admin-password').value.trim();
+      if (pass === "CORNERSTONE2026") {
+        activateOwnerMode();
+        alert("Byenveni Pwopriyetè! Tout liv yo debloke nan baz done a.");
+      } else {
+        alert("Modpas la pa bon!");
+      }
+    }
+
+    async function activateOwnerMode() {
+      isUnlocked = true;
+      localStorage.setItem('cornerstone_owner', 'true');
+      document.getElementById('admin-login-box').style.display = "none";
+      document.getElementById('access-status').textContent = "🔓 Mòd Pwopriyetè / Admin Aktif";
+      document.getElementById('warning-msg').style.display = "none";
+      const payBtn = document.getElementById('pay-btn');
+      payBtn.style.display = "none";
+      document.getElementById('referral-input').value = "CORNERSTONE-OWNER";
+      document.getElementById('share-btn-container').style.display = "block";
+      
+      try {
+        const db = window.db;
+        const { doc, getDoc, setDoc } = window.FirestoreMethods;
+        const ownerRef = doc(db, "users", "CORNERSTONE-OWNER");
+        const ownerSnap = await getDoc(ownerRef);
+        
+        if (!ownerSnap.exists()) {
+          await setDoc(ownerRef, { balance: 0, role: "owner" });
+        } else {
+          document.getElementById('balance-text').textContent = "Balans pa w: " + (ownerSnap.data().balance || 0) + " Gdes";
         }
-      }, 1000);
+      } catch(e) { console.log("Firebase sync note:", e); }
+
+      const responseDiv = document.getElementById('api-response');
+      responseDiv.style.color = "#97c373";
+      responseDiv.textContent = "✔ Ou konekte kòm Pwopriyetè. Done yo lye ak Firebase!";
+    }
+
+    async function activateClientUnlockedMode() {
+      isUnlocked = true;
+      document.getElementById('admin-login-box').style.display = "none";
+      document.getElementById('access-status').textContent = "🔓 Kont ou a Debloke nèt!";
+      document.getElementById('warning-msg').style.display = "none";
+      document.getElementById('pay-btn').style.display = "none";
+      document.getElementById('share-btn-container').style.display = "block";
+      
+      let savedMyCode = localStorage.getItem('my_personal_ref_code');
+      if(!savedMyCode) {
+        savedMyCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
+        localStorage.setItem('my_personal_ref_code', savedMyCode);
+      }
+      document.getElementById('referral-input').value = savedMyCode;
+
+      try {
+        const db = window.db;
+        const { doc, getDoc } = window.FirestoreMethods;
+        const userRef = doc(db, "users", savedMyCode);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          document.getElementById('balance-text').textContent = "Balans pa w: " + (userSnap.data().balance || 0) + " Gdes";
+        }
+      } catch(e) { console.log("Firebase sync note:", e); }
+
+      const responseDiv = document.getElementById('api-response');
+      responseDiv.style.color = "#97c373";
+      responseDiv.textContent = "✔ Ou deja peye epi kont ou debloke nan baz done a.";
+    }
+
+    function renderBooks() {
+      grid.innerHTML = '';
+      books.forEach((book, index) => {
+        const card = document.createElement('div');
+        card.className = 'book-card' + (index === 0 ? ' active' : '');
+        card.innerHTML = `<span class="book-title">${book.title}</span> <span style="color: #f5a94d;">🔊</span>`;
+        
+        card.onclick = () => {
+          if (!isUnlocked) {
+            alert("Aksè a fèmen! Ou dwe antre yon kòd parrenaj epi peye pou w ka koute liv yo.");
+            return;
+          }
+          document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
+          card.classList.add('active');
+          titlingDisplay.textContent = book.title;
+          player.src = book.file;
+          player.load();
+          player.play().catch(e => console.log("Erè lekti odyo:", e));
+        };
+        grid.appendChild(card);
+      });
+      player.src = books[0].file;
+    }
+
+    async function handlePurchase() {
+      if (localStorage.getItem('cornerstone_owner') === 'true') {
+        alert("Ou se Pwopriyetè a! Ou pa bezwen peye.");
+        return;
+      }
+
+      const codeInput = document.getElementById('referral-input').value.trim();
+      const responseDiv = document.getElementById('api-response');
+      
+      if (codeInput === "") {
+        responseDiv.style.color = "#ff505d";
+        responseDiv.textContent = "⚠️ Ou dwe gen yon kòd parrenaj valab nan lyen ou an pou w ka peye.";
+        return;
+      }
+
+      localStorage.setItem('cornerstone_client_unlocked', 'true');
+      let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
+      localStorage.setItem('my_personal_ref_code', myNewCode);
+
+      try {
+        const db = window.db;
+        const { doc, getDoc, setDoc, updateDoc, increment } = window.FirestoreMethods;
+
+        const newUserRef = doc(db, "users", myNewCode);
+        await setDoc(newUserRef, { balance: 0, parentRef: codeInput, createdAt: new Date() }, { merge: true });
+
+        if (codeInput === "CORNERSTONE-OWNER") {
+          const ownerRef = doc(db, "users", "CORNERSTONE-OWNER");
+          const ownerSnap = await getDoc(ownerRef);
+          if (ownerSnap.exists()) {
+            await updateDoc(ownerRef, { balance: increment(1000) });
+          } else {
+            await setDoc(ownerRef, { balance: 1000, role: "owner" });
+          }
+        } else {
+          const ownerRef = doc(db, "users", "CORNERSTONE-OWNER");
+          const ownerSnap = await getDoc(ownerRef);
+          if (ownerSnap.exists()) {
+            await updateDoc(ownerRef, { balance: increment(750) });
+          } else {
+            await setDoc(ownerRef, { balance: 750, role: "owner" });
+          }
+
+          const parentRef = doc(db, "users", codeInput);
+          const parentSnap = await getDoc(parentRef);
+          if (parentSnap.exists()) {
+            await updateDoc(parentRef, { balance: increment(250) });
+          } else {
+            await setDoc(parentRef, { balance: 250 });
+          }
+        }
+      } catch(e) {
+        console.log("Erè baz done:", e);
+      }
+
+      activateClientUnlockedMode();
+
+      if (codeInput === "CORNERSTONE-OWNER") {
+        responseDiv.style.color = "#97c373";
+        responseDiv.textContent = "✔ Peman anrejistre nan Firebase! Tout 1,000 Gdes yo ale pou Pwopriyetè a. Liv yo debloke!";
+      } else {
+        responseDiv.style.color = "#97c373";
+        responseDiv.textContent = "✔ Peman anrejistre nan Firebase! 750 Gdes pou Pwopriyetè, 250 Gdes pou Parenn (" + codeInput + "). Liv yo debloke!";
+      }
+    }
+
+    function getReferralCode() {
+      let myCode = "CORNERSTONE-OWNER";
+      if (localStorage.getItem('cornerstone_owner') !== 'true') {
+        myCode = localStorage.getItem('my_personal_ref_code');
+        if (!myCode) {
+          alert("Ou dwe gen kont ou debloke an premye!");
+          return;
+        }
+      }
+      
+      const currentUrl = window.location.origin + window.location.pathname;
+      const myShareLink = currentUrl + "?ref=" + myCode;
+
+      const responseDiv = document.getElementById('api-response');
+      responseDiv.style.color = "#f5a94d";
+      responseDiv.innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a ak lòt moun pou fè chèn nan grandi:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
     }
   </script>
 </body>
 </html>
-
