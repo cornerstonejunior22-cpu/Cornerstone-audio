@@ -25,11 +25,6 @@
     const db = getFirestore(app);
     window.db = db;
     window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, increment };
-    
-    window.initFirebaseDone = true;
-    if (typeof window.checkFirebaseAndUser === "function") {
-      window.checkFirebaseAndUser();
-    }
   </script>
 
   <style>
@@ -54,9 +49,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      cursor: pointer;
     }
-    .locked { opacity: 0.5; filter: grayscale(50%); cursor: not-allowed; }
+    .locked { opacity: 0.5; filter: grayscale(50%); }
     input, button {
       width: 100%;
       padding: 12px;
@@ -87,20 +81,12 @@
 <body>
 
   <div class="header-sub">Cornerstone Audio Player</div>
-  <h1 id="user-balance">Balans pa w: 0 Gdes</h1>
+  <h1 id="user-balance">Balans pa w: ...</h1>
 
   <div class="card-box" id="admin-panel">
     <div class="category-title">🔒 Mod Pwopriyetè / Kontwòl</div>
     <div id="my-ref-code" style="font-weight: bold; color: #f5a94d; margin-bottom: 8px;">Kòd: ...</div>
     <button onclick="copierLien()">Jwenn Kòd Paran mwen pou m pataje</button>
-  </div>
-
-  <div class="card-box" id="payment-section" style="display:none; border: 2px solid #f5a94d;">
-    <div class="category-title">📱 Debloke ak 1000 Gdes (MonCash)</div>
-    <p style="font-size: 14px; margin: 5px 0;">Voye 1000 Gdes sou nimewo MonCash sa a: <b style="color: #f5a94d;">+509 XXXX XXXX</b></p>
-    <p style="font-size: 13px; color: #ccc;">Apre w fin peye, antre kòd referans tranzaksyon an anba a pou debloke aplikasyon an:</p>
-    <input type="text" id="moncash-ref-input" placeholder="Antre Kòd Referans MonCash la (Eg: MC12345)">
-    <button onclick="validePeman()">Verifye epi Debloke Liv Yo</button>
   </div>
 
   <div class="category-title">Liv Istorik Yo (12 Liv)</div>
@@ -113,7 +99,6 @@
   </div>
 
   <script>
-    // Lis liv yo ak lyen odyo respektif yo (ou ka mete lyen MP3 w yo la a)
     const BOOKS = [
       { title: "JOZYÉ", audioUrl: "audio/jozye.mp3" },
       { title: "JIJ", audioUrl: "audio/jij.mp3" },
@@ -135,7 +120,7 @@
     }
 
     let userCode = getQueryParam("ref") || "CORNERSTONE-OWNER";
-    let isUnlocked = (userCode === "CORNERSTONE-OWNER");
+    let isUnlocked = false;
 
     document.getElementById("my-ref-code").innerText = "Kòd Parèy ou a: " + userCode;
 
@@ -144,30 +129,23 @@
       container.innerHTML = "";
       BOOKS.forEach((bookObj, index) => {
         const div = document.createElement("div");
-        const canPlay = (index < 2 || isUnlocked);
-        div.className = "book-card " + (canPlay ? "" : "locked");
+        div.className = "book-card " + ((index < 2 || isUnlocked) ? "" : "locked");
         div.innerHTML = `
           <span>${bookObj.title}</span>
-          <span>${canPlay ? "🔊" : "🔒"}</span>
+          <span>${(index < 2 || isUnlocked) ? "🔊" : "🔒"}</span>
         `;
-        if (canPlay) {
+        if (index < 2 || isUnlocked) {
           div.onclick = () => playBook(bookObj.title, bookObj.audioUrl);
         }
         container.appendChild(div);
       });
-
-      if (!isUnlocked) {
-        document.getElementById("payment-section").style.display = "block";
-      } else {
-        document.getElementById("payment-section").style.display = "none";
-      }
     }
 
     function playBook(title, audioUrl) {
       document.getElementById("current-playing-title").innerText = title;
       const audio = document.getElementById("audio-element");
       audio.src = audioUrl;
-      audio.play().catch(e => console.log("Jè odyo mande aksyon:", e));
+      audio.play();
     }
 
     function copierLien() {
@@ -176,60 +154,29 @@
       alert("Lyèn pataje w la kopye nan memwa telefòn nan!");
     }
 
-    window.checkFirebaseAndUser = async function() {
-      renderBooks();
-
-      if (!window.db) return;
-      try {
-        const { doc, getDoc } = window.FirestoreMethods;
-        const userDocRef = doc(window.db, "users", userCode);
-        const userSnap = await getDoc(userDocRef);
-
-        if (userSnap.exists()) {
-          const data = userSnap.data();
-          document.getElementById("user-balance").innerText = "Balans pa w: " + (data.balance || 0) + " Gdes";
-          if (data.unlocked) {
-            isUnlocked = true;
-            renderBooks();
-          }
-        }
-      } catch (e) {
-        console.log("Erè koneksyon Firebase:", e);
-      }
-    };
-
-    async function validePeman() {
-      const txRef = document.getElementById("moncash-ref-input").value.trim();
-      if (!txRef) {
-        alert("Tanpri antre kòd referans MonCash la anvan.");
-        return;
-      }
-
+    async function checkFirebaseAndUser() {
       if (!window.db) {
-        alert("Baz done a poko pare, tanpri redate paj la.");
+        setTimeout(checkFirebaseAndUser, 500);
         return;
       }
-
-      const { doc, getDoc, setDoc, updateDoc } = window.FirestoreMethods;
+      const { doc, getDoc } = window.FirestoreMethods;
       const userDocRef = doc(window.db, "users", userCode);
       const userSnap = await getDoc(userDocRef);
 
-      if (!userSnap.exists()) {
-        await setDoc(userDocRef, { balance: 0, unlocked: true, txCode: txRef });
-      } else {
-        await updateDoc(userDocRef, { unlocked: true, txCode: txRef });
+      let balance = 0;
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        balance = data.balance || 0;
+        isUnlocked = data.unlocked || false;
+      } else if (userCode === "CORNERSTONE-OWNER") {
+        isUnlocked = true;
       }
 
-      alert("Peman w lan anrejistre! Liv yo debloke kounye a.");
-      isUnlocked = true;
+      document.getElementById("user-balance").innerText = "Balans pa w: " + balance + " Gdes";
       renderBooks();
-      location.reload();
     }
 
-    renderBooks();
-    if (window.initFirebaseDone) {
-      window.checkFirebaseAndUser();
-    }
+    window.onload = checkFirebaseAndUser;
   </script>
 </body>
 </html>
