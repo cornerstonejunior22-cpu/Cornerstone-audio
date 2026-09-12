@@ -25,6 +25,11 @@
     const db = getFirestore(app);
     window.db = db;
     window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, increment };
+    
+    window.initFirebaseDone = true;
+    if (typeof window.checkFirebaseAndUser === "function") {
+      window.checkFirebaseAndUser();
+    }
   </script>
 
   <style>
@@ -49,8 +54,9 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      cursor: pointer;
     }
-    .locked { opacity: 0.5; filter: grayscale(50%); }
+    .locked { opacity: 0.5; filter: grayscale(50%); cursor: not-allowed; }
     input, button {
       width: 100%;
       padding: 12px;
@@ -81,7 +87,7 @@
 <body>
 
   <div class="header-sub">Cornerstone Audio Player</div>
-  <h1 id="user-balance">Balans pa w: ...</h1>
+  <h1 id="user-balance">Balans pa w: 0 Gdes</h1>
 
   <div class="card-box" id="admin-panel">
     <div class="category-title">🔒 Mod Pwopriyetè / Kontwòl</div>
@@ -120,7 +126,7 @@
     }
 
     let userCode = getQueryParam("ref") || "CORNERSTONE-OWNER";
-    let isUnlocked = false;
+    let isUnlocked = (userCode === "CORNERSTONE-OWNER");
 
     document.getElementById("my-ref-code").innerText = "Kòd Parèy ou a: " + userCode;
 
@@ -129,12 +135,13 @@
       container.innerHTML = "";
       BOOKS.forEach((bookObj, index) => {
         const div = document.createElement("div");
-        div.className = "book-card " + ((index < 2 || isUnlocked) ? "" : "locked");
+        const canPlay = (index < 2 || isUnlocked);
+        div.className = "book-card " + (canPlay ? "" : "locked");
         div.innerHTML = `
           <span>${bookObj.title}</span>
-          <span>${(index < 2 || isUnlocked) ? "🔊" : "🔒"}</span>
+          <span>${canPlay ? "🔊" : "🔒"}</span>
         `;
-        if (index < 2 || isUnlocked) {
+        if (canPlay) {
           div.onclick = () => playBook(bookObj.title, bookObj.audioUrl);
         }
         container.appendChild(div);
@@ -145,7 +152,7 @@
       document.getElementById("current-playing-title").innerText = title;
       const audio = document.getElementById("audio-element");
       audio.src = audioUrl;
-      audio.play();
+      audio.play().catch(e => console.log("Jè odyo mande aksyon:", e));
     }
 
     function copierLien() {
@@ -154,29 +161,45 @@
       alert("Lyèn pataje w la kopye nan memwa telefòn nan!");
     }
 
-    async function checkFirebaseAndUser() {
-      if (!window.db) {
-        setTimeout(checkFirebaseAndUser, 500);
-        return;
-      }
-      const { doc, getDoc } = window.FirestoreMethods;
-      const userDocRef = doc(window.db, "users", userCode);
-      const userSnap = await getDoc(userDocRef);
+    window.checkFirebaseAndUser = async function() {
+      renderBooks(); // Asire liv yo parèt dirèk
 
-      let balance = 0;
-      if (userSnap.exists()) {
-        const data = userSnap.data();
-        balance = data.balance || 0;
-        isUnlocked = data.unlocked || false;
-      } else if (userCode === "CORNERSTONE-OWNER") {
-        isUnlocked = true;
-      }
+      if (!window.db) return;
+      try {
+        const { doc, getDoc } = window.FirestoreMethods;
+        const userDocRef = doc(window.db, "users", userCode);
+        const userSnap = await getDoc(userDocRef);
 
-      document.getElementById("user-balance").innerText = "Balans pa w: " + balance + " Gdes";
-      renderBooks();
+        let balance = 0;
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+          balance = data.balance || 0;
+          if (data.unlocked) {
+            isUnlocked = true;
+          }
+        } else if (userCode === "CORNERSTONE-OWNER") {
+          isUnlocked = true;
+        }
+
+        document.getElementById("user-balance").innerText = "Balans pa w: " + balance + " Gdes";
+        renderBooks();
+      } catch (e) {
+        console.log("Erè koneksyon Firebase:", e);
+      }
+    };
+
+    // Afiche liv yo menm anvan Firebase reponn pou evite ekran vid
+    renderBooks();
+    if (window.initFirebaseDone) {
+      window.checkFirebaseAndUser();
+    } else {
+      setTimeout(() => {
+        if (typeof window.checkFirebaseAndUser === "function") {
+          window.checkFirebaseAndUser();
+        }
+      }, 1000);
     }
-
-    window.onload = checkFirebaseAndUser;
   </script>
 </body>
 </html>
+
