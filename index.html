@@ -92,7 +92,7 @@
   <div class="category-title">Liv Istorik Yo (12 Liv)</div>
   <div class="grid" id="books-grid"></div>
 
-  <!-- Espas Admin kache nan anba pou Pwopriyetè a -->
+  <!-- Espas Admin kache -->
   <div class="card-box" id="admin-login-box" style="display: none; border-color: #f5a94d; background-color: #2a2015; margin-top: 30px;">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔑 Espas Pwopriyetè (Antre Modpas):</div>
     <input type="password" id="admin-password" placeholder="Tape modpas ou la a...">
@@ -106,11 +106,15 @@
   <div class="player-box">
     <div style="font-size: 11px; color: #c59b77; text-transform: uppercase;">M ap koute kounye a:</div>
     <div id="selected-title" style="font-weight: bold; font-size: 14px; color: #f5a94d; margin: 2px 0;">Chwazi yon liv</div>
-    <audio id="audio-player" controls preload="auto"></audio>
+    
+    <!-- Itilize yon baliz <source> pou navigatè a rekonèt fòma MP3 a pi byen -->
+    <audio id="audio-player" controls preload="auto">
+      <source id="audio-source" src="" type="audio/mpeg">
+      Navigatè w la pa sipòte baliz odyo a.
+    </audio>
   </div>
 
   <script>
-    // Egzakteman 12 liv yo ak bon lyen Archive.org yo mete nan bon lòd yo
     const books = [
       { id: 'jozye', title: 'JOZYÉ', file: 'https://archive.org/download/e-ste-1-12-1/06_JOZYE.mp3' },
       { id: 'jij', title: 'JIJ', file: 'https://archive.org/download/e-ste-1-12-1/07_JIJ.mp3' },
@@ -129,6 +133,7 @@
     let isUnlocked = false;
     const grid = document.getElementById('books-grid');
     const player = document.getElementById('audio-player');
+    const audioSource = document.getElementById('audio-source');
     const titlingDisplay = document.getElementById('selected-title');
 
     window.onload = async function() {
@@ -251,7 +256,7 @@
           card.classList.add('active');
           titlingDisplay.textContent = book.title;
           
-          player.src = book.file;
+          audioSource.src = book.file;
           player.load();
           player.play().catch(e => {
             console.log("Otomatik jwe mande entèraksyon:", e);
@@ -260,8 +265,8 @@
         grid.appendChild(card);
       });
       
-      // Chaje premye liv la depi nan kòmansman
-      player.src = books[0].file;
+      // Chaje premye liv la
+      audioSource.src = books[0].file;
       player.load();
     }
 
@@ -351,3 +356,4 @@
   </script>
 </body>
 </html>
+
