@@ -10,7 +10,7 @@
   <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAV07bab01c879c608f54086287953032",
@@ -24,7 +24,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     window.db = db;
-    window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, increment, collection, getDocs };
+    window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, increment };
   </script>
 
   <style>
@@ -93,14 +93,6 @@
       box-sizing: border-box;
       text-align: center;
     }
-    .intermediary-item {
-      background: #18130e;
-      border: 1px solid #332025;
-      padding: 10px;
-      border-radius: 6px;
-      margin-top: 8px;
-      font-size: 13px;
-    }
   </style>
 </head>
 <body>
@@ -116,11 +108,6 @@
       Pataje lyen sa a ak lòt moun pou fè chèn nan grandi:
     </div>
     <input type="text" id="owner-referral-link" readonly onclick="this.select()">
-
-    <div style="margin-top: 15px; font-weight: bold; color: #f9c077; font-size: 14px;">Lis Entèmedyè yo ki gen balans:</div>
-    <div id="intermediaries-list" style="max-height: 250px; overflow-y: auto; margin-top: 8px;">
-      <div style="font-size: 12px; color: #887; text-align: center; padding: 10px;">Chaje lis entèmedyè yo...</div>
-    </div>
   </div>
 
   <!-- Seksyon Peman pou Moun k ap achte yo -->
@@ -162,7 +149,7 @@
   </div>
 
   <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;">
-    <span style="font-size: 13px; color: #f5a94d; cursor: pointer; text-decoration: underline; font-weight: bold;" onclick="revealAdminBox()">⚙️ Anviwònman Pwopriyetè</span>
+    <span style="font-size: 11px; color: #554433; cursor: pointer; text-decoration: underline;" onclick="revealAdminBox()">Anviwònman Pwopriyetè</span>
   </div>
 
   <div class="player-box">
@@ -222,9 +209,7 @@
     };
 
     function revealAdminBox() {
-      const adminBox = document.getElementById('admin-login-box');
-      adminBox.style.display = "block";
-      adminBox.scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('admin-login-box').style.display = "block";
       document.getElementById('admin-password').focus();
     }
 
@@ -232,7 +217,7 @@
       const pass = document.getElementById('admin-password').value.trim();
       if (pass === "CORNERSTONE2026") {
         activateOwnerMode();
-        alert("Byenveni Pwopriyetè! Tout balans ak entèmedyè yo anba kontwòl ou.");
+        alert("Byenveni Pwopriyetè! Tout balans ak liv yo anba kontwòl ou.");
       } else {
         alert("Modpas la pa bon!");
       }
@@ -261,79 +246,7 @@
         } else {
           document.getElementById('balance-text').textContent = "Balans Pwopriyetè: " + (ownerSnap.data().balance || 0) + " Gdes";
         }
-        
-        loadIntermediariesList();
       } catch(e) { console.log("Firebase sync note:", e); }
-    }
-
-    async function loadIntermediariesList() {
-      const listContainer = document.getElementById('intermediaries-list');
-      listContainer.innerHTML = '<div style="font-size: 12px; color: #887; text-align: center; padding: 10px;">Chaje entèmedyè yo...</div>';
-
-      try {
-        const db = window.db;
-        const { collection, getDocs } = window.FirestoreMethods;
-        const querySnapshot = await getDocs(collection(db, "users"));
-        
-        listContainer.innerHTML = '';
-        let count = 0;
-
-        querySnapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          const code = docSnap.id;
-          
-          if (code !== "CORNERSTONE-OWNER" && data.balance > 0) {
-            count++;
-            const item = document.createElement('div');
-            item.className = 'intermediary-item';
-            item.innerHTML = `
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                  <b>Kòd:</b> ${code}<br>
-                  <b>Tel:</b> <span style="color:#f5a94d;">${data.phone || 'Pa gen nimewo'}</span><br>
-                  <b>Balans dwe l:</b> <span style="color:#f9c077; font-weight:bold;">${data.balance} Gdes</span>
-                </div>
-                <div>
-                  <button class="btn" style="padding:6px 12px; margin:0; font-size:11px;" onclick="copyPhone('${data.phone}')">Kopye Tel</button>
-                  <button class="btn-outline" style="padding:6px 12px; margin-top:4px; font-size:11px; border-color:#ff505d; color:#ff505d;" onclick="clearBalance('${code}')">Klè (0)</button>
-                </div>
-              </div>
-            `;
-            listContainer.appendChild(item);
-          }
-        });
-
-        if (count === 0) {
-          listContainer.innerHTML = '<div style="font-size: 12px; color: #887; text-align: center; padding: 10px;">Pa gen entèmedyè ki gen lajan pou kounye a.</div>';
-        }
-      } catch(e) {
-        listContainer.innerHTML = '<div style="font-size: 12px; color: #ff505d; text-align: center; padding: 10px;">Erè nan chaje lis la.</div>';
-        console.log(e);
-      }
-    }
-
-    function copyPhone(phone) {
-      if(!phone || phone === 'undefined') {
-        alert("Moun sa a pa te antre nimewo telefòn li!");
-        return;
-      }
-      navigator.clipboard.writeText(phone);
-      alert("Nimewo " + phone + " kopye! Ou ka ale kole l nan MonCash.");
-    }
-
-    async function clearBalance(code) {
-      if(!confirm("Èske w sèten ou voye kòb sa a bay entèmedyè (" + code + "), epi ou vle mete balans li a zewo?")) return;
-
-      try {
-        const db = window.db;
-        const { doc, updateDoc } = window.FirestoreMethods;
-        const userRef = doc(db, "users", code);
-        await updateDoc(userRef, { balance: 0 });
-        alert("Balans entèmedyè a mete a zewo!");
-        loadIntermediariesList();
-      } catch(e) {
-        alert("Erè: " + e.message);
-      }
     }
 
     async function activateClientUnlockedMode() {
@@ -444,7 +357,7 @@
           if (parentSnap.exists()) {
             await updateDoc(parentRef, { balance: increment(250) });
           } else {
-            await setDoc(parentRef, { balance: 250, phone: "" });
+            await setDoc(parentRef, { balance: 250 });
           }
         }
       } catch(e) {
@@ -458,4 +371,21 @@
 
     function getReferralCode() {
       let myCode = "CORNERSTONE-OWNER";
-      if (localS
+      if (localStorage.getItem('cornerstone_owner') !== 'true') {
+        myCode = localStorage.getItem('my_personal_ref_code');
+        if (!myCode) {
+          alert("Ou dwe gen kont ou debloke an premye!");
+          return;
+        }
+      }
+      
+      const currentUrl = window.location.origin + window.location.pathname;
+      const myShareLink = currentUrl + "?ref=" + myCode;
+
+      const responseDiv = document.getElementById('api-response');
+      responseDiv.style.color = "#f5a94d";
+      responseDiv.innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a ak lòt moun pou lajan yo antre nan kont ou otomatikman:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
+    }
+  </script>
+</body>
+</html>
