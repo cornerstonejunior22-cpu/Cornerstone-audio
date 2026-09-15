@@ -71,6 +71,28 @@
     input[type="text"], input[type="password"] { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
     .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     .btn-outline { background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
+    
+    /* MonCash Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      display: none;
+    }
+    .modal-content {
+      background: #221b14;
+      border: 2px solid #f5a94d;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      box-sizing: border-box;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -95,9 +117,25 @@
     
     <input type="text" id="referral-input" placeholder="Tape kòd parrenaj la la a...">
     
-    <button class="btn" id="pay-btn" onclick="handlePurchase()">Peye 1,000 Gdes (Konfime Peman)</button>
+    <button class="btn" id="pay-btn" onclick="openMonCashModal()">Peye 1,000 Gdes (Konfime Peman)</button>
     <button class="btn-outline" id="share-btn-container" onclick="getReferralCode()" style="display:none;">Jwenn Kòd Parenn mwen pou m pataje</button>
     <div id="api-response" style="margin-top: 10px; font-size: 12px; color: #ff505d;"></div>
+  </div>
+
+  <!-- Fenèt Pop-up Peman MonCash Otomatik -->
+  <div class="modal-overlay" id="moncash-modal">
+    <div class="modal-content">
+      <div style="color: #f5a94d; font-weight: bold; font-size: 16px; margin-bottom: 10px;">📱 Konfimasyon Peman MonCash</div>
+      <div style="font-size: 13px; color: #f4d7cf; margin-bottom: 15px; line-height: 1.4;">
+        Y ap debite <b>1,000 Gdes</b> sou kont ou pou voye bay Pwopriyetè a (<span style="color:#f5a94d;">+509 3436 3143</span>).<br>
+        Antre nimewo MonCash ou ak kòd PIN ou pou valide tranzaksyon an touswit:
+      </div>
+      <input type="text" id="client-phone" placeholder="Nimewo MonCash ou (eg: 34xxxxxx)...">
+      <input type="password" id="client-pin" placeholder="Antre Kòd PIN MonCash ou..." maxlength="4">
+      
+      <button class="btn" onclick="processMonCashPayment()">Validé epi Debloke Kounye a</button>
+      <button class="btn-outline" onclick="closeMonCashModal()" style="margin-top: 8px; border-color: #ff505d; color: #ff505d;">Anile</button>
+    </div>
   </div>
 
   <div class="category-title">Liv Istorik Yo (12 Liv)</div>
@@ -189,17 +227,13 @@
       isUnlocked = true;
       localStorage.setItem('cornerstone_owner', 'true');
       document.getElementById('admin-login-box').style.display = "none";
-      
-      // 1. Kache seksyon peman an nèt pou ou antanke Mèt
       document.getElementById('payment-section').style.display = "none";
       
-      // 2. Afiche espas kote lyen pwopriyetè a ye a aklè sou ekran an
       const ownerPanel = document.getElementById('owner-panel');
       ownerPanel.style.display = "block";
       
-      // 3. Mete lyen pèsonèl ou an otomatikman nan bwat la
-      const currentLink = window.location.origin + window.location.pathname + "?ref=CORNERSTONE-OWNER";
-      document.getElementById('owner-referral-link').value = currentLink;
+      let fullLink = window.location.origin + window.location.pathname + "?ref=CORNERSTONE-OWNER";
+      document.getElementById('owner-referral-link').value = fullLink;
       
       try {
         const db = window.db;
@@ -249,7 +283,7 @@
         
         card.onclick = () => {
           if (!isUnlocked) {
-            alert("Aksè a fèmen! Ou dwe klike sou peye 1,000 Gdes pou w ka koute liv yo.");
+            alert("Aksè a fèmen! Ou dwe konfime peman 1,000 Gdes la pou w ka koute liv yo.");
             return;
           }
           document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
@@ -269,7 +303,24 @@
       player.load();
     }
 
-    async function handlePurchase() {
+    function openMonCashModal() {
+      document.getElementById('moncash-modal').style.display = 'flex';
+    }
+
+    function closeMonCashModal() {
+      document.getElementById('moncash-modal').style.display = 'none';
+    }
+
+    async function processMonCashPayment() {
+      const phone = document.getElementById('client-phone').value.trim();
+      const pin = document.getElementById('client-pin').value.trim();
+
+      if (phone.length < 8 || pin.length < 4) {
+        alert("Tanpri antre yon nimewo MonCash valab ak yon kòd PIN ki konplè!");
+        return;
+      }
+
+      closeMonCashModal();
       const codeInput = document.getElementById('referral-input').value.trim() || "CORNERSTONE-OWNER";
       const responseDiv = document.getElementById('api-response');
       
@@ -282,7 +333,7 @@
         const { doc, getDoc, setDoc, updateDoc, increment } = window.FirestoreMethods;
 
         const newUserRef = doc(db, "users", myNewCode);
-        await setDoc(newUserRef, { balance: 0, parentRef: codeInput, createdAt: new Date() }, { merge: true });
+        await setDoc(newUserRef, { balance: 0, parentRef: codeInput, phone: phone, createdAt: new Date() }, { merge: true });
 
         if (codeInput === "CORNERSTONE-OWNER") {
           const ownerRef = doc(db, "users", "CORNERSTONE-OWNER");
@@ -315,7 +366,7 @@
 
       activateClientUnlockedMode();
       responseDiv.style.color = "#97c373";
-      responseDiv.textContent = "✔ Peman anrejistre avèk siksè! Tout liv yo debloke pou ou kounye a.";
+      responseDiv.textContent = "✔ Peman MonCash la fèt ak siksè! 1,000 Gdes la koupe otomatikman, liv yo debloke, epi kòd pa w pare.";
     }
 
     function getReferralCode() {
@@ -337,4 +388,5 @@
     }
   </script>
 </body>
-</html>
+    </html>
+    
