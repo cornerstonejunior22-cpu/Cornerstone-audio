@@ -190,12 +190,16 @@
       localStorage.setItem('cornerstone_owner', 'true');
       document.getElementById('admin-login-box').style.display = "none";
       
-      // Kache seksyon peman an epi afiche panèl pwopriyetè a
+      // 1. Kache seksyon peman an nèt pou ou antanke Mèt
       document.getElementById('payment-section').style.display = "none";
-      document.getElementById('owner-panel').style.display = "block";
       
-      let fullLink = window.location.origin + window.location.pathname + "?ref=CORNERSTONE-OWNER";
-      document.getElementById('owner-referral-link').value = fullLink;
+      // 2. Afiche espas kote lyen pwopriyetè a ye a aklè sou ekran an
+      const ownerPanel = document.getElementById('owner-panel');
+      ownerPanel.style.display = "block";
+      
+      // 3. Mete lyen pèsonèl ou an otomatikman nan bwat la
+      const currentLink = window.location.origin + window.location.pathname + "?ref=CORNERSTONE-OWNER";
+      document.getElementById('owner-referral-link').value = currentLink;
       
       try {
         const db = window.db;
@@ -334,4 +338,3 @@
   </script>
 </body>
 </html>
-
