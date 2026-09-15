@@ -141,7 +141,7 @@
       
       <select id="payment-method-select" onchange="updatePaymentInfo()">
         <option value="moncash">MonCash (Digicel: +509 3436 3143)</option>
-        <option value="natcash">Natcash (Natcom: +509 XXXX XXXX)</option>
+        <option value="natcash">Natcash (Natcom: +509 3436 3143)</option>
       </select>
 
       <div style="font-size: 13px; color: #f4d7cf; margin: 12px 0; line-height: 1.4;" id="payment-instructions">
@@ -167,7 +167,7 @@
   </div>
 
   <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;">
-    <span style="font-size: 11px; color: #554433; cursor: pointer; text-decoration: underline;" onclick="revealAdminBox()">Anviwònman Pwopriyetè</span>
+    <span style="font-size: 13px; color: #f5a94d; cursor: pointer; text-decoration: underline; font-weight: bold;" onclick="revealAdminBox()">⚙️ Anviwònman Pwopriyetè</span>
   </div>
 
   <div class="player-box">
@@ -227,7 +227,9 @@
     };
 
     function revealAdminBox() {
-      document.getElementById('admin-login-box').style.display = "block";
+      const adminBox = document.getElementById('admin-login-box');
+      adminBox.style.display = "block";
+      adminBox.scrollIntoView({ behavior: 'smooth' });
       document.getElementById('admin-password').focus();
     }
 
@@ -293,7 +295,7 @@
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
                   <b>Kòd:</b> ${code}<br>
-                  <b>Tel:</b> <span id="tel-${code}" style="color:#f5a94d;">${data.phone || 'Pa gen nimewo'}</span> (${(data.method || 'moncash').toUpperCase()})<br>
+                  <b>Tel:</b> <span style="color:#f5a94d;">${data.phone || 'Pa gen nimewo'}</span> (${(data.method || 'moncash').toUpperCase()})<br>
                   <b>Balans dwe l:</b> <span style="color:#f9c077; font-weight:bold;">${data.balance} Gdes</span>
                 </div>
                 <div>
@@ -407,7 +409,7 @@
       if (method === 'moncash') {
         instructionDiv.innerHTML = 'Y ap debite <b>1,000 Gdes</b> sou MonCash pou voye bay Pwopriyetè a (<span style="color:#f5a94d;">+509 3436 3143</span>). Antre nimewo w ak kòd PIN ou:';
       } else {
-        instructionDiv.innerHTML = 'Y ap debite <b>1,000 Gdes</b> sou Natcash pou voye bay Pwopriyetè a (<span style="color:#f5a94d;">Mete Nimewo Natcom ou la a</span>). Antre nimewo w ak kòd PIN ou:';
+        instructionDiv.innerHTML = 'Y ap debite <b>1,000 Gdes</b> sou Natcash pou voye bay Pwopriyetè a (<span style="color:#f5a94d;">+509 3436 3143</span>). Antre nimewo w ak kòd PIN ou:';
       }
     }
 
@@ -446,6 +448,4 @@
           }
         } else {
           const ownerRef = doc(db, "users", "CORNERSTONE-OWNER");
-          const ownerSnap = await getDoc(ownerRef);
-          if (ownerSnap.exists()) {
-          
+          const o
