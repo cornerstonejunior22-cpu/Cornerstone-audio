@@ -78,7 +78,18 @@
   <div class="header-sub">Cornerstone Audio Player</div>
   <h1 id="balance-text">Balans pa w (Komisyon): 0 Gdes</h1>
 
-  <div class="card-box" id="pay-section">
+  <!-- Seksyon Pwopriyetè / Admin -->
+  <div class="card-box" id="owner-panel" style="display: none; border-color: #f5a94d; background-color: #2a2015;">
+    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔒 Mòd Pwopriyetè / Admin Aktif</div>
+    <div style="font-size: 12px; color: #f4d7cf; margin-top: 6px;">
+      Kòd Parrenaj ou a se: <b>CORNERSTONE-OWNER</b><br>
+      Pataje lyen sa a ak lòt moun pou fè chèn nan grandi:
+    </div>
+    <input type="text" id="owner-referral-link" readonly onclick="this.select()">
+  </div>
+
+  <!-- Seksyon Peman pou Moun k ap achte yo -->
+  <div class="card-box" id="payment-section">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Debloke 12 Liv Istorik Yo (1,000 Gdes)</div>
     <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Antre yon kòd parrenaj oswa itilize lyen yon entèmedyè pou kontinye.</div>
     
@@ -155,7 +166,7 @@
       if (refCode && refCode.trim() !== "") {
         inputField.value = refCode;
       } else {
-        inputField.value = "CORNERSTONE-OWNER"; // Pa defo si pa gen moun
+        inputField.value = "CORNERSTONE-OWNER";
       }
     };
 
@@ -178,10 +189,13 @@
       isUnlocked = true;
       localStorage.setItem('cornerstone_owner', 'true');
       document.getElementById('admin-login-box').style.display = "none";
-      document.getElementById('access-status').textContent = "🔓 Mòd Pwopriyetè / Admin Aktif";
-      document.getElementById('warning-msg').style.display = "none";
-      document.getElementById('pay-section').style.display = "none"; // Admin pa bezwen peye
-      document.getElementById('share-btn-container').style.display = "block";
+      
+      // Kache seksyon peman an epi afiche panèl pwopriyetè a
+      document.getElementById('payment-section').style.display = "none";
+      document.getElementById('owner-panel').style.display = "block";
+      
+      let fullLink = window.location.origin + window.location.pathname + "?ref=CORNERSTONE-OWNER";
+      document.getElementById('owner-referral-link').value = fullLink;
       
       try {
         const db = window.db;
@@ -263,11 +277,9 @@
         const db = window.db;
         const { doc, getDoc, setDoc, updateDoc, increment } = window.FirestoreMethods;
 
-        // Anrejistre nouvo kliyan an
         const newUserRef = doc(db, "users", myNewCode);
         await setDoc(newUserRef, { balance: 0, parentRef: codeInput, createdAt: new Date() }, { merge: true });
 
-        // Si se Pwopriyetè a ki te bay lyen an dirèk
         if (codeInput === "CORNERSTONE-OWNER") {
           const ownerRef = doc(db, "users", "CORNERSTONE-OWNER");
           const ownerSnap = await getDoc(ownerRef);
@@ -277,7 +289,6 @@
             await setDoc(ownerRef, { balance: 1000, role: "owner" });
           }
         } else {
-          // Si se yon entèmedyè ki te pote l: Pwopriyetè pran 750, Entèmedyè pran 250
           const ownerRef = doc(db, "users", "CORNERSTONE-OWNER");
           const ownerSnap = await getDoc(ownerRef);
           if (ownerSnap.exists()) {
@@ -323,3 +334,4 @@
   </script>
 </body>
 </html>
+
