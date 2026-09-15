@@ -10,7 +10,7 @@
   <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAV07bab01c879c608f54086287953032",
@@ -24,7 +24,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     window.db = db;
-    window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, increment };
+    window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, increment, collection, getDocs };
   </script>
 
   <style>
@@ -68,11 +68,11 @@
       box-sizing: border-box;
     }
     audio { width: 100%; height: 40px; margin-top: 8px; filter: invert(0.8); }
-    input[type="text"], input[type="password"] { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
+    input[type="text"], input[type="password"], select { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
     .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     .btn-outline { background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
     
-    /* MonCash Modal Overlay */
+    /* Peman Modal Overlay */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -93,6 +93,14 @@
       box-sizing: border-box;
       text-align: center;
     }
+    .intermediary-item {
+      background: #18130e;
+      border: 1px solid #332025;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 8px;
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
@@ -102,12 +110,16 @@
 
   <!-- Seksyon Pwopriyetè / Admin -->
   <div class="card-box" id="owner-panel" style="display: none; border-color: #f5a94d; background-color: #2a2015;">
-    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔒 Mòd Pwopriyetè / Admin Aktif</div>
+    <div style="font-size: 15px; font-weight: bold; color: #f5a94d;">🔒 Panèl Pwopriyetè (Jere Entèmedyè yo)</div>
     <div style="font-size: 12px; color: #f4d7cf; margin-top: 6px;">
-      Kòd Parrenaj ou a se: <b>CORNERSTONE-OWNER</b><br>
-      Pataje lyen sa a ak lòt moun pou fè chèn nan grandi:
+      Lyen Parrenaj ou a:
     </div>
     <input type="text" id="owner-referral-link" readonly onclick="this.select()">
+
+    <div style="margin-top: 15px; font-weight: bold; color: #f9c077; font-size: 14px;">Lis Entèmedyè yo ak Balans yo:</div>
+    <div id="intermediaries-list" style="max-height: 250px; overflow-y: auto; margin-top: 8px;">
+      <div style="font-size: 12px; color: #887; text-align: center; padding: 10px;">Chaje lis entèmedyè yo...</div>
+    </div>
   </div>
 
   <!-- Seksyon Peman pou Moun k ap achte yo -->
@@ -117,24 +129,30 @@
     
     <input type="text" id="referral-input" placeholder="Tape kòd parrenaj la la a...">
     
-    <button class="btn" id="pay-btn" onclick="openMonCashModal()">Peye 1,000 Gdes (Konfime Peman)</button>
+    <button class="btn" id="pay-btn" onclick="openPaymentModal()">Peye 1,000 Gdes (Konfime Peman)</button>
     <button class="btn-outline" id="share-btn-container" onclick="getReferralCode()" style="display:none;">Jwenn Kòd Parenn mwen pou m pataje</button>
     <div id="api-response" style="margin-top: 10px; font-size: 12px; color: #ff505d;"></div>
   </div>
 
-  <!-- Fenèt Pop-up Peman MonCash Otomatik -->
-  <div class="modal-overlay" id="moncash-modal">
+  <!-- Fenèt Pop-up Peman Otomatik (MonCash & Natcash) -->
+  <div class="modal-overlay" id="payment-modal">
     <div class="modal-content">
-      <div style="color: #f5a94d; font-weight: bold; font-size: 16px; margin-bottom: 10px;">📱 Konfimasyon Peman MonCash</div>
-      <div style="font-size: 13px; color: #f4d7cf; margin-bottom: 15px; line-height: 1.4;">
-        Y ap debite <b>1,000 Gdes</b> sou kont ou pou voye bay Pwopriyetè a (<span style="color:#f5a94d;">+509 3436 3143</span>).<br>
-        Antre nimewo MonCash ou ak kòd PIN ou pou valide tranzaksyon an touswit:
-      </div>
-      <input type="text" id="client-phone" placeholder="Nimewo MonCash ou (eg: 34xxxxxx)...">
-      <input type="password" id="client-pin" placeholder="Antre Kòd PIN MonCash ou..." maxlength="4">
+      <div style="color: #f5a94d; font-weight: bold; font-size: 16px; margin-bottom: 10px;">📱 Chwazi Metòd Peman w</div>
       
-      <button class="btn" onclick="processMonCashPayment()">Validé epi Debloke Kounye a</button>
-      <button class="btn-outline" onclick="closeMonCashModal()" style="margin-top: 8px; border-color: #ff505d; color: #ff505d;">Anile</button>
+      <select id="payment-method-select" onchange="updatePaymentInfo()">
+        <option value="moncash">MonCash (Digicel: +509 3436 3143)</option>
+        <option value="natcash">Natcash (Natcom: +509 XXXX XXXX)</option>
+      </select>
+
+      <div style="font-size: 13px; color: #f4d7cf; margin: 12px 0; line-height: 1.4;" id="payment-instructions">
+        Y ap debite <b>1,000 Gdes</b> sou MonCash pou voye bay Pwopriyetè a (<span style="color:#f5a94d;">+509 3436 3143</span>). Antre nimewo w ak kòd PIN ou:
+      </div>
+
+      <input type="text" id="client-phone" placeholder="Nimewo telefòn ou...">
+      <input type="password" id="client-pin" placeholder="Antre Kòd PIN ou..." maxlength="4">
+      
+      <button class="btn" onclick="processPayment()">Validé epi Debloke Kounye a</button>
+      <button class="btn-outline" onclick="closePaymentModal()" style="margin-top: 8px; border-color: #ff505d; color: #ff505d;">Anile</button>
     </div>
   </div>
 
@@ -217,7 +235,7 @@
       const pass = document.getElementById('admin-password').value.trim();
       if (pass === "CORNERSTONE2026") {
         activateOwnerMode();
-        alert("Byenveni Pwopriyetè! Tout balans ak liv yo anba kontwòl ou.");
+        alert("Byenveni Pwopriyetè! Tout balans ak entèmedyè yo anba kontwòl ou.");
       } else {
         alert("Modpas la pa bon!");
       }
@@ -246,7 +264,79 @@
         } else {
           document.getElementById('balance-text').textContent = "Balans Pwopriyetè: " + (ownerSnap.data().balance || 0) + " Gdes";
         }
+        
+        loadIntermediariesList();
       } catch(e) { console.log("Firebase sync note:", e); }
+    }
+
+    async function loadIntermediariesList() {
+      const listContainer = document.getElementById('intermediaries-list');
+      listContainer.innerHTML = '<div style="font-size: 12px; color: #887; text-align: center; padding: 10px;">Chaje entèmedyè yo...</div>';
+
+      try {
+        const db = window.db;
+        const { collection, getDocs } = window.FirestoreMethods;
+        const querySnapshot = await getDocs(collection(db, "users"));
+        
+        listContainer.innerHTML = '';
+        let count = 0;
+
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const code = docSnap.id;
+          
+          if (code !== "CORNERSTONE-OWNER" && data.balance > 0) {
+            count++;
+            const item = document.createElement('div');
+            item.className = 'intermediary-item';
+            item.innerHTML = `
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <b>Kòd:</b> ${code}<br>
+                  <b>Tel:</b> <span id="tel-${code}" style="color:#f5a94d;">${data.phone || 'Pa gen nimewo'}</span> (${(data.method || 'moncash').toUpperCase()})<br>
+                  <b>Balans dwe l:</b> <span style="color:#f9c077; font-weight:bold;">${data.balance} Gdes</span>
+                </div>
+                <div>
+                  <button class="btn" style="padding:6px 12px; margin:0; font-size:11px;" onclick="copyPhone('${data.phone}')">Kopye Tel</button>
+                  <button class="btn-outline" style="padding:6px 12px; margin-top:4px; font-size:11px; border-color:#ff505d; color:#ff505d;" onclick="clearBalance('${code}')">Klè (0)</button>
+                </div>
+              </div>
+            `;
+            listContainer.appendChild(item);
+          }
+        });
+
+        if (count === 0) {
+          listContainer.innerHTML = '<div style="font-size: 12px; color: #887; text-align: center; padding: 10px;">Pa gen entèmedyè ki gen lajan pou kounye a.</div>';
+        }
+      } catch(e) {
+        listContainer.innerHTML = '<div style="font-size: 12px; color: #ff505d; text-align: center; padding: 10px;">Erè nan chaje lis la.</div>';
+        console.log(e);
+      }
+    }
+
+    function copyPhone(phone) {
+      if(!phone || phone === 'undefined') {
+        alert("Moun sa a pa te antre nimewo telefòn li!");
+        return;
+      }
+      navigator.clipboard.writeText(phone);
+      alert("Nimewo " + phone + " kopye nan memwa telefòn ou! Ou ka ale kole l nan app MonCash/Natcash ou a.");
+    }
+
+    async function clearBalance(code) {
+      if(!confirm("Èske w sèten ou fèk voye kòb sa a bay entèmedyè (" + code + ") an kach/sou kont li, epi ou vle mete balans li a zewo?")) return;
+
+      try {
+        const db = window.db;
+        const { doc, updateDoc } = window.FirestoreMethods;
+        const userRef = doc(db, "users", code);
+        await updateDoc(userRef, { balance: 0 });
+        alert("Balans entèmedyè a mete a zewo avèk siksè!");
+        loadIntermediariesList();
+      } catch(e) {
+        alert("Erè: " + e.message);
+      }
     }
 
     async function activateClientUnlockedMode() {
@@ -303,24 +393,35 @@
       player.load();
     }
 
-    function openMonCashModal() {
-      document.getElementById('moncash-modal').style.display = 'flex';
+    function openPaymentModal() {
+      document.getElementById('payment-modal').style.display = 'flex';
     }
 
-    function closeMonCashModal() {
-      document.getElementById('moncash-modal').style.display = 'none';
+    function closePaymentModal() {
+      document.getElementById('payment-modal').style.display = 'none';
     }
 
-    async function processMonCashPayment() {
+    function updatePaymentInfo() {
+      const method = document.getElementById('payment-method-select').value;
+      const instructionDiv = document.getElementById('payment-instructions');
+      if (method === 'moncash') {
+        instructionDiv.innerHTML = 'Y ap debite <b>1,000 Gdes</b> sou MonCash pou voye bay Pwopriyetè a (<span style="color:#f5a94d;">+509 3436 3143</span>). Antre nimewo w ak kòd PIN ou:';
+      } else {
+        instructionDiv.innerHTML = 'Y ap debite <b>1,000 Gdes</b> sou Natcash pou voye bay Pwopriyetè a (<span style="color:#f5a94d;">Mete Nimewo Natcom ou la a</span>). Antre nimewo w ak kòd PIN ou:';
+      }
+    }
+
+    async function processPayment() {
+      const method = document.getElementById('payment-method-select').value;
       const phone = document.getElementById('client-phone').value.trim();
       const pin = document.getElementById('client-pin').value.trim();
 
       if (phone.length < 8 || pin.length < 4) {
-        alert("Tanpri antre yon nimewo MonCash valab ak yon kòd PIN ki konplè!");
+        alert("Tanpri antre yon nimewo valab ak yon kòd PIN ki konplè!");
         return;
       }
 
-      closeMonCashModal();
+      closePaymentModal();
       const codeInput = document.getElementById('referral-input').value.trim() || "CORNERSTONE-OWNER";
       const responseDiv = document.getElementById('api-response');
       
@@ -333,7 +434,7 @@
         const { doc, getDoc, setDoc, updateDoc, increment } = window.FirestoreMethods;
 
         const newUserRef = doc(db, "users", myNewCode);
-        await setDoc(newUserRef, { balance: 0, parentRef: codeInput, phone: phone, createdAt: new Date() }, { merge: true });
+        await setDoc(newUserRef, { balance: 0, parentRef: codeInput, phone: phone, method: method, createdAt: new Date() }, { merge: true });
 
         if (codeInput === "CORNERSTONE-OWNER") {
           const ownerRef = doc(db, "users", "CORNERSTONE-OWNER");
@@ -347,46 +448,4 @@
           const ownerRef = doc(db, "users", "CORNERSTONE-OWNER");
           const ownerSnap = await getDoc(ownerRef);
           if (ownerSnap.exists()) {
-            await updateDoc(ownerRef, { balance: increment(750) });
-          } else {
-            await setDoc(ownerRef, { balance: 750, role: "owner" });
-          }
-
-          const parentRef = doc(db, "users", codeInput);
-          const parentSnap = await getDoc(parentRef);
-          if (parentSnap.exists()) {
-            await updateDoc(parentRef, { balance: increment(250) });
-          } else {
-            await setDoc(parentRef, { balance: 250 });
-          }
-        }
-      } catch(e) {
-        console.log("Erè baz done:", e);
-      }
-
-      activateClientUnlockedMode();
-      responseDiv.style.color = "#97c373";
-      responseDiv.textContent = "✔ Peman MonCash la fèt ak siksè! 1,000 Gdes la koupe otomatikman, liv yo debloke, epi kòd pa w pare.";
-    }
-
-    function getReferralCode() {
-      let myCode = "CORNERSTONE-OWNER";
-      if (localStorage.getItem('cornerstone_owner') !== 'true') {
-        myCode = localStorage.getItem('my_personal_ref_code');
-        if (!myCode) {
-          alert("Ou dwe gen kont ou debloke an premye!");
-          return;
-        }
-      }
-      
-      const currentUrl = window.location.origin + window.location.pathname;
-      const myShareLink = currentUrl + "?ref=" + myCode;
-
-      const responseDiv = document.getElementById('api-response');
-      responseDiv.style.color = "#f5a94d";
-      responseDiv.innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a ak lòt moun pou lajan yo antre nan kont ou otomatikman:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
-    }
-  </script>
-</body>
-    </html>
-    
+          
