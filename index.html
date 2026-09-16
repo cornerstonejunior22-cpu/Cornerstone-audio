@@ -155,16 +155,9 @@
   <div class="category-title">Liv Istorik Yo (12 Liv)</div>
   <div class="grid" id="books-grid"></div>
 
-  <!-- Seksyon Anviwònman Pwopriyetè ak Bwat Modpas li Ansanm -->
+  <!-- Seksyon Anviwònman Pwopriyetè -->
   <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;">
     <span style="font-size: 14px; color: #f5a94d; cursor: pointer; text-decoration: underline; font-weight: bold; padding: 10px; display: inline-block;" onclick="revealAdminBox()">⚙️ Anviwònman Pwopriyetè (Klike la a)</span>
-    
-    <!-- Bwat Modpas la kounye a vin dwat anba lyen an -->
-    <div class="card-box" id="admin-login-box" style="display: none; border-color: #f5a94d; background-color: #2a2015; text-align: left; margin-top: 10px;">
-      <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔑 Antre Modpas Pwopriyetè a:</div>
-      <input type="password" id="admin-password" placeholder="Tape modpas la...">
-      <button class="btn" onclick="verifyOwnerPassword()">Konekte kòm Pwopriyetè</button>
-    </div>
   </div>
 
   <div class="player-box">
@@ -229,19 +222,10 @@
         return;
       }
       
-      const adminBox = document.getElementById('admin-login-box');
-      if (adminBox.style.display === "block") {
-        adminBox.style.display = "none";
-      } else {
-        adminBox.style.display = "block";
-        adminBox.scrollIntoView({ behavior: 'smooth' });
-        document.getElementById('admin-password').focus();
-      }
-    }
-
-    async function verifyOwnerPassword() {
-      const pass = document.getElementById('admin-password').value.trim();
-      if (pass === "CORNERSTONE2026") {
+      let pass = prompt("🔑 Antre Modpas Pwopriyetè a:");
+      if (pass === null) return;
+      
+      if (pass.trim() === "CORNERSTONE2026") {
         activateOwnerMode();
         alert("Byenveni Pwopriyetè! Tout balans ak entèmedyè yo anba kontwòl ou.");
       } else {
@@ -253,7 +237,6 @@
       isUnlocked = true;
       localStorage.setItem('cornerstone_owner', 'true');
       
-      document.getElementById('admin-login-box').style.display = "none";
       document.getElementById('payment-section').style.display = "none";
       
       const ownerPanel = document.getElementById('owner-panel');
@@ -455,4 +438,32 @@
 
           const parentRef = doc(db, "users", codeInput);
           const parentSnap = await getDoc(parentRef);
-          if (pa
+          if (parentSnap.exists()) {
+            await updateDoc(parentRef, { balance: increment(250) });
+          } else {
+            await setDoc(parentRef, { balance: 250, phone: "" });
+          }
+        }
+      } catch(e) {
+        console.log("Erè baz done:", e);
+      }
+
+      activateClientUnlockedMode();
+      responseDiv.style.color = "#97c373";
+      responseDiv.textContent = "✔ Peman MonCash la fèt ak siksè! 1,000 Gdes la koupe otomatikman, liv yo debloke, epi kòd pa w pare.";
+    }
+
+    function getReferralCode() {
+      let myCode = "CORNERSTONE-OWNER";
+      if (localStorage.getItem('cornerstone_owner') !== 'true') {
+        myCode = localStorage.getItem('my_personal_ref_code');
+        if (!myCode) {
+          alert("Ou dwe gen kont ou debloke an premye!");
+          return;
+        }
+      }
+      
+      const currentUrl = window.location.origin + window.location.pathname;
+      const myShareLink = currentUrl + "?ref=" + myCode;
+
+      const respon
