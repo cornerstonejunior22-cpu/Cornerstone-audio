@@ -101,13 +101,13 @@
 
   <!-- Pwopriyetè / Admin Panèl -->
   <div class="card-box" id="owner-panel" style="display: none; border-color: #f5a94d; background-color: #2a2015;">
-    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔒 Panèl Pwopriyetè (Voye Komisyon sou Kont MonCash yo)</div>
+    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔒 Panèl Pwopriyetè (Voye Komisyon sou MonCash / Natcash)</div>
     <div style="font-size: 12px; color: #f4d7cf; margin-top: 6px;">
       Lyen Parrenaj ou a:
     </div>
     <input type="text" id="owner-referral-link" readonly onclick="this.select()">
     
-    <div class="category-title" style="margin-top: 15px;">Lis Entèmedyè ak Kont MonCash yo:</div>
+    <div class="category-title" style="margin-top: 15px;">Lis Entèmedyè ak Kont yo:</div>
     <div id="intermediaries-list" style="font-size: 13px; margin-top: 8px; max-height: 200px; overflow-y: auto;">
       Chaje lis la...
     </div>
@@ -116,7 +116,7 @@
   <!-- Seksyon Peman pou Kliyan -->
   <div class="card-box" id="payment-section">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Debloke 12 Liv Istorik Yo (1,000 Gdes)</div>
-    <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Antre kòd parrenaj la epi fè peman an nan nimewo pwopriyetè a.</div>
+    <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Antre kòd parrenaj la epi fè peman an sou MonCash oswa Natcash.</div>
     
     <input type="text" id="referral-input" placeholder="Tape kòd parrenaj la la a...">
     
@@ -132,7 +132,7 @@
       <div style="font-size: 13px; color: #f4d7cf; margin-bottom: 15px; line-height: 1.4;">
         Transfere <b>1,000 Gdes</b> dirèkteman sou nimewo Pwopriyetè a:<br>
         <span style="color:#f5a94d; font-size: 18px; font-weight: bold;">+509 3436 3143</span><br><br>
-        Lè w fin fè l sou telefòn ou (tankou w ap fè *202#), antre nimewo w la anba a pou valide aksè w:
+        (Ou ka itilize kit se <b>MonCash</b> kit se <b>Natcash</b>). Lè w fin fè l sou telefòn ou, antre nimewo w la anba a pou valide aksè w:
       </div>
       <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l...">
       
@@ -220,7 +220,7 @@
       const pass = document.getElementById('admin-password').value.trim();
       if (pass === "CORNERSTONE2026") {
         activateOwnerMode();
-        alert("Byenveni Pwopriyetè! Ou kapab voye kòb la dirèkteman sou kont MonCash entèmedyè yo.");
+        alert("Byenveni Pwopriyetè! Ou kapab voye komisyon yo.");
       } else {
         alert("Modpas la pa bon!");
       }
@@ -254,13 +254,12 @@
           const data = docSnap.data();
           if (data.role !== "owner" && data.balance > 0) {
             const phoneNum = data.phone || '';
-            // Kreye lyen USSD rapid pou MonCash (tankou *202*1*nimewo*montan#)
             const ussdCode = `*202*1*${phoneNum}*${data.balance}#`;
             
             html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid #332025;">
-              <div>Kòd: <b>${docSnap.id}</b> | Nimewo MonCash: <b style="color:#f5a94d;">${phoneNum}</b></div>
+              <div>Kòd: <b>${docSnap.id}</b> | Nimewo: <b style="color:#f5a94d;">${phoneNum}</b></div>
               <div style="margin:4px 0;">Komisyon pou voye: <span style="color:#f5a94d; font-size:15px; font-weight:bold;">${data.balance} Gdes</span></div>
-              <button class="btn" style="padding:8px; margin-top:4px; font-size:12px;" onclick="payIntermediaryDirectly('${docSnap.id}', '${phoneNum}', ${data.balance})">📲 Voye 250 Gdes sou Kont MonCash Li Kounye a</button>
+              <button class="btn" style="padding:8px; margin-top:4px; font-size:12px;" onclick="payIntermediaryDirectly('${docSnap.id}', '${phoneNum}', ${data.balance})">📲 Voye Kòb la sou Kont Li Kounye a</button>
             </div>`;
           }
         });
@@ -272,16 +271,13 @@
 
     async function payIntermediaryDirectly(refCode, phoneNum, amount) {
       if (!phoneNum || phoneNum.length < 8) {
-        alert("Nimewo MonCash entèmedyè sa a pa valab nan sistèm nan!");
+        alert("Nimewo telefòn entèmedyè sa a pa valab!");
         return;
       }
 
-      // Kòmand USSD kout pou konpoze sou telefòn pou fè transfè a nan yon segonn
       const ussdShortcut = `*202*1*${phoneNum}*${amount}#`;
       
-      if(confirm(`E w ap prèt pou voye ${amount} Gdes dirèkteman sou kont MonCash ${phoneNum}?\n\nKlike OK pou kopye kòmand lan oswa louvri l, epi fè l ak telefòn ou touswit!`)) {
-        
-        // Kopye kòmand la otomatikman nan memwa telefòn nan pou l kole l fasil
+      if(confirm(`Èske w prèt pou voye ${amount} Gdes sou kont ${phoneNum}?\n\nKlike OK pou kopye kòmand lan epi fè l sou telefòn ou!`)) {
         navigator.clipboard.writeText(ussdShortcut).catch(err => console.log(err));
 
         try {
@@ -290,7 +286,7 @@
           const userRef = doc(db, "users", refCode);
           await updateDoc(userRef, { balance: 0 });
           
-          alert(`Kòmand transfè a (${ussdShortcut}) kopye nan memwa w!\n\nLajan an mete a zewo nan app a. Pwochen etap: Konpoze kòmand sa a sou telefòn ou pou lajan an antre sou kont li pou l al retire l nan pwen MonCash.`);
+          alert(`Kòmand lan (${ussdShortcut}) kopye nan memwa w! Balans lan vin a zewo nan app a.`);
           loadIntermediariesList();
         } catch(e) {
           alert("Echèk nan aktyalizasyon a.");
@@ -322,7 +318,7 @@
         
         card.onclick = () => {
           if (!isUnlocked) {
-            alert("Aksè a fèmen! Ou dwe konfime peman 1,000 Gdes la pou w ka koute liv yo.");
+            alert("Aksè a fèmen! Ou dwe konfime peman 1,000 Gdes la.");
             return;
           }
           document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
@@ -379,7 +375,7 @@
 
       activateClientUnlockedMode();
       responseDiv.style.color = "#97c373";
-      responseDiv.textContent = "✔ Peman an soumèt! Depi w konfime li sou MonCash ou, liv yo debloke nèt.";
+      responseDiv.textContent = "✔ Peman an soumèt! Liv yo debloke nèt pou ou.";
     }
 
     function getReferralCode() {
@@ -389,7 +385,7 @@
 
       const responseDiv = document.getElementById('api-response');
       responseDiv.style.color = "#f5a94d";
-      responseDiv.innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a pou w ka touche komisyon ou sou kont MonCash ou:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
+      responseDiv.innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a pou w touche komisyon ou:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
     }
   </script>
 </body>
