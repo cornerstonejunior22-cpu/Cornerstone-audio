@@ -200,7 +200,6 @@
     window.onload = async function() {
       renderBooks();
 
-      // Si pwopriyetè a te deja konekte sou aparèy sa a anvan, louvri mòd pwopriyetè a dirèkteman
       if (localStorage.getItem('cornerstone_owner') === 'true') {
         activateOwnerMode();
         return;
@@ -223,7 +222,6 @@
     };
 
     function revealAdminBox() {
-      // Si w deja pwopriyetè, pa bezwen mande modpas ankò, jis montre panèl la dirèkteman
       if (localStorage.getItem('cornerstone_owner') === 'true') {
         activateOwnerMode();
         return;
@@ -253,11 +251,9 @@
       isUnlocked = true;
       localStorage.setItem('cornerstone_owner', 'true');
       
-      // Kache espas kliyan an ak bwat modpas la nèt
       document.getElementById('admin-login-box').style.display = "none";
       document.getElementById('payment-section').style.display = "none";
       
-      // Montre panèl pwopriyetè a
       const ownerPanel = document.getElementById('owner-panel');
       ownerPanel.style.display = "block";
       ownerPanel.scrollIntoView({ behavior: 'smooth' });
@@ -455,4 +451,9 @@
             await setDoc(ownerRef, { balance: 750, role: "owner" });
           }
 
-         
+          const parentRef = doc(db, "users", codeInput);
+          const parentSnap = await getDoc(parentRef);
+          if (parentSnap.exists()) {
+            await updateDoc(parentRef, { balance: increment(250) });
+          } else {
+            await setDoc(parentRef, { balance: 250,
