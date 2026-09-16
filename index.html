@@ -66,6 +66,7 @@
       border-radius: 12px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.8);
       box-sizing: border-box;
+      z-index: 99;
     }
     audio { width: 100%; height: 40px; margin-top: 8px; filter: invert(0.8); }
     input[type="text"], input[type="password"] { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
@@ -154,15 +155,16 @@
   <div class="category-title">Liv Istorik Yo (12 Liv)</div>
   <div class="grid" id="books-grid"></div>
 
-  <!-- Espas Admin / Modpas (Anviwònman Pwopriyetè) -->
-  <div class="card-box" id="admin-login-box" style="display: none; border-color: #f5a94d; background-color: #2a2015; margin-top: 30px;">
-    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔑 Espas Pwopriyetè (Antre Modpas):</div>
-    <input type="password" id="admin-password" placeholder="Tape modpas ou la a...">
-    <button class="btn" onclick="verifyOwnerPassword()">Konekte kòm Pwopriyetè</button>
-  </div>
-
+  <!-- Seksyon Anviwònman Pwopriyetè ak Bwat Modpas li Ansanm -->
   <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;">
-    <span style="font-size: 13px; color: #f5a94d; cursor: pointer; text-decoration: underline; font-weight: bold;" onclick="revealAdminBox()">⚙️ Anviwònman Pwopriyetè</span>
+    <span style="font-size: 14px; color: #f5a94d; cursor: pointer; text-decoration: underline; font-weight: bold; padding: 10px; display: inline-block;" onclick="revealAdminBox()">⚙️ Anviwònman Pwopriyetè (Klike la a)</span>
+    
+    <!-- Bwat Modpas la kounye a vin dwat anba lyen an -->
+    <div class="card-box" id="admin-login-box" style="display: none; border-color: #f5a94d; background-color: #2a2015; text-align: left; margin-top: 10px;">
+      <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔑 Antre Modpas Pwopriyetè a:</div>
+      <input type="password" id="admin-password" placeholder="Tape modpas la...">
+      <button class="btn" onclick="verifyOwnerPassword()">Konekte kòm Pwopriyetè</button>
+    </div>
   </div>
 
   <div class="player-box">
@@ -228,8 +230,7 @@
       }
       
       const adminBox = document.getElementById('admin-login-box');
-      // Fòse l parèt ak block anpil fòs
-      if (adminBox.style.display === "block" || adminBox.style.display === "flex") {
+      if (adminBox.style.display === "block") {
         adminBox.style.display = "none";
       } else {
         adminBox.style.display = "block";
@@ -454,5 +455,4 @@
 
           const parentRef = doc(db, "users", codeInput);
           const parentSnap = await getDoc(parentRef);
-          if (parentSnap.exists()) {
-            await updateDoc(parentRef, { balance: increment(2
+          if (pa
