@@ -228,7 +228,8 @@
       }
       
       const adminBox = document.getElementById('admin-login-box');
-      if (adminBox.style.display === "block") {
+      // Fòse l parèt ak block anpil fòs
+      if (adminBox.style.display === "block" || adminBox.style.display === "flex") {
         adminBox.style.display = "none";
       } else {
         adminBox.style.display = "block";
@@ -454,6 +455,4 @@
           const parentRef = doc(db, "users", codeInput);
           const parentSnap = await getDoc(parentRef);
           if (parentSnap.exists()) {
-            await updateDoc(parentRef, { balance: increment(250) });
-          } else {
-            await setDoc(parentRef, { balance: 250,
+            await updateDoc(parentRef, { balance: increment(2
