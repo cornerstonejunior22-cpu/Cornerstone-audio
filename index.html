@@ -106,7 +106,7 @@
 <body>
 
   <div class="header-sub">Cornerstone Audio Player</div>
-  <h1 id="balance-text">Balans pa w (Komisyon): 0 Gdes</h1>
+  <h1 id="balance-text">Balans pa w: 0 Gdes</h1>
 
   <!-- Seksyon Pwopriyetè / Admin -->
   <div class="card-box" id="owner-panel" style="display: none; border-color: #f5a94d; background-color: #2a2015;">
@@ -154,7 +154,7 @@
   <div class="category-title">Liv Istorik Yo (12 Liv)</div>
   <div class="grid" id="books-grid"></div>
 
-  <!-- Espas Admin kache (Anviwònman Pwopriyetè ou te genyen an) -->
+  <!-- Espas Admin / Modpas (Anviwònman Pwopriyetè) -->
   <div class="card-box" id="admin-login-box" style="display: none; border-color: #f5a94d; background-color: #2a2015; margin-top: 30px;">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔑 Espas Pwopriyetè (Antre Modpas):</div>
     <input type="password" id="admin-password" placeholder="Tape modpas ou la a...">
@@ -200,6 +200,7 @@
     window.onload = async function() {
       renderBooks();
 
+      // Si pwopriyetè a te deja konekte sou aparèy sa a anvan, louvri mòd pwopriyetè a dirèkteman
       if (localStorage.getItem('cornerstone_owner') === 'true') {
         activateOwnerMode();
         return;
@@ -222,10 +223,20 @@
     };
 
     function revealAdminBox() {
+      // Si w deja pwopriyetè, pa bezwen mande modpas ankò, jis montre panèl la dirèkteman
+      if (localStorage.getItem('cornerstone_owner') === 'true') {
+        activateOwnerMode();
+        return;
+      }
+      
       const adminBox = document.getElementById('admin-login-box');
-      adminBox.style.display = "block";
-      adminBox.scrollIntoView({ behavior: 'smooth' });
-      document.getElementById('admin-password').focus();
+      if (adminBox.style.display === "block") {
+        adminBox.style.display = "none";
+      } else {
+        adminBox.style.display = "block";
+        adminBox.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('admin-password').focus();
+      }
     }
 
     async function verifyOwnerPassword() {
@@ -241,11 +252,15 @@
     async function activateOwnerMode() {
       isUnlocked = true;
       localStorage.setItem('cornerstone_owner', 'true');
+      
+      // Kache espas kliyan an ak bwat modpas la nèt
       document.getElementById('admin-login-box').style.display = "none";
       document.getElementById('payment-section').style.display = "none";
       
+      // Montre panèl pwopriyetè a
       const ownerPanel = document.getElementById('owner-panel');
       ownerPanel.style.display = "block";
+      ownerPanel.scrollIntoView({ behavior: 'smooth' });
       
       let fullLink = window.location.origin + window.location.pathname + "?ref=CORNERSTONE-OWNER";
       document.getElementById('owner-referral-link').value = fullLink;
@@ -258,6 +273,7 @@
         
         if (!ownerSnap.exists()) {
           await setDoc(ownerRef, { balance: 0, role: "owner" });
+          document.getElementById('balance-text').textContent = "Balans Pwopriyetè: 0 Gdes";
         } else {
           document.getElementById('balance-text').textContent = "Balans Pwopriyetè: " + (ownerSnap.data().balance || 0) + " Gdes";
         }
@@ -439,22 +455,4 @@
             await setDoc(ownerRef, { balance: 750, role: "owner" });
           }
 
-          const parentRef = doc(db, "users", codeInput);
-          const parentSnap = await getDoc(parentRef);
-          if (parentSnap.exists()) {
-            await updateDoc(parentRef, { balance: increment(250) });
-          } else {
-            await setDoc(parentRef, { balance: 250, phone: "" });
-          }
-        }
-      } catch(e) {
-        console.log("Erè baz done:", e);
-      }
-
-      activateClientUnlockedMode();
-      responseDiv.style.color = "#97c373";
-      responseDiv.textContent = "✔ Peman MonCash la fèt ak siksè! 1,000 Gdes la koupe otomatikman, liv yo debloke, epi kòd pa w pare.";
-    }
-
-    function getReferralCode() {
-      let myCode
+         
