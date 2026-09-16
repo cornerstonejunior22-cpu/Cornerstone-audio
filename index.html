@@ -155,9 +155,11 @@
   <div class="category-title">Liv Istorik Yo (12 Liv)</div>
   <div class="grid" id="books-grid"></div>
 
-  <!-- Seksyon Anviwònman Pwopriyetè -->
-  <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;">
-    <span style="font-size: 14px; color: #f5a94d; cursor: pointer; text-decoration: underline; font-weight: bold; padding: 10px; display: inline-block;" onclick="revealAdminBox()">⚙️ Anviwònman Pwopriyetè (Klike la a)</span>
+  <!-- Gwo Bouton Pwopriyetè Klè pou Telefòn -->
+  <div style="margin-top: 40px; margin-bottom: 30px; text-align: center;">
+    <button class="btn-outline" style="border-color: #f5a94d; color: #f5a94d; padding: 14px; font-size: 14px; background-color: #221b14;" onclick="revealAdminBox()">
+      ⚙️ Anviwònman Pwopriyetè (Klike la a)
+    </button>
   </div>
 
   <div class="player-box">
@@ -219,6 +221,7 @@
     function revealAdminBox() {
       if (localStorage.getItem('cornerstone_owner') === 'true') {
         activateOwnerMode();
+        alert("Ou deja nan Mòd Pwopriyetè!");
         return;
       }
       
@@ -441,7 +444,7 @@
           if (parentSnap.exists()) {
             await updateDoc(parentRef, { balance: increment(250) });
           } else {
-            await setDoc(parentRef, { balance: 250, phone: "" });
+            await setDoc(parentRef, { balance: 250 });
           }
         }
       } catch(e) {
@@ -464,6 +467,4 @@
       }
       
       const currentUrl = window.location.origin + window.location.pathname;
-      const myShareLink = currentUrl + "?ref=" + myCode;
-
-      const respon
+      const myShareLink = currentU
