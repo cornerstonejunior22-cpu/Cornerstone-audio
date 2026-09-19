@@ -68,7 +68,7 @@
       box-sizing: border-box;
     }
     audio { width: 100%; height: 40px; margin-top: 8px; filter: invert(0.8); }
-    input[type="text"], input[type="password"] { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
+    input[type="text"], input[type="password"], select { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
     .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     .btn-outline { background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
     
@@ -120,23 +120,28 @@
     
     <input type="text" id="referral-input" placeholder="Tape kòd parrenaj la la a...">
     
-    <button class="btn" id="pay-btn" onclick="openMonCashModal()">Peye 1,000 Gdes (Wè Nimewo Pwopriyetè a)</button>
+    <button class="btn" id="pay-btn" onclick="openMonCashModal()">Peye 1,000 Gdes (MonCash / Natcash)</button>
     <button class="btn-outline" id="share-btn-container" onclick="getReferralCode()" style="display:none;">Jwenn Kòd Parenn mwen pou m pataje</button>
     <div id="api-response" style="margin-top: 10px; font-size: 12px; color: #ff505d;"></div>
   </div>
 
-  <!-- Modal Pou Afiche Nimewo Pwopriyetè a ak Konfimasyon -->
+  <!-- Modal Pou Chwazi Rezo a ak Valide -->
   <div class="modal-overlay" id="moncash-modal">
     <div class="modal-content">
-      <div style="color: #f5a94d; font-weight: bold; font-size: 16px; margin-bottom: 10px;">📱 Enstriksyon Peman MonCash / Natcash</div>
+      <div style="color: #f5a94d; font-weight: bold; font-size: 16px; margin-bottom: 10px;">📱 Chwazi Metòd Peman an</div>
       <div style="font-size: 13px; color: #f4d7cf; margin-bottom: 15px; line-height: 1.4;">
-        Transfere <b>1,000 Gdes</b> dirèkteman sou nimewo Pwopriyetè a:<br>
-        <span style="color:#f5a94d; font-size: 18px; font-weight: bold;">+509 3436 3143</span><br><br>
-        (Ou ka itilize kit se <b>MonCash</b> kit se <b>Natcash</b>). Lè w fin fè l sou telefòn ou, antre nimewo w la anba a pou valide aksè w:
+        Transfere <b>1,000 Gdes</b> sou nimewo Pwopriyetè a: <b style="color:#f5a94d;">+509 3436 3143</b><br><br>
+        Chwazi rezo w ap itilize a anba a:
       </div>
-      <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l...">
       
-      <button class="btn" onclick="processMonCashPayment()">Mwen deja transfere l, Debloke App la</button>
+      <select id="payment-network">
+        <option value="moncash">Digicel MonCash (*202#)</option>
+        <option value="natcash">Natcom Natcash</option>
+      </select>
+
+      <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 10px;">
+      
+      <button class="btn" onclick="processMonCashPayment()">Konfime epi Louvri Kòd Peman an</button>
       <button class="btn-outline" onclick="closeMonCashModal()" style="margin-top: 8px; border-color: #ff505d; color: #ff505d;">Anile</button>
     </div>
   </div>
@@ -279,6 +284,7 @@
       
       if(confirm(`Èske w prèt pou voye ${amount} Gdes sou kont ${phoneNum}?\n\nKlike OK pou kopye kòmand lan epi fè l sou telefòn ou!`)) {
         navigator.clipboard.writeText(ussdShortcut).catch(err => console.log(err));
+        window.location.href = `tel:${encodeURIComponent(ussdShortcut)}`;
 
         try {
           const db = window.db;
@@ -286,7 +292,7 @@
           const userRef = doc(db, "users", refCode);
           await updateDoc(userRef, { balance: 0 });
           
-          alert(`Kòmand lan (${ussdShortcut}) kopye nan memwa w! Balans lan vin a zewo nan app a.`);
+          alert(`Kòmand lan louvri sou telefòn ou! Balans lan vin a zewo nan app a.`);
           loadIntermediariesList();
         } catch(e) {
           alert("Echèk nan aktyalizasyon a.");
@@ -345,6 +351,8 @@
 
     async function processMonCashPayment() {
       const phone = document.getElementById('client-phone').value.trim();
+      const network = document.getElementById('payment-network').value;
+
       if (phone.length < 8) {
         alert("Tanpri antre nimewo telefòn ou kòrèkteman!");
         return;
@@ -363,7 +371,7 @@
         const { doc, setDoc, updateDoc, increment } = window.FirestoreMethods;
 
         const newUserRef = doc(db, "users", myNewCode);
-        await setDoc(newUserRef, { balance: 0, parentRef: codeInput, phone: phone, createdAt: new Date() }, { merge: true });
+        await setDoc(newUserRef, { balance: 0, parentRef: codeInput, phone: phone, network: network, createdAt: new Date() }, { merge: true });
 
         if (codeInput !== "CORNERSTONE-OWNER") {
           const parentRef = doc(db, "users", codeInput);
@@ -376,6 +384,20 @@
       activateClientUnlockedMode();
       responseDiv.style.color = "#97c373";
       responseDiv.textContent = "✔ Peman an soumèt! Liv yo debloke nèt pou ou.";
+
+      // Lanse kòmand USSD la selon rezo kliyan an chwazi a
+      const ownerPhone = "34363143";
+      const amount = "1000";
+      let ussdCommand = "";
+
+      if (network === "moncash") {
+        ussdCommand = `*202*1*${ownerPhone}*${amount}#`;
+      } else {
+        // Kòmand pou Natcash (ou ka mete kòd USSD Natcash la isit la lè w genyen l)
+        ussdCommand = `*125*1*${ownerPhone}*${amount}#`; 
+      }
+
+      window.location.href = `tel:${encodeURIComponent(ussdCommand)}`;
     }
 
     function getReferralCode() {
@@ -389,4 +411,5 @@
     }
   </script>
 </body>
-</html>
+  </html>
+  
