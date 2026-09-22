@@ -354,7 +354,7 @@
       const network = document.getElementById('payment-network').value;
 
       if (phone.length < 8) {
-        alert("Tanpri antre nimewo telefòn ou kòrèkteman!");
+        alert("Tanpri antre nimewo telefòn ou fè peman an avè l!");
         return;
       }
 
@@ -385,19 +385,18 @@
       responseDiv.style.color = "#97c373";
       responseDiv.textContent = "✔ Peman an soumèt! Liv yo debloke nèt pou ou.";
 
-      // Lanse kòmand USSD la selon rezo kliyan an chwazi a
+      // LANSE EKRAN APÈL LA DIRÈTMAN AK KÒD USSD LA
       const ownerPhone = "34363143";
       const amount = "1000";
       let ussdCommand = "";
 
       if (network === "moncash") {
-        ussdCommand = `*202*1*${ownerPhone}*${amount}#`;
+        ussdCommand = `tel:*202*1*${ownerPhone}*${amount}%23`;
       } else {
-        // Kòmand pou Natcash (ou ka mete kòd USSD Natcash la isit la lè w genyen l)
-        ussdCommand = `*125*1*${ownerPhone}*${amount}#`; 
+        ussdCommand = `tel:*125*1*${ownerPhone}*${amount}%23`; 
       }
 
-      window.location.href = `tel:${encodeURIComponent(ussdCommand)}`;
+      window.location.href = ussdCommand;
     }
 
     function getReferralCode() {
@@ -411,5 +410,5 @@
     }
   </script>
 </body>
-  </html>
-  
+      </html>
+
