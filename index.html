@@ -130,9 +130,9 @@
     <div class="modal-content">
       <div style="color: #f5a94d; font-weight: bold; font-size: 16px; margin-bottom: 10px;">📱 Chwazi Metòd Peman an</div>
       <div style="font-size: 13px; color: #f4d7cf; margin-bottom: 15px; line-height: 1.4;">
-        Transfere <b>1,000 Gdes</b> sou nimewo Pwopriyetè a: <b style="color:#f5a94d;">+509 3436 3143</b><br><br>
-        1. Chwazi rezo a epi klike sou bouton an pou voye l nan telefòn ou.<br>
-        2. Lè w fini fè tranzaksyon an, tounen sou app la epi klike sou konfime.
+        Transfere <b>1,000 Gdes</b> sou rezo w chwazi a.<br><br>
+        1. Chwazi rezo a epi antre nimewo w.<br>
+        2. Klike pou voye l nan telefòn ou, epi konfime apre w fin peye.
       </div>
       
       <select id="payment-network">
@@ -360,14 +360,15 @@
         return;
       }
 
-      const ownerPhone = "34363143";
+      const digicelOwnerPhone = "34363143";
+      const natcomOwnerPhone = "42125630";
       const amount = "1000";
       let ussdCommand = "";
 
       if (network === "moncash") {
-        ussdCommand = `*202*1*${ownerPhone}*${amount}#`;
+        ussdCommand = `*202*1*${digicelOwnerPhone}*${amount}#`;
       } else {
-        ussdCommand = `*125*1*${ownerPhone}*${amount}#`;
+        ussdCommand = `*125*1*${natcomOwnerPhone}*${amount}#`;
       }
 
       window.location.href = `tel:${encodeURIComponent(ussdCommand)}`;
@@ -385,7 +386,6 @@
       closeMonCashModal();
       let codeInput = document.getElementById('referral-input').value.trim();
       
-      // Si pa gen kòd oswa se pwòp kòd pwopriyetè a yo mete, fòse l pran OWNER_REF_CODE pou tout 1000 Gdes ale dirèkteman sou kont ou
       if (!codeInput || codeInput === OWNER_REF_CODE) {
         codeInput = OWNER_REF_CODE;
       }
@@ -403,7 +403,6 @@
         const newUserRef = doc(db, "users", myNewCode);
         await setDoc(newUserRef, { balance: 0, parentRef: codeInput, phone: phone, network: network, createdAt: new Date() }, { merge: true });
 
-        // Si se yon vre entèmedyè ki nan mitan an, n ap ba l 250 Gdes sou balans li, si se pa sa tout lajan an rete pou ou
         if (codeInput !== OWNER_REF_CODE) {
           const parentRef = doc(db, "users", codeInput);
           await setDoc(parentRef, { balance: increment(250) }, { merge: true });
@@ -429,4 +428,4 @@
   </script>
 </body>
   </html>
-
+  
