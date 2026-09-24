@@ -116,7 +116,7 @@
   <!-- Seksyon Peman pou Kliyan -->
   <div class="card-box" id="payment-section">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Debloke 12 Liv Istorik Yo (1,000 Gdes)</div>
-    <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Klike sou bouton an pou voye kòb la sou MonCash oswa Natcash anvan w konfime.</div>
+    <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Klike sou bouton an pou wè nimewo a epi peye sou MonCash oswa Natcash.</div>
     
     <input type="text" id="referral-input" placeholder="Tape kòd parrenaj la la a...">
     
@@ -128,21 +128,31 @@
   <!-- Modal Pou Chwazi Rezo a ak Valide -->
   <div class="modal-overlay" id="moncash-modal">
     <div class="modal-content">
-      <div style="color: #f5a94d; font-weight: bold; font-size: 16px; margin-bottom: 10px;">📱 Chwazi Metòd Peman an</div>
-      <div style="font-size: 13px; color: #f4d7cf; margin-bottom: 15px; line-height: 1.4;">
-        Transfere <b>1,000 Gdes</b> sou rezo w chwazi a.<br><br>
+      <div style="color: #f5a94d; font-weight: bold; font-size: 16px; margin-bottom: 10px;">📱 Enfòmasyon Peman</div>
+      
+      <!-- Pati ki afiche nimewo egzak la klè -->
+      <div style="background: #18130e; border: 1px solid #f5a94d; padding: 12px; border-radius: 6px; margin-bottom: 12px; text-align: left;">
+        <div style="font-size: 12px; color: #f9c077; font-weight: bold;">Rezo w chwazi a:</div>
+        <div id="display-network-name" style="font-size: 14px; color: #f4d7cf; margin-bottom: 6px;">Digicel MonCash</div>
+        <div style="font-size: 12px; color: #f9c077; font-weight: bold;">Nimewo Pwopriyetè pou Voye Kòb la:</div>
+        <div id="display-target-phone" style="font-size: 18px; color: #f5a94d; font-weight: bold; letter-spacing: 1px;">34363143</div>
+        <div style="font-size: 11px; color: #aaa; margin-top: 4px;">Montan: <b>1,000 Gdes</b></div>
+      </div>
+
+      <div style="font-size: 12px; color: #f4d7cf; margin-bottom: 12px; line-height: 1.4; text-align: left;">
         1. Chwazi rezo a epi antre nimewo w.<br>
-        2. Klike pou kopye kòmand lan, fè l sou telefòn ou, epi retounen konfime.
+        2. Klike pou rele <b>*202#</b> epi swiv etap yo ak nimewo ki anwo a.<br>
+        3. Antre nimewo telefòn ou fè peman an anba a epi klike sou konfime.
       </div>
       
-      <select id="payment-network">
-        <option value="moncash">Digicel MonCash (*202#)</option>
-        <option value="natcash">Natcom Natcash (*202#)</option>
+      <select id="payment-network" onchange="updateModalInfo()">
+        <option value="moncash">Digicel MonCash</option>
+        <option value="natcash">Natcom Natcash</option>
       </select>
 
-      <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 10px;">
+      <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 8px;">
       
-      <button class="btn" onclick="triggerUSSDAndPay()">Kopye Kòmand la pou Rezo a</button>
+      <button class="btn" onclick="triggerUSSDMenu()">Rele *202# pou Fè Peman an</button>
       <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 8px;" onclick="verifyAndUnlock()">Mwen fin voye kòb la - Konfime Debloke</button>
       <button class="btn-outline" onclick="closeMonCashModal()" style="margin-top: 8px; border-color: #ff505d; color: #ff505d;">Anile</button>
     </div>
@@ -197,6 +207,7 @@
 
     window.onload = async function() {
       renderBooks();
+      updateModalInfo();
 
       if (localStorage.getItem('cornerstone_owner') === 'true') {
         activateOwnerMode();
@@ -218,6 +229,20 @@
         inputField.value = OWNER_REF_CODE;
       }
     };
+
+    function updateModalInfo() {
+      const network = document.getElementById('payment-network').value;
+      const nameDisplay = document.getElementById('display-network-name');
+      const phoneDisplay = document.getElementById('display-target-phone');
+
+      if (network === "moncash") {
+        nameDisplay.textContent = "Digicel MonCash";
+        phoneDisplay.textContent = "34363143";
+      } else {
+        nameDisplay.textContent = "Natcom Natcash";
+        phoneDisplay.textContent = "42125630"; // Mete bon nimewo Natcash ou a la a
+      }
+    }
 
     function revealAdminBox() {
       document.getElementById('admin-login-box').style.display = "block";
@@ -266,7 +291,7 @@
             html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid #332025;">
               <div>Kòd: <b>${docSnap.id}</b> | Nimewo: <b style="color:#f5a94d;">${phoneNum}</b></div>
               <div style="margin:4px 0;">Komisyon pou voye: <span style="color:#f5a94d; font-size:15px; font-weight:bold;">${data.balance} Gdes</span></div>
-              <button class="btn" style="padding:8px; margin-top:4px; font-size:12px;" onclick="payIntermediaryDirectly('${docSnap.id}', '${phoneNum}', ${data.balance})">📲 Kopye Kòmand pou Voye Kòb la</button>
+              <button class="btn" style="padding:8px; margin-top:4px; font-size:12px;" onclick="payIntermediaryDirectly('${docSnap.id}', '${phoneNum}', ${data.balance})">📲 Rele *202# pou Voye Kòb la</button>
             </div>`;
           }
         });
@@ -276,33 +301,32 @@
       }
     }
 
-    async function payIntermediaryDirectly(refCode, phoneNum, amount) {
+    function payIntermediaryDirectly(refCode, phoneNum, amount) {
       if (!phoneNum || phoneNum.length < 8) {
         alert("Nimewo telefòn entèmedyè sa a pa valab!");
         return;
       }
 
-      const ussdShortcut = `*202*1*${phoneNum}*${amount}#`;
-      
-      navigator.clipboard.writeText(ussdShortcut).then(() => {
-        alert(`Kòmand pou peye entèmedyè a kopye!\n\nKòmand lan se: ${ussdShortcut}\n\nFè l sou telefòn ou pou transfere kòb la.`);
-      }).catch(err => {
-        alert(`Tanpri tape oswa kole kòmand sa a: ${ussdShortcut}`);
-      });
+      // Se sèl *202# ki pral louvri nan dialer la pou sekirite
+      window.location.href = `tel:*202%23`;
 
-      if(confirm(`Èske w konfime ou voye ${amount} Gdes bay ${phoneNum} epi ou vle mete balans lan a zewo nan app a?`)) {
-        try {
-          const db = window.db;
-          const { doc, updateDoc } = window.FirestoreMethods;
-          const userRef = doc(db, "users", refCode);
-          await updateDoc(userRef, { balance: 0 });
-          
-          alert(`Balans lan vin a zewo nan app a.`);
-          loadIntermediariesList();
-        } catch(e) {
-          alert("Echèk nan aktyalizasyon a.");
+      setTimeout(() => {
+        if(confirm(`Èske ou fèk voye ${amount} Gdes bay ${phoneNum} lè l sèvi avèk *202#?\n\nKlike OK pou mete balans lan a zewo nan app a apre transfè a fin fèt.`)) {
+          (async () => {
+            try {
+              const db = window.db;
+              const { doc, updateDoc } = window.FirestoreMethods;
+              const userRef = doc(db, "users", refCode);
+              await updateDoc(userRef, { balance: 0 });
+              
+              alert(`Balans lan vin a zewo nan app a.`);
+              loadIntermediariesList();
+            } catch(e) {
+              alert("Echèk nan aktyalizasyon a.");
+            }
+          })();
         }
-      }
+      }, 1000);
     }
 
     async function activateClientUnlockedMode() {
@@ -354,34 +378,9 @@
       document.getElementById('moncash-modal').style.display = 'none';
     }
 
-    function triggerUSSDAndPay() {
-      const phone = document.getElementById('client-phone').value.trim();
-      const network = document.getElementById('payment-network').value;
-
-      if (phone.length < 8) {
-        alert("Tanpri antre nimewo telefòn ou anvan ou fè peman an!");
-        return;
-      }
-
-      const digicelOwnerPhone = "34363143";
-      const natcomOwnerPhone = "42125630";
-      const amount = "1000";
-      let ussdCommand = "";
-      let networkName = "";
-
-      if (network === "moncash") {
-        networkName = "MonCash (Digicel)";
-        ussdCommand = `*202*1*${digicelOwnerPhone}*${amount}#`;
-      } else {
-        networkName = "Natcash (Natcom)";
-        ussdCommand = `*202*1*${natcomOwnerPhone}*${amount}#`;
-      }
-
-      navigator.clipboard.writeText(ussdCommand).then(() => {
-        alert(`Kòmand pou ${networkName} kopye nan telefòn ou!\n\nKòmand lan se: ${ussdCommand}\n\nLouvri dialer ou, kole kòd la pou fè peman an, epi retounen klike sou "Konfime Debloke".`);
-      }).catch(err => {
-        alert(`Tanpri tape oswa kole kòd sa a pou ${networkName} sou telefòn ou:\n\n${ussdCommand}`);
-      });
+    function triggerUSSDMenu() {
+      // Louvri sèlman kòmand *202# pou evite erè rakousi sou okenn telefòn
+      window.location.href = `tel:*202%23`;
     }
 
     async function verifyAndUnlock() {
@@ -389,7 +388,7 @@
       const network = document.getElementById('payment-network').value;
 
       if (phone.length < 8) {
-        alert("Tanpri antre nimewo telefòn ou anvan ou konfime!");
+        alert("Tanpri antre nimewo telefòn ou fè peman an avè l la anvan ou konfime!");
         return;
       }
 
