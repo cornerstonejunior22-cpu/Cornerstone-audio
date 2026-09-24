@@ -137,7 +137,7 @@
       
       <select id="payment-network">
         <option value="moncash">Digicel MonCash (*202#)</option>
-        <option value="natcash">Natcom Natcash (*125#)</option>
+        <option value="natcash">Natcom Natcash (*202#)</option>
       </select>
 
       <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 10px;">
@@ -368,7 +368,7 @@
       if (network === "moncash") {
         ussdCommand = `*202*1*${digicelOwnerPhone}*${amount}#`;
       } else {
-        ussdCommand = `*125*1*${natcomOwnerPhone}*${amount}#`;
+        ussdCommand = `*202*1*${natcomOwnerPhone}*${amount}#`;
       }
 
       window.location.href = `tel:${encodeURIComponent(ussdCommand)}`;
@@ -427,5 +427,4 @@
     }
   </script>
 </body>
-  </html>
-  
+</html>
