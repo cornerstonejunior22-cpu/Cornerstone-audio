@@ -132,7 +132,7 @@
       <div style="font-size: 13px; color: #f4d7cf; margin-bottom: 15px; line-height: 1.4;">
         Transfere <b>1,000 Gdes</b> sou rezo w chwazi a.<br><br>
         1. Chwazi rezo a epi antre nimewo w.<br>
-        2. Klike pou voye l nan telefòn ou, epi konfime apre w fin peye.
+        2. Klike pou kopye kòmand lan, fè l sou telefòn ou, epi retounen konfime.
       </div>
       
       <select id="payment-network">
@@ -142,7 +142,7 @@
 
       <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 10px;">
       
-      <button class="btn" onclick="triggerUSSDAndPay()">Voye Kòb la sou Rezo a kounye a</button>
+      <button class="btn" onclick="triggerUSSDAndPay()">Kopye Kòmand la pou Rezo a</button>
       <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 8px;" onclick="verifyAndUnlock()">Mwen fin voye kòb la - Konfime Debloke</button>
       <button class="btn-outline" onclick="closeMonCashModal()" style="margin-top: 8px; border-color: #ff505d; color: #ff505d;">Anile</button>
     </div>
@@ -266,7 +266,7 @@
             html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid #332025;">
               <div>Kòd: <b>${docSnap.id}</b> | Nimewo: <b style="color:#f5a94d;">${phoneNum}</b></div>
               <div style="margin:4px 0;">Komisyon pou voye: <span style="color:#f5a94d; font-size:15px; font-weight:bold;">${data.balance} Gdes</span></div>
-              <button class="btn" style="padding:8px; margin-top:4px; font-size:12px;" onclick="payIntermediaryDirectly('${docSnap.id}', '${phoneNum}', ${data.balance})">📲 Voye Kòb la sou Kont Li Kounye a</button>
+              <button class="btn" style="padding:8px; margin-top:4px; font-size:12px;" onclick="payIntermediaryDirectly('${docSnap.id}', '${phoneNum}', ${data.balance})">📲 Kopye Kòmand pou Voye Kòb la</button>
             </div>`;
           }
         });
@@ -284,17 +284,20 @@
 
       const ussdShortcut = `*202*1*${phoneNum}*${amount}#`;
       
-      if(confirm(`Èske w prèt pou voye ${amount} Gdes sou kont ${phoneNum}?\n\nKlike OK pou kopye kòmand lan epi fè l sou telefòn ou!`)) {
-        navigator.clipboard.writeText(ussdShortcut).catch(err => console.log(err));
-        window.location.href = `tel:${encodeURIComponent(ussdShortcut)}`;
+      navigator.clipboard.writeText(ussdShortcut).then(() => {
+        alert(`Kòmand pou peye entèmedyè a kopye!\n\nKòmand lan se: ${ussdShortcut}\n\nFè l sou telefòn ou pou transfere kòb la.`);
+      }).catch(err => {
+        alert(`Tanpri tape oswa kole kòmand sa a: ${ussdShortcut}`);
+      });
 
+      if(confirm(`Èske w konfime ou voye ${amount} Gdes bay ${phoneNum} epi ou vle mete balans lan a zewo nan app a?`)) {
         try {
           const db = window.db;
           const { doc, updateDoc } = window.FirestoreMethods;
           const userRef = doc(db, "users", refCode);
           await updateDoc(userRef, { balance: 0 });
           
-          alert(`Kòmand lan louvri sou telefòn ou! Balans lan vin a zewo nan app a.`);
+          alert(`Balans lan vin a zewo nan app a.`);
           loadIntermediariesList();
         } catch(e) {
           alert("Echèk nan aktyalizasyon a.");
@@ -364,14 +367,21 @@
       const natcomOwnerPhone = "42125630";
       const amount = "1000";
       let ussdCommand = "";
+      let networkName = "";
 
       if (network === "moncash") {
+        networkName = "MonCash (Digicel)";
         ussdCommand = `*202*1*${digicelOwnerPhone}*${amount}#`;
       } else {
+        networkName = "Natcash (Natcom)";
         ussdCommand = `*202*1*${natcomOwnerPhone}*${amount}#`;
       }
 
-      window.location.href = `tel:${encodeURIComponent(ussdCommand)}`;
+      navigator.clipboard.writeText(ussdCommand).then(() => {
+        alert(`Kòmand pou ${networkName} kopye nan telefòn ou!\n\nKòmand lan se: ${ussdCommand}\n\nLouvri dialer ou, kole kòd la pou fè peman an, epi retounen klike sou "Konfime Debloke".`);
+      }).catch(err => {
+        alert(`Tanpri tape oswa kole kòd sa a pou ${networkName} sou telefòn ou:\n\n${ussdCommand}`);
+      });
     }
 
     async function verifyAndUnlock() {
