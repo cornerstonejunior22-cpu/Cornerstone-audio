@@ -143,10 +143,14 @@
         <div style="font-size: 11px; color: #aaa; margin-top: 4px;">Montan: <b>1,000 Gdes</b></div>
       </div>
 
+      <!-- Bouton espesyal pou kliyan an kopye nimewo a anvan l rele -->
+      <button class="btn" style="background-color: #2e7d32; color: #fff; margin-bottom: 10px; font-size: 13px;" onclick="copyOwnerNumber()">📋 Kopye Nimewo sa a nan memwa telefòn nan</button>
+      <div id="copy-feedback" style="font-size: 11px; color: #97c373; margin-bottom: 8px; display: none;">✔ Nimewo a kopye! Ou ka kole l (paste) nan ekran USSD la fasil.</div>
+
       <div style="font-size: 12px; color: #f4d7cf; margin-bottom: 12px; line-height: 1.4; text-align: left;">
-        1. Klike sou bouton an pou rele <b>*202#</b> epi fè transfè a.<br>
-        2. Antre nimewo telefòn ou fè peman an anba a.<br>
-        3. Klike sou <b>"Voye Demann lan"</b> epi tann pwopriyetè a apwouve l.
+        1. Klike sou kopye anwo a.<br>
+        2. Klike sou rele <b>*202#</b> epi lè yo mande nimewo a, kenbe dwèt ou pou w *kole (paste)* li.<br>
+        3. Antre nimewo telefòn ou fè peman an anba a epi voye demann lan.
       </div>
       
       <select id="payment-network" onchange="updateModalInfo()">
@@ -157,7 +161,7 @@
       <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 8px;">
       
       <button class="btn" onclick="triggerUSSDMenu()">Rele *202# pou Fè Peman an</button>
-      <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 8px;" onclick="submitPaymentRequest()">Voye Demann Debloke bay Pwopriyetè a</button>
+      <button class="btn" style="background-color: #1976d2; color: #fff; margin-top: 8px;" onclick="submitPaymentRequest()">Voye Demann Debloke bay Pwopriyetè a</button>
       <button class="btn-outline" onclick="closeMonCashModal()" style="margin-top: 8px; border-color: #ff505d; color: #ff505d;">Anile</button>
     </div>
   </div>
@@ -218,7 +222,6 @@
         return;
       }
 
-      // Tcheke estati kliyan an an dirèk nan Firebase
       checkClientStatusOnCloud();
 
       const urlParams = new URLSearchParams(window.location.search);
@@ -267,6 +270,18 @@
         nameDisplay.textContent = "Natcom Natcash";
         phoneDisplay.textContent = "42125630";
       }
+    }
+
+    // Fonksyon pou kopye nimewo a otomatikman nan clipboard la lè w klike sou bouton an
+    function copyOwnerNumber() {
+      const phoneText = document.getElementById('display-target-phone').textContent.trim();
+      navigator.clipboard.writeText(phoneText).then(() => {
+        const feedback = document.getElementById('copy-feedback');
+        feedback.style.display = "block";
+        setTimeout(() => { feedback.style.display = "none"; }, 4000);
+      }).catch(err => {
+        alert("Echèk nan kopye nimewo a. Tanpri sonje l oswa ekri l.");
+      });
     }
 
     function revealAdminBox() {
@@ -334,10 +349,8 @@
         const db = window.db;
         const { doc, updateDoc, setDoc, increment } = window.FirestoreMethods;
         
-        // Mete estati kliyan an an "approved"
         await updateDoc(doc(db, "users", clientCode), { status: "approved" });
 
-        // Si l gen yon paran (entèmedyè), ajoute 250 goud sou komisyon li
         if (parentRefCode && parentRefCode !== OWNER_REF_CODE) {
           await setDoc(doc(db, "users", parentRefCode), { balance: increment(250) }, { merge: true });
         }
@@ -489,7 +502,6 @@
         document.getElementById('api-response').style.color = "#f5a94d";
         document.getElementById('api-response').textContent = "✔ Demann ou an ale avèk siksè! Y ap verifye l tousuit.";
 
-        // Mete yon chekè otomatik chak 10 segond pou wè si pwopriyetè a apwouve l deja
         setInterval(checkClientStatusOnCloud, 10000);
 
       } catch(e) {
