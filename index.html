@@ -101,8 +101,15 @@
 
   <!-- Pwopriyetè / Admin Panèl -->
   <div class="card-box" id="owner-panel" style="display: none; border-color: #f5a94d; background-color: #2a2015;">
-    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔒 Panèl Pwopriyetè (Apwobasyon ak Komisyon)</div>
-    <div style="font-size: 12px; color: #f4d7cf; margin-top: 6px;">
+    <div style="font-size: 14px; font-weight: bold; color: #f5a94d; display: flex; justify-content: space-between; align-items: center;">
+      <span>🔒 Panèl Pwopriyetè (Apwobasyon ak Komisyon)</span>
+      <button class="btn-outline" style="width: auto; padding: 4px 8px; font-size: 11px; margin-top: 0; border-color: #ff505d; color: #ff505d;" onclick="logoutOwner()">Soti</button>
+    </div>
+
+    <!-- TI BOUTON ESPESYAL POU W WE EKRAN KLIYAN AN -->
+    <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 12px; font-size: 13px;" onclick="switchToClientView()">👁️ Wè koòdone kliyan an sou ekran pam</button>
+
+    <div style="font-size: 12px; color: #f4d7cf; margin-top: 10px;">
       Lyen Parrenaj ou a:
     </div>
     <input type="text" id="owner-referral-link" readonly onclick="this.select()">
@@ -116,6 +123,11 @@
     <div id="intermediaries-list" style="font-size: 13px; margin-top: 8px; max-height: 200px; overflow-y: auto;">
       Chaje lis la...
     </div>
+  </div>
+
+  <!-- BOUTON RETOUNEN NAN MÒD MÈT (Lè w t ap gade ekran kliyan an epi w vle tounen mèt) -->
+  <div id="back-to-master-btn-container" style="display: none; margin-top: 15px;">
+    <button class="btn" style="background-color: #c62828; color: #fff; font-size: 13px;" onclick="backToMasterPanel()">👑 Tounen nan Panèl Mèt (Pwopriyetè)</button>
   </div>
 
   <!-- Seksyon Peman pou Kliyan -->
@@ -144,7 +156,7 @@
       </div>
 
       <button class="btn" style="background-color: #2e7d32; color: #fff; margin-bottom: 10px; font-size: 13px;" onclick="copyOwnerNumber()">📋 Kopye Nimewo sa a nan memwa telefòn nan</button>
-      <div id="copy-feedback" style="font-size: 11px; color: #97c373; margin-bottom: 8px; display: none;">✔ Nimewo a kopye! Ou ka kole l (paste) nan ekran USSD la fasil.</div>
+      <div id="copy-feedback" style="font-size: 11px; color: #97c373; margin-bottom: 8px; display: none;">✔ Nimewo a kopye! Ou ka kole l nan ekran USSD la fasil.</div>
 
       <div style="font-size: 12px; color: #f4d7cf; margin-bottom: 12px; line-height: 1.4; text-align: left;">
         1. Klike sou kopye anwo a.<br>
@@ -176,7 +188,7 @@
     <button class="btn" onclick="verifyOwnerPassword()">Konekte kòm Pwopriyetè</button>
   </div>
 
-  <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;">
+  <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;" id="reveal-link-container">
     <span style="font-size: 11px; color: #554433; cursor: pointer; text-decoration: underline;" onclick="revealAdminBox()">Anviwònman Pwopriyetè</span>
   </div>
 
@@ -302,7 +314,7 @@
       isUnlocked = true;
       localStorage.setItem('cornerstone_owner', 'true');
       document.getElementById('admin-login-box').style.display = "none";
-      document.getElementById('payment-section').style.display = "none";
+      document.getElementById('payment-section').style.display = "block"; // Kenbe l vizib pou mèt la ka wè l si l vle
       
       const ownerPanel = document.getElementById('owner-panel');
       ownerPanel.style.display = "block";
@@ -311,6 +323,25 @@
       document.getElementById('owner-referral-link').value = fullLink;
       
       loadOwnerAdminData();
+    }
+
+    // Fonksyon pou w klike epi w wè koòdone kliyan an nèt san panèl pwopriyetè a anlè w
+    function switchToClientView() {
+      document.getElementById('owner-panel').style.display = "none";
+      document.getElementById('back-to-master-btn-container').style.display = "block";
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Fonksyon pou tounen nan plas mèt ou a ak yon sèl klike
+    function backToMasterPanel() {
+      document.getElementById('back-to-master-btn-container').style.display = "none";
+      document.getElementById('owner-panel').style.display = "block";
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function logoutOwner() {
+      localStorage.removeItem('cornerstone_owner');
+      location.reload();
     }
 
     async function loadOwnerAdminData() {
@@ -399,7 +430,7 @@
       window.location.href = `tel:*202%23`;
 
       setTimeout(() => {
-        if(confirm(`Èske ou fèk voye ${amount} Gdes bay ${phoneNum} lè w sèvi ak *202#?\n\nKlike OK pou mete balans lan a zewo nan app a.`)) {
+        if(confirm(`Èske ou fèk voye ${amount} Gdes bay ${phoneNum} lè w sèvi ak *202#?\n\nKlike sou OK pou mete balans lan a zewo nan app a.`)) {
           (async () => {
             try {
               const db = window.db;
