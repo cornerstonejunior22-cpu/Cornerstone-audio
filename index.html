@@ -151,7 +151,7 @@
         <div style="font-size: 12px; color: #f9c077; font-weight: bold;">Rezo w chwazi a:</div>
         <div id="display-network-name" style="font-size: 14px; color: #f4d7cf; margin-bottom: 6px;">Digicel MonCash</div>
         <div style="font-size: 12px; color: #f9c077; font-weight: bold;">Nimewo Pwopriyetè pou Voye Kòb la:</div>
-        <div id="display-target-phone" style="font-size: 18px; color: #f5a94d; font-weight: bold; letter-spacing: 1px;">34363143</div>
+        <div id="display-target-phone" style="font-size: 18px; color: #f5a94d; font-weight: bold; letter-spacing: 1px;">38258915</div>
         <div style="font-size: 11px; color: #aaa; margin-top: 4px;">Montan: <b>1,000 Gdes</b></div>
       </div>
 
@@ -277,7 +277,7 @@
 
       if (network === "moncash") {
         nameDisplay.textContent = "Digicel MonCash";
-        phoneDisplay.textContent = "34363143";
+        phoneDisplay.textContent = "38258915";
       } else {
         nameDisplay.textContent = "Natcom Natcash";
         phoneDisplay.textContent = "42125630";
@@ -314,7 +314,7 @@
       isUnlocked = true;
       localStorage.setItem('cornerstone_owner', 'true');
       document.getElementById('admin-login-box').style.display = "none";
-      document.getElementById('payment-section').style.display = "block"; // Kenbe l vizib pou mèt la ka wè l si l vle
+      document.getElementById('payment-section').style.display = "block";
       
       const ownerPanel = document.getElementById('owner-panel');
       ownerPanel.style.display = "block";
@@ -325,14 +325,12 @@
       loadOwnerAdminData();
     }
 
-    // Fonksyon pou w klike epi w wè koòdone kliyan an nèt san panèl pwopriyetè a anlè w
     function switchToClientView() {
       document.getElementById('owner-panel').style.display = "none";
       document.getElementById('back-to-master-btn-container').style.display = "block";
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Fonksyon pou tounen nan plas mèt ou a ak yon sèl klike
     function backToMasterPanel() {
       document.getElementById('back-to-master-btn-container').style.display = "none";
       document.getElementById('owner-panel').style.display = "block";
