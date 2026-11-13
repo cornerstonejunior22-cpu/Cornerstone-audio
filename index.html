@@ -125,7 +125,7 @@
     </div>
   </div>
 
-  <!-- BOUTON RETOUNEN NAN MÒD MÈT (Lè w t ap gade ekran kliyan an epi w vle tounen mèt) -->
+  <!-- BOUTON RETOUNEN NAN MÒD MÈT -->
   <div id="back-to-master-btn-container" style="display: none; margin-top: 15px;">
     <button class="btn" style="background-color: #c62828; color: #fff; font-size: 13px;" onclick="backToMasterPanel()">👑 Tounen nan Panèl Mèt (Pwopriyetè)</button>
   </div>
@@ -181,7 +181,7 @@
   <div class="category-title">Liv Istorik Yo (12 Liv)</div>
   <div class="grid" id="books-grid"></div>
 
-  <!-- Espas Pwopriyetè Kache (Diskrè anba nèt) -->
+  <!-- Espas Pwopriyetè Kache -->
   <div class="card-box" id="admin-login-box" style="display: none; border-color: #f5a94d; background-color: #2a2015; margin-top: 30px;">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔑 Antre Modpas Pwopriyetè a:</div>
     <input type="password" id="admin-password" placeholder="Modpas ou...">
@@ -347,6 +347,7 @@
       loadIntermediariesList();
     }
 
+    // Koreksyon fonksyon pou li demann yo nan baz done a kòrèkteman
     async function loadPendingClients() {
       const listContainer = document.getElementById('pending-clients-list');
       listContainer.innerHTML = "Ap chaje demann yo...";
@@ -364,12 +365,14 @@
               <div>Non: <b style="color:#f5a94d;">${clientName}</b></div>
               <div>Kòd Kliyan: ${docSnap.id}</div>
               <div>Nimewo Peman: <b>${data.phone}</b> (${data.network})</div>
-              <button class="btn" style="background:#2e7d32; color:#fff; padding:8px; margin-top:6px; font-size:12px;" onclick="approveClient('${docSnap.id}', '${data.parentRef}')">✔ Apwouve & Debloke Liv Yo</button>
+              <div>Parrenaj (Ref): <b>${data.parentRef || 'Okenn'}</b></div>
+              <button class="btn" style="background:#2e7d32; color:#fff; padding:8px; margin-top:6px; font-size:12px;" onclick="approveClient('${docSnap.id}', '${data.parentRef || ''}')">✔ Apwouve & Debloke Liv Yo</button>
             </div>`;
           }
         });
         listContainer.innerHTML = html || "Pa gen okenn demann an annatant pou kounye a.";
       } catch(e) {
+        console.log(e);
         listContainer.innerHTML = "Erè nan chaje demann yo.";
       }
     }
@@ -381,7 +384,7 @@
         
         await updateDoc(doc(db, "users", clientCode), { status: "approved" });
 
-        if (parentRefCode && parentRefCode !== OWNER_REF_CODE) {
+        if (parentRefCode && parentRefCode !== OWNER_REF_CODE && parentRefCode !== "undefined" && parentRefCode !== "") {
           await setDoc(doc(db, "users", parentRefCode), { balance: increment(250) }, { merge: true });
         }
 
@@ -392,6 +395,7 @@
       }
     }
 
+    // Koreksyon lis entèmedyè yo pou afiche non ak balans yo kòrèkteman
     async function loadIntermediariesList() {
       const listContainer = document.getElementById('intermediaries-list');
       try {
@@ -402,7 +406,7 @@
         let html = "";
         querySnapshot.forEach((docSnap) => {
           const data = docSnap.data();
-          if (docSnap.id !== OWNER_REF_CODE && data.balance > 0) {
+          if (docSnap.id !== OWNER_REF_CODE && data.balance && data.balance > 0) {
             const phoneNum = data.phone || '';
             const clientName = data.clientName || 'Entèmedyè';
             html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid #332025;">
@@ -491,6 +495,7 @@
       window.location.href = `tel:*202%23`;
     }
 
+    // Fonksyon pou kliyan an voye demann lan dirèkteman nan Firestore
     async function submitPaymentRequest() {
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
@@ -544,7 +549,7 @@
         setInterval(checkClientStatusOnCloud, 10000);
 
       } catch(e) {
-        alert("Erè nan voye demann lan.");
+        alert("Erè nan voye demann lan. Tcheke entènèt ou.");
       }
     }
 
