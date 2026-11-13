@@ -108,6 +108,9 @@
 
     <!-- TI BOUTON ESPESYAL POU W WE EKRAN KLIYAN AN -->
     <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 12px; font-size: 13px;" onclick="switchToClientView()">👁️ Wè koòdone kliyan an sou ekran pam</button>
+    
+    <!-- BOUTON POU RAFÈCHI LIS DEMANN YO MANÈLMAN -->
+    <button class="btn-outline" style="margin-top: 8px; font-size: 12px;" onclick="loadOwnerAdminData()">🔄 Rafèchi Lis Demann yo Tousuit</button>
 
     <div style="font-size: 12px; color: #f4d7cf; margin-top: 10px;">
       Lyen Parrenaj ou a:
@@ -323,6 +326,11 @@
       document.getElementById('owner-referral-link').value = fullLink;
       
       loadOwnerAdminData();
+
+      // Rafèchi panèl admin an otomatikman chak 10 segonn pou w pa bezwen ap rafrechi paj la
+      if (!window.adminInterval) {
+        window.adminInterval = setInterval(loadOwnerAdminData, 10000);
+      }
     }
 
     function switchToClientView() {
@@ -347,10 +355,8 @@
       loadIntermediariesList();
     }
 
-    // Koreksyon fonksyon pou li demann yo nan baz done a kòrèkteman
     async function loadPendingClients() {
       const listContainer = document.getElementById('pending-clients-list');
-      listContainer.innerHTML = "Ap chaje demann yo...";
       try {
         const db = window.db;
         const { collection, getDocs } = window.FirestoreMethods;
@@ -373,7 +379,7 @@
         listContainer.innerHTML = html || "Pa gen okenn demann an annatant pou kounye a.";
       } catch(e) {
         console.log(e);
-        listContainer.innerHTML = "Erè nan chaje demann yo.";
+        listContainer.innerHTML = "Erè nan chaje demann yo (Tcheke règ Firebase yo).";
       }
     }
 
@@ -395,7 +401,6 @@
       }
     }
 
-    // Koreksyon lis entèmedyè yo pou afiche non ak balans yo kòrèkteman
     async function loadIntermediariesList() {
       const listContainer = document.getElementById('intermediaries-list');
       try {
@@ -495,7 +500,6 @@
       window.location.href = `tel:*202%23`;
     }
 
-    // Fonksyon pou kliyan an voye demann lan dirèkteman nan Firestore
     async function submitPaymentRequest() {
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
@@ -549,7 +553,7 @@
         setInterval(checkClientStatusOnCloud, 10000);
 
       } catch(e) {
-        alert("Erè nan voye demann lan. Tcheke entènèt ou.");
+        alert("Erè nan voye demann lan. Tcheke si règ Firestore ou yo pèmèt lekti/ekriti.");
       }
     }
 
