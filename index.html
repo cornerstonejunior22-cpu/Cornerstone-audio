@@ -327,7 +327,6 @@
       
       loadOwnerAdminData();
 
-      // Rafèchi panèl admin an otomatikman chak 10 segonn pou w pa bezwen ap rafrechi paj la
       if (!window.adminInterval) {
         window.adminInterval = setInterval(loadOwnerAdminData, 10000);
       }
@@ -379,7 +378,7 @@
         listContainer.innerHTML = html || "Pa gen okenn demann an annatant pou kounye a.";
       } catch(e) {
         console.log(e);
-        listContainer.innerHTML = "Erè nan chaje demann yo (Tcheke règ Firebase yo).";
+        listContainer.innerHTML = "Erè nan chaje demann yo.";
       }
     }
 
@@ -553,7 +552,7 @@
         setInterval(checkClientStatusOnCloud, 10000);
 
       } catch(e) {
-        alert("Erè nan voye demann lan. Tcheke si règ Firestore ou yo pèmèt lekti/ekriti.");
+        alert("Erè nan voye demann lan.");
       }
     }
 
