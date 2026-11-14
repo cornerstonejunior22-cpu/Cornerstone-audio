@@ -25,6 +25,7 @@
     const db = getFirestore(app);
     window.db = db;
     window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot, increment };
+    window.isFirebaseReady = true;
   </script>
 
   <style>
@@ -109,9 +110,6 @@
     <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 12px; font-size: 13px;" onclick="switchToClientView()">👁️ Wè koòdone kliyan an</button>
     <button class="btn" style="background-color: #1976d2; color: #fff; margin-top: 8px; font-size: 12px;" onclick="createTestClient()">🧪 Ajoute yon Kliyan Tès Manèlman</button>
 
-    <!-- TI BWAT ESTATI OSWA ERÈ SOU EKRAN PAM NAN -->
-    <div id="admin-error-box" style="margin-top: 10px; padding: 8px; background: #18130e; border: 1px solid #ff505d; color: #ff505d; font-size: 11px; border-radius: 6px; display: none;"></div>
-
     <div style="font-size: 12px; color: #f4d7cf; margin-top: 10px;">Lyen Parrenaj ou a:</div>
     <input type="text" id="owner-referral-link" readonly onclick="this.select()">
     
@@ -161,6 +159,8 @@
       <input type="text" id="client-name" placeholder="Non ak siyati w..." style="margin-top: 8px;">
       <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 8px;">
       
+      <div id="client-debug-status" style="margin-top: 8px; font-size: 11px; color: #ff505d; font-weight: bold;"></div>
+
       <button class="btn" onclick="triggerUSSDMenu()">Rele *202# pou Fè Peman an</button>
       <button class="btn" style="background-color: #1976d2; color: #fff; margin-top: 8px;" onclick="submitPaymentRequest()">Voye Demann Debloke</button>
       <button class="btn-outline" onclick="closeMonCashModal()" style="margin-top: 8px; border-color: #ff505d; color: #ff505d;">Anile</button>
@@ -301,22 +301,14 @@
       initAdminLiveListener();
     }
 
-    // LIS LIVE AK KAPTE ERÈ SOU EKRAN PAM NAN
     function initAdminLiveListener() {
       const listContainer = document.getElementById('pending-clients-list');
-      const errBox = document.getElementById('admin-error-box');
-      
       try {
         const db = window.db;
-        if (!db) { 
-          errBox.style.display = "block";
-          errBox.textContent = "Erè: Baz done a pa disponib nan sistèm nan.";
-          return; 
-        }
+        if (!db) { listContainer.innerHTML = "Baz done a pa disponib."; return; }
         const { collection, onSnapshot } = window.FirestoreMethods;
 
         onSnapshot(collection(db, "users"), (querySnapshot) => {
-          errBox.style.display = "none"; // Si l ap mache, kache bwat erè a
           let html = "";
           querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
@@ -335,15 +327,9 @@
             }
           });
           listContainer.innerHTML = html || "Pa gen okenn demann nan baz done a pou kounye a.";
-        }, (error) => {
-          // Si koneksyon live la jwenn yon erè (tankou pèmisyon oswa entènèt), l ap afiche l la a
-          errBox.style.display = "block";
-          errBox.textContent = "⚠ Erè Live Firebase: " + error.message;
         });
-
       } catch(e) {
-        errBox.style.display = "block";
-        errBox.textContent = "⚠ Erè nan kòd la: " + e.message;
+        listContainer.innerHTML = "Erè nan koneksyon an dirèk: " + e.message;
       }
     }
 
@@ -435,16 +421,34 @@
     function closeMonCashModal() { document.getElementById('moncash-modal').style.display = 'none'; }
     function triggerUSSDMenu() { window.location.href = `tel:*202%23`; }
 
+    // SEKSYON NOUVO AK SEKIRITE AK CHAJMAN FIREBASE
     async function submitPaymentRequest() {
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
       const network = document.getElementById('payment-network').value;
+      const debugEl = document.getElementById('client-debug-status');
 
-      if (clientName.length < 2) { alert("Tanpri antre non ak siyati w!"); return; }
-      if (phone.length < 8) { alert("Tanpri antre nimewo telefòn ou!"); return; }
+      debugEl.style.color = "#f5a94d";
+      debugEl.textContent = "";
 
-      closeMonCashModal();
-      
+      if (clientName.length < 2) {
+        debugEl.textContent = "⚠ Tanpri antre non ak siyati w!";
+        return;
+      }
+      if (phone.length < 8) {
+        debugEl.textContent = "⚠ Tanpri antre nimewo telefòn ou!";
+        return;
+      }
+
+      // Tcheke si Firebase pare sou aparèy la
+      if (!window.isFirebaseReady || !window.db) {
+        debugEl.style.color = "#ff505d";
+        debugEl.textContent = "⚠ Tanpri tann 2 segond, koneksyon an ap chaje sou telefòn sa a...";
+        return;
+      }
+
+      debugEl.textContent = "Ap voye demann lan nan sistèm nan...";
+
       let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
       localStorage.setItem('my_personal_ref_code', myNewCode);
@@ -463,12 +467,19 @@
           createdAt: new Date().toISOString() 
         }, { merge: true });
 
-        alert("✔ Demann ou an voye ak siksè nan sistèm nan!");
-        document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
-        document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
-        document.getElementById('pay-btn').style.display = "none";
+        debugEl.style.color = "#97c373";
+        debugEl.textContent = "✔ Demann lan voye ak siksè!";
+        
+        setTimeout(() => {
+          closeMonCashModal();
+          document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
+          document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
+          document.getElementById('pay-btn').style.display = "none";
+        }, 1500);
+
       } catch(e) {
-        alert("Erè nan voye demann lan: " + e.message);
+        debugEl.style.color = "#ff505d";
+        debugEl.textContent = "❌ Erè: " + e.message;
       }
     }
 
