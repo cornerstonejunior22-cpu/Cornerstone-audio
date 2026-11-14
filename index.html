@@ -117,8 +117,8 @@
     </div>
     <input type="text" id="owner-referral-link" readonly onclick="this.select()">
     
-    <div class="category-title" style="margin-top: 15px;">Moun k ap tann konfimasyon peman (1,000 Gdes):</div>
-    <div id="pending-clients-list" style="font-size: 13px; margin-top: 8px; max-height: 200px; overflow-y: auto;">
+    <div class="category-title" style="margin-top: 15px;">Lis Kliyan nan Sistèm nan (Demann ak Apwobasyon):</div>
+    <div id="pending-clients-list" style="font-size: 13px; margin-top: 8px; max-height: 250px; overflow-y: auto;">
       Chaje lis la...
     </div>
 
@@ -256,6 +256,7 @@
 
       try {
         const db = window.db;
+        if (!db) return;
         const { doc, getDoc } = window.FirestoreMethods;
         const userSnap = await getDoc(doc(db, "users", myCode));
         if (userSnap.exists()) {
@@ -358,27 +359,34 @@
       const listContainer = document.getElementById('pending-clients-list');
       try {
         const db = window.db;
+        if (!db) {
+          listContainer.innerHTML = "Baz done a poko chaje. Tanpri tann 2 segond.";
+          return;
+        }
         const { collection, getDocs } = window.FirestoreMethods;
         const querySnapshot = await getDocs(collection(db, "users"));
         
         let html = "";
         querySnapshot.forEach((docSnap) => {
           const data = docSnap.data();
-          if (data.status === "pending") {
+          if (docSnap.id !== OWNER_REF_CODE) {
             const clientName = data.clientName || "Non pa sove";
-            html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid #ff505d;">
+            const status = data.status || "pending";
+            const isPending = (status === "pending");
+
+            html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid ${isPending ? '#ff505d' : '#2e7d32'};">
               <div>Non: <b style="color:#f5a94d;">${clientName}</b></div>
-              <div>Kòd Kliyan: ${docSnap.id}</div>
-              <div>Nimewo Peman: <b>${data.phone}</b> (${data.network})</div>
+              <div>Kòd Kliyan: ${docSnap.id} | Estati: <b>${status}</b></div>
+              <div>Nimewo Peman: <b>${data.phone || 'Pa gen'}</b> (${data.network || ''})</div>
               <div>Parrenaj (Ref): <b>${data.parentRef || 'Okenn'}</b></div>
-              <button class="btn" style="background:#2e7d32; color:#fff; padding:8px; margin-top:6px; font-size:12px;" onclick="approveClient('${docSnap.id}', '${data.parentRef || ''}')">✔ Apwouve & Debloke Liv Yo</button>
+              ${isPending ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:8px; margin-top:6px; font-size:12px;" onclick="approveClient('${docSnap.id}', '${data.parentRef || ''}')">✔ Apwouve & Debloke Liv Yo</button>` : `<div style="color:#97c373; margin-top:6px; font-size:12px; font-weight:bold;">✔ Kliyan sa a deja debloke</div>`}
             </div>`;
           }
         });
-        listContainer.innerHTML = html || "Pa gen okenn demann an annatant pou kounye a.";
+        listContainer.innerHTML = html || "Pa gen okenn kliyan nan baz done a pou kounye a.";
       } catch(e) {
         console.log(e);
-        listContainer.innerHTML = "Erè nan chaje demann yo.";
+        listContainer.innerHTML = "Erè nan chaje lis la: " + e.message;
       }
     }
 
@@ -393,10 +401,10 @@
           await setDoc(doc(db, "users", parentRefCode), { balance: increment(250) }, { merge: true });
         }
 
-        alert("Demann nan apwouve! Kliyan an ap jwenn aksè nan liv yo kounye a.");
+        alert("Demann nan apwouve ak siksè! Kliyan an gen aksè kounye a.");
         loadOwnerAdminData();
       } catch(e) {
-        alert("Echèk nan apwobasyon an.");
+        alert("Echèk nan apwobasyon an: " + e.message);
       }
     }
 
@@ -404,6 +412,7 @@
       const listContainer = document.getElementById('intermediaries-list');
       try {
         const db = window.db;
+        if (!db) return;
         const { collection, getDocs } = window.FirestoreMethods;
         const querySnapshot = await getDocs(collection(db, "users"));
         
@@ -528,6 +537,10 @@
 
       try {
         const db = window.db;
+        if (!db) {
+          alert("Baz done a poko pare, tanpri tann 2 segond epi eseye ankò.");
+          return;
+        }
         const { doc, setDoc } = window.FirestoreMethods;
 
         const newUserRef = doc(db, "users", myNewCode);
@@ -538,8 +551,10 @@
           phone: phone, 
           network: network, 
           status: "pending", 
-          createdAt: new Date() 
+          createdAt: new Date().toISOString() 
         }, { merge: true });
+
+        alert("✔ Demann ou an voye ak siksè nan sistèm nan!");
 
         document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
         document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
@@ -547,12 +562,12 @@
         document.getElementById('referral-input').style.display = "none";
         
         document.getElementById('api-response').style.color = "#f5a94d";
-        document.getElementById('api-response').textContent = "✔ Demann ou an ale avèk siksè! Y ap verifye l tousuit.";
+        document.getElementById('api-response').textContent = "✔ Demann ou an ale avèk siksè!";
 
         setInterval(checkClientStatusOnCloud, 10000);
 
       } catch(e) {
-        alert("Erè nan voye demann lan.");
+        alert("Erè nan voye demann lan: " + e.message);
       }
     }
 
