@@ -102,35 +102,24 @@
   <!-- Pwopriyetè / Admin Panèl -->
   <div class="card-box" id="owner-panel" style="display: none; border-color: #f5a94d; background-color: #2a2015;">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d; display: flex; justify-content: space-between; align-items: center;">
-      <span>🔒 Panèl Pwopriyetè (Apwobasyon ak Komisyon)</span>
+      <span>🔒 Panèl Pwopriyetè (Apwobasyon)</span>
       <button class="btn-outline" style="width: auto; padding: 4px 8px; font-size: 11px; margin-top: 0; border-color: #ff505d; color: #ff505d;" onclick="logoutOwner()">Soti</button>
     </div>
 
-    <!-- TI BOUTON ESPESYAL POU W WE EKRAN KLIYAN AN -->
-    <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 12px; font-size: 13px;" onclick="switchToClientView()">👁️ Wè koòdone kliyan an sou ekran pam</button>
-    
-    <!-- BOUTON POU RAFÈCHI LIS DEMANN YO MANÈLMAN -->
-    <button class="btn-outline" style="margin-top: 8px; font-size: 12px;" onclick="loadOwnerAdminData()">🔄 Rafèchi Lis Demann yo Tousuit</button>
+    <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 12px; font-size: 13px;" onclick="switchToClientView()">👁️ Wè koòdone kliyan an</button>
+    <button class="btn-outline" style="margin-top: 8px; font-size: 12px;" onclick="loadOwnerAdminData()">🔄 Rafèchi Lis Kliyan yo Tousuit</button>
 
-    <div style="font-size: 12px; color: #f4d7cf; margin-top: 10px;">
-      Lyen Parrenaj ou a:
-    </div>
+    <div style="font-size: 12px; color: #f4d7cf; margin-top: 10px;">Lyen Parrenaj ou a:</div>
     <input type="text" id="owner-referral-link" readonly onclick="this.select()">
     
-    <div class="category-title" style="margin-top: 15px;">Lis Kliyan nan Sistèm nan (Demann ak Apwobasyon):</div>
+    <div class="category-title" style="margin-top: 15px;">Lis Itilizatè ak Kliyan nan Sistèm nan:</div>
     <div id="pending-clients-list" style="font-size: 13px; margin-top: 8px; max-height: 250px; overflow-y: auto;">
-      Chaje lis la...
-    </div>
-
-    <div class="category-title" style="margin-top: 15px;">Lis Entèmedyè ak Komisyon yo:</div>
-    <div id="intermediaries-list" style="font-size: 13px; margin-top: 8px; max-height: 200px; overflow-y: auto;">
       Chaje lis la...
     </div>
   </div>
 
-  <!-- BOUTON RETOUNEN NAN MÒD MÈT -->
   <div id="back-to-master-btn-container" style="display: none; margin-top: 15px;">
-    <button class="btn" style="background-color: #c62828; color: #fff; font-size: 13px;" onclick="backToMasterPanel()">👑 Tounen nan Panèl Mèt (Pwopriyetè)</button>
+    <button class="btn" style="background-color: #c62828; color: #fff; font-size: 13px;" onclick="backToMasterPanel()">👑 Tounen nan Panèl Mèt</button>
   </div>
 
   <!-- Seksyon Peman pou Kliyan -->
@@ -158,15 +147,9 @@
         <div style="font-size: 11px; color: #aaa; margin-top: 4px;">Montan: <b>1,000 Gdes</b></div>
       </div>
 
-      <button class="btn" style="background-color: #2e7d32; color: #fff; margin-bottom: 10px; font-size: 13px;" onclick="copyOwnerNumber()">📋 Kopye Nimewo sa a nan memwa telefòn nan</button>
-      <div id="copy-feedback" style="font-size: 11px; color: #97c373; margin-bottom: 8px; display: none;">✔ Nimewo a kopye! Ou ka kole l nan ekran USSD la fasil.</div>
+      <button class="btn" style="background-color: #2e7d32; color: #fff; margin-bottom: 10px; font-size: 13px;" onclick="copyOwnerNumber()">📋 Kopye Nimewo sa a</button>
+      <div id="copy-feedback" style="font-size: 11px; color: #97c373; margin-bottom: 8px; display: none;">✔ Nimewo a kopye!</div>
 
-      <div style="font-size: 12px; color: #f4d7cf; margin-bottom: 12px; line-height: 1.4; text-align: left;">
-        1. Klike sou kopye anwo a.<br>
-        2. Klike sou rele <b>*202#</b> epi lè yo mande nimewo a, kenbe dwèt ou pou w *kole (paste)* li.<br>
-        3. Antre non w ak nimewo telefòn ou fè peman an anba a epi voye demann lan.
-      </div>
-      
       <select id="payment-network" onchange="updateModalInfo()">
         <option value="moncash">Digicel MonCash</option>
         <option value="natcash">Natcom Natcash</option>
@@ -176,7 +159,7 @@
       <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 8px;">
       
       <button class="btn" onclick="triggerUSSDMenu()">Rele *202# pou Fè Peman an</button>
-      <button class="btn" style="background-color: #1976d2; color: #fff; margin-top: 8px;" onclick="submitPaymentRequest()">Voye Demann Debloke bay Pwopriyetè a</button>
+      <button class="btn" style="background-color: #1976d2; color: #fff; margin-top: 8px;" onclick="submitPaymentRequest()">Voye Demann Debloke</button>
       <button class="btn-outline" onclick="closeMonCashModal()" style="margin-top: 8px; border-color: #ff505d; color: #ff505d;">Anile</button>
     </div>
   </div>
@@ -191,7 +174,7 @@
     <button class="btn" onclick="verifyOwnerPassword()">Konekte kòm Pwopriyetè</button>
   </div>
 
-  <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;" id="reveal-link-container">
+  <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;">
     <span style="font-size: 11px; color: #554433; cursor: pointer; text-decoration: underline;" onclick="revealAdminBox()">Anviwònman Pwopriyetè</span>
   </div>
 
@@ -242,12 +225,7 @@
       const urlParams = new URLSearchParams(window.location.search);
       const refCode = urlParams.get('ref');
       const inputField = document.getElementById('referral-input');
-
-      if (refCode && refCode.trim() !== "") {
-        inputField.value = refCode;
-      } else {
-        inputField.value = OWNER_REF_CODE;
-      }
+      inputField.value = (refCode && refCode.trim() !== "") ? refCode : OWNER_REF_CODE;
     };
 
     async function checkClientStatusOnCloud() {
@@ -261,11 +239,11 @@
         const userSnap = await getDoc(doc(db, "users", myCode));
         if (userSnap.exists()) {
           const data = userSnap.data();
-          if (data.status === "approved") {
+          if (data.hasPaid === true || data.status === "approved") {
             activateClientUnlockedMode();
-          } else if (data.status === "pending") {
+          } else {
             document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
-            document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an nan kont li, liv yo ap louvri otomatikman.";
+            document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
             document.getElementById('pay-btn').style.display = "none";
           }
         }
@@ -276,16 +254,8 @@
 
     function updateModalInfo() {
       const network = document.getElementById('payment-network').value;
-      const nameDisplay = document.getElementById('display-network-name');
-      const phoneDisplay = document.getElementById('display-target-phone');
-
-      if (network === "moncash") {
-        nameDisplay.textContent = "Digicel MonCash";
-        phoneDisplay.textContent = "38258915";
-      } else {
-        nameDisplay.textContent = "Natcom Natcash";
-        phoneDisplay.textContent = "42125630";
-      }
+      document.getElementById('display-network-name').textContent = (network === "moncash") ? "Digicel MonCash" : "Natcom Natcash";
+      document.getElementById('display-target-phone').textContent = (network === "moncash") ? "38258915" : "42125630";
     }
 
     function copyOwnerNumber() {
@@ -294,8 +264,6 @@
         const feedback = document.getElementById('copy-feedback');
         feedback.style.display = "block";
         setTimeout(() => { feedback.style.display = "none"; }, 4000);
-      }).catch(err => {
-        alert("Echèk nan kopye nimewo a.");
       });
     }
 
@@ -305,8 +273,7 @@
     }
 
     async function verifyOwnerPassword() {
-      const pass = document.getElementById('admin-password').value.trim();
-      if (pass === "CORNERSTONE2026") {
+      if (document.getElementById('admin-password').value.trim() === "CORNERSTONE2026") {
         activateOwnerMode();
         alert("Byenveni Pwopriyetè!");
       } else {
@@ -319,18 +286,10 @@
       localStorage.setItem('cornerstone_owner', 'true');
       document.getElementById('admin-login-box').style.display = "none";
       document.getElementById('payment-section').style.display = "block";
+      document.getElementById('owner-panel').style.display = "block";
       
-      const ownerPanel = document.getElementById('owner-panel');
-      ownerPanel.style.display = "block";
-      
-      let fullLink = window.location.origin + window.location.pathname + "?ref=" + OWNER_REF_CODE;
-      document.getElementById('owner-referral-link').value = fullLink;
-      
+      document.getElementById('owner-referral-link').value = window.location.origin + window.location.pathname + "?ref=" + OWNER_REF_CODE;
       loadOwnerAdminData();
-
-      if (!window.adminInterval) {
-        window.adminInterval = setInterval(loadOwnerAdminData, 10000);
-      }
     }
 
     function switchToClientView() {
@@ -351,65 +310,7 @@
     }
 
     async function loadOwnerAdminData() {
-      loadPendingClients();
-      loadIntermediariesList();
-    }
-
-    async function loadPendingClients() {
       const listContainer = document.getElementById('pending-clients-list');
-      try {
-        const db = window.db;
-        if (!db) {
-          listContainer.innerHTML = "Baz done a poko chaje. Tanpri tann 2 segond.";
-          return;
-        }
-        const { collection, getDocs } = window.FirestoreMethods;
-        const querySnapshot = await getDocs(collection(db, "users"));
-        
-        let html = "";
-        querySnapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          if (docSnap.id !== OWNER_REF_CODE) {
-            const clientName = data.clientName || "Non pa sove";
-            const status = data.status || "pending";
-            const isPending = (status === "pending");
-
-            html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid ${isPending ? '#ff505d' : '#2e7d32'};">
-              <div>Non: <b style="color:#f5a94d;">${clientName}</b></div>
-              <div>Kòd Kliyan: ${docSnap.id} | Estati: <b>${status}</b></div>
-              <div>Nimewo Peman: <b>${data.phone || 'Pa gen'}</b> (${data.network || ''})</div>
-              <div>Parrenaj (Ref): <b>${data.parentRef || 'Okenn'}</b></div>
-              ${isPending ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:8px; margin-top:6px; font-size:12px;" onclick="approveClient('${docSnap.id}', '${data.parentRef || ''}')">✔ Apwouve & Debloke Liv Yo</button>` : `<div style="color:#97c373; margin-top:6px; font-size:12px; font-weight:bold;">✔ Kliyan sa a deja debloke</div>`}
-            </div>`;
-          }
-        });
-        listContainer.innerHTML = html || "Pa gen okenn kliyan nan baz done a pou kounye a.";
-      } catch(e) {
-        console.log(e);
-        listContainer.innerHTML = "Erè nan chaje lis la: " + e.message;
-      }
-    }
-
-    async function approveClient(clientCode, parentRefCode) {
-      try {
-        const db = window.db;
-        const { doc, updateDoc, setDoc, increment } = window.FirestoreMethods;
-        
-        await updateDoc(doc(db, "users", clientCode), { status: "approved" });
-
-        if (parentRefCode && parentRefCode !== OWNER_REF_CODE && parentRefCode !== "undefined" && parentRefCode !== "") {
-          await setDoc(doc(db, "users", parentRefCode), { balance: increment(250) }, { merge: true });
-        }
-
-        alert("Demann nan apwouve ak siksè! Kliyan an gen aksè kounye a.");
-        loadOwnerAdminData();
-      } catch(e) {
-        alert("Echèk nan apwobasyon an: " + e.message);
-      }
-    }
-
-    async function loadIntermediariesList() {
-      const listContainer = document.getElementById('intermediaries-list');
       try {
         const db = window.db;
         if (!db) return;
@@ -419,46 +320,41 @@
         let html = "";
         querySnapshot.forEach((docSnap) => {
           const data = docSnap.data();
-          if (docSnap.id !== OWNER_REF_CODE && data.balance && data.balance > 0) {
-            const phoneNum = data.phone || '';
-            const clientName = data.clientName || 'Entèmedyè';
-            html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid #332025;">
-              <div>Non: <b>${clientName}</b> | Kòd: <b>${docSnap.id}</b></div>
-              <div>Nimewo: <b style="color:#f5a94d;">${phoneNum}</b></div>
-              <div style="margin:4px 0;">Komisyon pou voye: <span style="color:#f5a94d; font-size:15px; font-weight:bold;">${data.balance} Gdes</span></div>
-              <button class="btn" style="padding:8px; margin-top:4px; font-size:12px;" onclick="payIntermediaryDirectly('${docSnap.id}', '${phoneNum}', ${data.balance})">📲 Rele *202# pou Voye Kòb la</button>
+          if (docSnap.id !== OWNER_REF_CODE) {
+            const clientName = data.clientName || data.name || "Kliyan San Non";
+            const phoneNum = data.phone || "Pa gen nimewo";
+            const isPaid = (data.hasPaid === true || data.status === "approved");
+
+            html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid ${isPaid ? '#2e7d32' : '#ff505d'};">
+              <div>Non: <b style="color:#f5a94d;">${clientName}</b></div>
+              <div>Kòd: ${docSnap.id} | Nimewo: <b>${phoneNum}</b></div>
+              <div>Estati: <b>${isPaid ? '✔ Deja Debloke' : '⏳ Ap tann Peman'}</b></div>
+              ${!isPaid ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:8px; margin-top:6px; font-size:12px;" onclick="approveClient('${docSnap.id}', '${data.parentRef || ''}')">✔ Apwouve & Debloke Liv Yo</button>` : `<div style="color:#97c373; margin-top:6px; font-size:12px;">Aksè a louvri nèt pou kliyan sa a.</div>`}
             </div>`;
           }
         });
-        listContainer.innerHTML = html || "Pa gen entèmedyè ki gen komisyon pou kounye a.";
+        listContainer.innerHTML = html || "Pa gen okenn itilizatè nan baz done a pou kounye a.";
       } catch(e) {
-        listContainer.innerHTML = "Erè nan chaje lis la.";
+        listContainer.innerHTML = "Erè nan chaje lis la: " + e.message;
       }
     }
 
-    function payIntermediaryDirectly(refCode, phoneNum, amount) {
-      if (!phoneNum || phoneNum.length < 8) {
-        alert("Nimewo telefòn entèmedyè sa a pa valab!");
-        return;
-      }
+    async function approveClient(clientCode, parentRefCode) {
+      try {
+        const db = window.db;
+        const { doc, updateDoc, setDoc, increment } = window.FirestoreMethods;
+        
+        await updateDoc(doc(db, "users", clientCode), { hasPaid: true, status: "approved" });
 
-      window.location.href = `tel:*202%23`;
-
-      setTimeout(() => {
-        if(confirm(`Èske ou fèk voye ${amount} Gdes bay ${phoneNum} lè w sèvi ak *202#?\n\nKlike sou OK pou mete balans lan a zewo nan app a.`)) {
-          (async () => {
-            try {
-              const db = window.db;
-              const { doc, updateDoc } = window.FirestoreMethods;
-              await updateDoc(doc(db, "users", refCode), { balance: 0 });
-              alert("Balans lan vin a zewo.");
-              loadOwnerAdminData();
-            } catch(e) {
-              alert("Echèk.");
-            }
-          })();
+        if (parentRefCode && parentRefCode !== OWNER_REF_CODE && parentRefCode !== "") {
+          await setDoc(doc(db, "users", parentRefCode), { balance: increment(250) }, { merge: true });
         }
-      }, 1000);
+
+        alert("Demann nan apwouve ak siksè! Kliyan an gen aksè kounye a.");
+        loadOwnerAdminData();
+      } catch(e) {
+        alert("Echèk nan apwobasyon an: " + e.message);
+      }
     }
 
     function activateClientUnlockedMode() {
@@ -479,16 +375,15 @@
         
         card.onclick = () => {
           if (!isUnlocked) {
-            alert("Aksè a fèmen! Ou dwe tann pwopriyetè a konfime peman 1,000 Gdes ou an.");
+            alert("Aksè a fèmen! Ou dwe tann pwopriyetè a konfime peman an.");
             return;
           }
           document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
           card.classList.add('active');
           titlingDisplay.textContent = book.title;
-          
           audioSource.src = book.file;
           player.load();
-          player.play().catch(e => { console.log("Jwe mande entèraksyon:", e); });
+          player.play().catch(e => { console.log(e); });
         };
         grid.appendChild(card);
       });
@@ -496,39 +391,20 @@
       player.load();
     }
 
-    function openMonCashModal() {
-      document.getElementById('moncash-modal').style.display = 'flex';
-    }
-
-    function closeMonCashModal() {
-      document.getElementById('moncash-modal').style.display = 'none';
-    }
-
-    function triggerUSSDMenu() {
-      window.location.href = `tel:*202%23`;
-    }
+    function openMonCashModal() { document.getElementById('moncash-modal').style.display = 'flex'; }
+    function closeMonCashModal() { document.getElementById('moncash-modal').style.display = 'none'; }
+    function triggerUSSDMenu() { window.location.href = `tel:*202%23`; }
 
     async function submitPaymentRequest() {
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
       const network = document.getElementById('payment-network').value;
 
-      if (clientName.length < 2) {
-        alert("Tanpri antre non ak siyati w!");
-        return;
-      }
-
-      if (phone.length < 8) {
-        alert("Tanpri antre nimewo telefòn ou fè peman an avè l la!");
-        return;
-      }
+      if (clientName.length < 2) { alert("Tanpri antre non ak siyati w!"); return; }
+      if (phone.length < 8) { alert("Tanpri antre nimewo telefòn ou!"); return; }
 
       closeMonCashModal();
-      let codeInput = document.getElementById('referral-input').value.trim();
-      if (!codeInput) {
-        codeInput = OWNER_REF_CODE;
-      }
-
+      let codeInput = document.getElementById('referral-input').value.trim() || OWNER_REF_CODE;
       let myNewCode = localStorage.getItem('my_personal_ref_code');
       if (!myNewCode) {
         myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
@@ -537,35 +413,24 @@
 
       try {
         const db = window.db;
-        if (!db) {
-          alert("Baz done a poko pare, tanpri tann 2 segond epi eseye ankò.");
-          return;
-        }
         const { doc, setDoc } = window.FirestoreMethods;
 
-        const newUserRef = doc(db, "users", myNewCode);
-        await setDoc(newUserRef, { 
+        await setDoc(doc(db, "users", myNewCode), { 
           balance: 0, 
           parentRef: codeInput, 
           clientName: clientName,
           phone: phone, 
           network: network, 
+          hasPaid: false,
           status: "pending", 
           createdAt: new Date().toISOString() 
         }, { merge: true });
 
-        alert("✔ Demann ou an voye ak siksè nan sistèm nan!");
-
+        alert("✔ Demann ou an voye ak siksè!");
         document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
         document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
         document.getElementById('pay-btn').style.display = "none";
         document.getElementById('referral-input').style.display = "none";
-        
-        document.getElementById('api-response').style.color = "#f5a94d";
-        document.getElementById('api-response').textContent = "✔ Demann ou an ale avèk siksè!";
-
-        setInterval(checkClientStatusOnCloud, 10000);
-
       } catch(e) {
         alert("Erè nan voye demann lan: " + e.message);
       }
@@ -573,12 +438,8 @@
 
     function getReferralCode() {
       let myCode = localStorage.getItem('my_personal_ref_code');
-      const currentUrl = window.location.origin + window.location.pathname;
-      const myShareLink = currentUrl + "?ref=" + myCode;
-
-      const responseDiv = document.getElementById('api-response');
-      responseDiv.style.color = "#f5a94d";
-      responseDiv.innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a pou w touche komisyon ou:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
+      let myShareLink = window.location.origin + window.location.pathname + "?ref=" + myCode;
+      document.getElementById('api-response').innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
     }
   </script>
 </body>
