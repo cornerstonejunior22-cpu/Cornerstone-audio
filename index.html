@@ -115,7 +115,7 @@
     
     <div class="category-title" style="margin-top: 15px;">Lis Demann Kliyan yo (Live):</div>
     <div id="pending-clients-list" style="font-size: 13px; margin-top: 8px; max-height: 250px; overflow-y: auto;">
-      Ap tann demann...
+      Ap tann demann kliyan yo an dirèk...
     </div>
   </div>
 
@@ -220,10 +220,9 @@
 
       if (localStorage.getItem('cornerstone_owner') === 'true') {
         activateOwnerMode();
-        return;
+      } else {
+        checkClientStatusOnCloud();
       }
-
-      checkClientStatusOnCloud();
 
       const urlParams = new URLSearchParams(window.location.search);
       const refCode = urlParams.get('ref');
@@ -320,7 +319,8 @@
 
               html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid ${isApproved ? '#2e7d32' : '#ff505d'};">
                 <div>Non: <b style="color:#f5a94d;">${clientName}</b></div>
-                <div>Nimewo: <b>${phoneNum}</b> | Parènaj: <b style="color:#f5a94d;">${parentRef}</b></div>
+                <div>Nimewo: <b>${phoneNum}</b> | Kòd Kliyan: <b>${docSnap.id}</b></div>
+                <div>Parènaj: <b style="color:#f5a94d;">${parentRef}</b></div>
                 <div>Estati: <b>${isApproved ? '✔ Deja Debloke' : '⏳ Ap tann Peman'}</b></div>
                 ${!isApproved ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:8px; margin-top:6px; font-size:12px;" onclick="approveClient('${docSnap.id}', '${data.parentRef || ''}')">✔ Apwouve & Debloke Liv Yo</button>` : `<div style="color:#97c373; margin-top:6px; font-size:12px;">Aksè a louvri nèt pou kliyan sa a.</div>`}
               </div>`;
@@ -338,12 +338,13 @@
         const db = window.db;
         if (!db) { alert("Baz done a poko chaje."); return; }
         const { doc, setDoc } = window.FirestoreMethods;
-        const testCode = "TEST-" + Math.floor(1000 + Math.random() * 9000);
+        const testCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
         await setDoc(doc(db, "users", testCode), {
           clientName: "Kliyan Tès Manèlman",
           phone: "+50934363143",
           status: "pending",
           network: "moncash",
+          parentRef: OWNER_REF_CODE,
           createdAt: new Date().toISOString()
         });
         alert("✔ Kliyan tès la kreye nan Firebase!");
@@ -369,15 +370,21 @@
       location.reload();
     }
 
+    // LE PWOPRIYETÈ KLIKE SOU APWOUVE: LI DEBLOKE LIV YO EPI LI BAY KLIS LA KÒD PARENAJ PA L
     async function approveClient(clientCode, parentRefCode) {
       try {
         const db = window.db;
         const { doc, updateDoc, setDoc, increment } = window.FirestoreMethods;
+        
+        // 1. Mete estati kliyan an an approved
         await updateDoc(doc(db, "users", clientCode), { status: "approved" });
+
+        // 2. Si gen yon paran ki te parène kliyan sa a, ba l 250 Gdes komisyon
         if (parentRefCode && parentRefCode !== OWNER_REF_CODE && parentRefCode !== "") {
           await setDoc(doc(db, "users", parentRefCode), { balance: increment(250) }, { merge: true });
         }
-        alert("Demann nan apwouve ak siksè!");
+
+        alert("✔ Demann nan apwouve ak siksè! Kliyan an gen aksè kounye a epi li ka sèvi ak kòd pa l.");
       } catch(e) {
         alert("Echèk nan apwobasyon an: " + e.message);
       }
@@ -421,7 +428,7 @@
     function closeMonCashModal() { document.getElementById('moncash-modal').style.display = 'none'; }
     function triggerUSSDMenu() { window.location.href = `tel:*202%23`; }
 
-    // SEKSYON NOUVO AK SEKIRITE AK CHAJMAN FIREBASE
+    // SÒMÈT DEMANN KLIYAN SOTI SOU NENPÒT LÒT TELEFÒN
     async function submitPaymentRequest() {
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
@@ -440,16 +447,17 @@
         return;
       }
 
-      // Tcheke si Firebase pare sou aparèy la
       if (!window.isFirebaseReady || !window.db) {
         debugEl.style.color = "#ff505d";
-        debugEl.textContent = "⚠ Tanpri tann 2 segond, koneksyon an ap chaje sou telefòn sa a...";
+        debugEl.textContent = "⚠ Tanpri tann 2 segond pou koneksyon an chaje sou aparèy sa a...";
         return;
       }
 
       debugEl.textContent = "Ap voye demann lan nan sistèm nan...";
 
       let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
+      
+      // Kreye yon kòd inik pou nouvo kliyan an
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
       localStorage.setItem('my_personal_ref_code', myNewCode);
 
@@ -457,6 +465,7 @@
         const db = window.db;
         const { doc, setDoc } = window.FirestoreMethods;
 
+        // Anrejistre nan baz done a
         await setDoc(doc(db, "users", myNewCode), { 
           balance: 0, 
           parentRef: codeInput, 
@@ -468,7 +477,7 @@
         }, { merge: true });
 
         debugEl.style.color = "#97c373";
-        debugEl.textContent = "✔ Demann lan voye ak siksè!";
+        debugEl.textContent = "✔ Demann lan voye ak siksè nan sistèm nan!";
         
         setTimeout(() => {
           closeMonCashModal();
@@ -483,10 +492,15 @@
       }
     }
 
+    // KÒD PARÈNAJ POU KLIYAN AN PATAJE LÈ L DEBLOKE
     function getReferralCode() {
       let myCode = localStorage.getItem('my_personal_ref_code');
+      if (!myCode) {
+        myCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
+        localStorage.setItem('my_personal_ref_code', myCode);
+      }
       let myShareLink = window.location.origin + window.location.pathname + "?ref=" + myCode;
-      document.getElementById('api-response').innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
+      document.getElementById('api-response').innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a ak lòt moun:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
     }
   </script>
 </body>
