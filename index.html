@@ -102,20 +102,17 @@
   <!-- Pwopriyetè / Admin Panèl -->
   <div class="card-box" id="owner-panel" style="display: none; border-color: #f5a94d; background-color: #2a2015;">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d; display: flex; justify-content: space-between; align-items: center;">
-      <span>🔒 Panèl Pwopriyetè (Apwobasyon)</span>
+      <span>🔒 Panèl Pwopriyetè (Apwobasyon ak Parènaj)</span>
       <button class="btn-outline" style="width: auto; padding: 4px 8px; font-size: 11px; margin-top: 0; border-color: #ff505d; color: #ff505d;" onclick="logoutOwner()">Soti</button>
     </div>
 
     <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 12px; font-size: 13px;" onclick="switchToClientView()">👁️ Wè koòdone kliyan an</button>
     <button class="btn-outline" style="margin-top: 8px; font-size: 12px;" onclick="loadOwnerAdminData()">🔄 Rafèchi Lis Demann yo Tousuit</button>
-    
-    <!-- NOUVO BOUTON TÈS ENSANTANE -->
-    <button class="btn" style="background-color: #1976d2; color: #fff; margin-top: 8px; font-size: 12px;" onclick="createTestClient()">🧪 Ajoute yon Kliyan Tès Manèlman</button>
 
-    <div style="font-size: 12px; color: #f4d7cf; margin-top: 10px;">Lyen Parrenaj ou a:</div>
+    <div style="font-size: 12px; color: #f4d7cf; margin-top: 10px;">Lyen Parrenaj ou a (Pataje l ak moun yo):</div>
     <input type="text" id="owner-referral-link" readonly onclick="this.select()">
     
-    <div class="category-title" style="margin-top: 15px;">Lis Demann Kliyan yo:</div>
+    <div class="category-title" style="margin-top: 15px;">Lis Demann Kliyan ak Parènaj:</div>
     <div id="pending-clients-list" style="font-size: 13px; margin-top: 8px; max-height: 250px; overflow-y: auto;">
       Chaje lis la...
     </div>
@@ -130,7 +127,8 @@
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Debloke 12 Liv Istorik Yo (1,000 Gdes)</div>
     <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Ou dwe fè peman an epi voye demann lan bay pwopriyetè a pou valider l.</div>
     
-    <input type="text" id="referral-input" placeholder="Tape kòd parrenaj la la a...">
+    <!-- Kòd Parènaj Kliyan an ap itilize a (Kache oubyen otomatik) -->
+    <input type="text" id="referral-input" placeholder="Kòd parrenaj..." style="display:none;">
     
     <button class="btn" id="pay-btn" onclick="openMonCashModal()">Peye 1,000 Gdes (MonCash / Natcash)</button>
     <button class="btn-outline" id="share-btn-container" onclick="getReferralCode()" style="display:none;">Jwenn Kòd Parenn mwen pou m pataje</button>
@@ -228,7 +226,14 @@
       const urlParams = new URLSearchParams(window.location.search);
       const refCode = urlParams.get('ref');
       const inputField = document.getElementById('referral-input');
-      inputField.value = (refCode && refCode.trim() !== "") ? refCode : OWNER_REF_CODE;
+      
+      // Si yon moun klike sou lyen parènaj ou a, l ap pran l otomatikman
+      if (refCode && refCode.trim() !== "") {
+        inputField.value = refCode;
+        localStorage.setItem('my_parent_ref', refCode);
+      } else {
+        inputField.value = OWNER_REF_CODE;
+      }
     };
 
     async function checkClientStatusOnCloud() {
@@ -312,27 +317,6 @@
       location.reload();
     }
 
-    // FONKSYON TÈS KLIYAN MANÈLMAN
-    async function createTestClient() {
-      try {
-        const db = window.db;
-        if (!db) { alert("Baz done a poko chaje."); return; }
-        const { doc, setDoc } = window.FirestoreMethods;
-        const testCode = "TEST-" + Math.floor(1000 + Math.random() * 9000);
-        await setDoc(doc(db, "users", testCode), {
-          clientName: "Kliyan Tès Panèl",
-          phone: "+50934363143",
-          status: "pending",
-          network: "moncash",
-          createdAt: new Date().toISOString()
-        });
-        alert("✔ Kliyan tès la kreye ak siksè nan Firebase!");
-        loadOwnerAdminData();
-      } catch(e) {
-        alert("Erè pou kreye tès la: " + e.message);
-      }
-    }
-
     async function loadOwnerAdminData() {
       const listContainer = document.getElementById('pending-clients-list');
       listContainer.innerHTML = "Chaje lis la...";
@@ -346,13 +330,14 @@
         querySnapshot.forEach((docSnap) => {
           const data = docSnap.data();
           if (docSnap.id !== OWNER_REF_CODE) {
-            const clientName = data.clientName || data.name || "Kliyan San Non";
+            const clientName = data.clientName || "Kliyan San Non";
             const phoneNum = data.phone || "Pa gen nimewo";
+            const parentRef = data.parentRef || "Okenn";
             const isApproved = (data.status === "approved");
 
             html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid ${isApproved ? '#2e7d32' : '#ff505d'};">
               <div>Non: <b style="color:#f5a94d;">${clientName}</b></div>
-              <div>Kòd: ${docSnap.id} | Nimewo: <b>${phoneNum}</b></div>
+              <div>Nimewo: <b>${phoneNum}</b> | Parènaj: <b style="color:#f5a94d;">${parentRef}</b></div>
               <div>Estati: <b>${isApproved ? '✔ Deja Debloke' : '⏳ Ap tann Peman'}</b></div>
               ${!isApproved ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:8px; margin-top:6px; font-size:12px;" onclick="approveClient('${docSnap.id}', '${data.parentRef || ''}')">✔ Apwouve & Debloke Liv Yo</button>` : `<div style="color:#97c373; margin-top:6px; font-size:12px;">Aksè a louvri nèt pou kliyan sa a.</div>`}
             </div>`;
@@ -369,13 +354,15 @@
         const db = window.db;
         const { doc, updateDoc, setDoc, increment } = window.FirestoreMethods;
         
+        // Mete estati kliyan an an approved
         await updateDoc(doc(db, "users", clientCode), { status: "approved" });
 
+        // Si gen yon paran ki te parène kliyan sa a, ba l 250 Gdes komisyon
         if (parentRefCode && parentRefCode !== OWNER_REF_CODE && parentRefCode !== "") {
           await setDoc(doc(db, "users", parentRefCode), { balance: increment(250) }, { merge: true });
         }
 
-        alert("Demann nan apwouve ak siksè!");
+        alert("Demann nan apwouve ak siksè! Kliyan an gen aksè kounye a.");
         loadOwnerAdminData();
       } catch(e) {
         alert("Echèk nan apwobasyon an: " + e.message);
@@ -429,7 +416,8 @@
       if (phone.length < 8) { alert("Tanpri antre nimewo telefòn ou!"); return; }
 
       closeMonCashModal();
-      let codeInput = document.getElementById('referral-input').value.trim() || OWNER_REF_CODE;
+      
+      let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
       localStorage.setItem('my_personal_ref_code', myNewCode);
 
@@ -447,11 +435,10 @@
           createdAt: new Date().toISOString() 
         }, { merge: true });
 
-        alert("✔ Demann ou an voye ak siksè!");
+        alert("✔ Demann ou an voye ak siksè nan sistèm nan!");
         document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
         document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
         document.getElementById('pay-btn').style.display = "none";
-        document.getElementById('referral-input').style.display = "none";
       } catch(e) {
         alert("Erè nan voye demann lan: " + e.message);
       }
