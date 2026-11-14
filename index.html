@@ -108,6 +108,9 @@
 
     <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 12px; font-size: 13px;" onclick="switchToClientView()">👁️ Wè koòdone kliyan an</button>
     <button class="btn-outline" style="margin-top: 8px; font-size: 12px;" onclick="loadOwnerAdminData()">🔄 Rafèchi Lis Demann yo Tousuit</button>
+    
+    <!-- NOUVO BOUTON TÈS ENSANTANE -->
+    <button class="btn" style="background-color: #1976d2; color: #fff; margin-top: 8px; font-size: 12px;" onclick="createTestClient()">🧪 Ajoute yon Kliyan Tès Manèlman</button>
 
     <div style="font-size: 12px; color: #f4d7cf; margin-top: 10px;">Lyen Parrenaj ou a:</div>
     <input type="text" id="owner-referral-link" readonly onclick="this.select()">
@@ -309,11 +312,33 @@
       location.reload();
     }
 
-    async function loadOwnerAdminData() {
-      const listContainer = document.getElementById('pending-clients-list');
+    // FONKSYON TÈS KLIYAN MANÈLMAN
+    async function createTestClient() {
       try {
         const db = window.db;
-        if (!db) return;
+        if (!db) { alert("Baz done a poko chaje."); return; }
+        const { doc, setDoc } = window.FirestoreMethods;
+        const testCode = "TEST-" + Math.floor(1000 + Math.random() * 9000);
+        await setDoc(doc(db, "users", testCode), {
+          clientName: "Kliyan Tès Panèl",
+          phone: "+50934363143",
+          status: "pending",
+          network: "moncash",
+          createdAt: new Date().toISOString()
+        });
+        alert("✔ Kliyan tès la kreye ak siksè nan Firebase!");
+        loadOwnerAdminData();
+      } catch(e) {
+        alert("Erè pou kreye tès la: " + e.message);
+      }
+    }
+
+    async function loadOwnerAdminData() {
+      const listContainer = document.getElementById('pending-clients-list');
+      listContainer.innerHTML = "Chaje lis la...";
+      try {
+        const db = window.db;
+        if (!db) { listContainer.innerHTML = "Baz done a pa disponib."; return; }
         const { collection, getDocs } = window.FirestoreMethods;
         const querySnapshot = await getDocs(collection(db, "users"));
         
@@ -321,7 +346,7 @@
         querySnapshot.forEach((docSnap) => {
           const data = docSnap.data();
           if (docSnap.id !== OWNER_REF_CODE) {
-            const clientName = data.clientName || "Kliyan San Non";
+            const clientName = data.clientName || data.name || "Kliyan San Non";
             const phoneNum = data.phone || "Pa gen nimewo";
             const isApproved = (data.status === "approved");
 
