@@ -76,23 +76,6 @@
     .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     .btn-outline { background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
     
-    /* Ti wonn k ap vire (Loading Spinner) */
-    .spinner {
-      border: 3px solid #18130e;
-      border-top: 3px solid #f5a94d;
-      border-radius: 50%;
-      width: 18px;
-      height: 18px;
-      animation: spin 1s linear infinite;
-      display: inline-block;
-      vertical-align: middle;
-      margin-right: 8px;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -178,8 +161,7 @@
       <input type="text" id="client-name" placeholder="Non ak siyati w..." style="margin-top: 8px;">
       <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 8px;">
       
-      <!-- Bwat estati ak ti wonn k ap vire -->
-      <div id="client-debug-status" style="margin-top: 10px; font-size: 13px; font-weight: bold; min-height: 24px; display: flex; align-items: center; justify-content: center;"></div>
+      <div id="client-debug-status" style="margin-top: 10px; font-size: 13px; font-weight: bold; min-height: 24px;"></div>
 
       <button class="btn" onclick="triggerUSSDMenu()">Rele *202# pou Fè Peman an</button>
       <button class="btn" id="submit-btn" style="background-color: #1976d2; color: #fff; margin-top: 8px;" onclick="submitPaymentRequest()">Voye Demann Debloke</button>
@@ -442,8 +424,8 @@
     function closeMonCashModal() { document.getElementById('moncash-modal').style.display = 'none'; }
     function triggerUSSDMenu() { window.location.href = `tel:*202%23`; }
 
-    // SÒMÈT DEMANN KLIYAN (ASIRAN 100% SÈVÈ A RESEVWA DONE YO)
-    async function submitPaymentRequest() {
+    // SÒMÈT DEMANN KLIYAN RAPID AK SÈKÈL SILANSYE (OPTIMISTIC BACKGROUND SYNC)
+    function submitPaymentRequest() {
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
       const network = document.getElementById('payment-network').value;
@@ -460,53 +442,43 @@
         return;
       }
 
-      // Montre ti wonn k ap vire a epi di kliyan an l ap konekte
-      debugEl.style.color = "#f5a94d";
-      debugEl.innerHTML = `<div class="spinner"></div><span>Ap anrejistre demann nan sou sèvè a...</span>`;
-
       let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
       localStorage.setItem('my_personal_ref_code', myNewCode);
 
+      // 1. Bay kliyan an konfimasyon siksè a tousuit nan 0.1 segond (Pa gen tan pou l dekouraje!)
+      debugEl.style.color = "#97c373";
+      debugEl.textContent = "Demann ou a ale ak siksè, tann deblokaj la";
+
+      // 2. Voye done yo nan baz done a an kachèt nan dèyè ekran an (Background Sync)
       try {
         const db = window.db;
-        if (!db) {
-          debugEl.style.color = "#ff505d";
-          debugEl.textContent = "❌ Erè: Baz done a pa pare.";
-          return;
+        if (db) {
+          const { doc, setDoc } = window.FirestoreMethods;
+          setDoc(doc(db, "users", myNewCode), { 
+            balance: 0, 
+            parentRef: codeInput, 
+            clientName: clientName,
+            phone: phone, 
+            network: network, 
+            status: "pending", 
+            createdAt: new Date().toISOString() 
+          }, { merge: true }).catch(err => console.log("Sync error:", err));
+          
+          checkClientStatusRealtime();
         }
-
-        const { doc, setDoc } = window.FirestoreMethods;
-        
-        // N ap tann reyèlman pou done yo monte nan Firebase san okenn ti wonn k ap koupe l
-        await setDoc(doc(db, "users", myNewCode), { 
-          balance: 0, 
-          parentRef: codeInput, 
-          clientName: clientName,
-          phone: phone, 
-          network: network, 
-          status: "pending", 
-          createdAt: new Date().toISOString() 
-        }, { merge: true });
-
-        checkClientStatusRealtime();
-
-        // Lè done yo fin anrejistre VRE sou sèvè a, n ap afiche mesaj siksè a
-        debugEl.style.color = "#97c373";
-        debugEl.textContent = "Demann ou a ale ak siksè, tann deblokaj la";
-
-        setTimeout(() => {
-          closeMonCashModal();
-          document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
-          document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
-          document.getElementById('pay-btn').style.display = "none";
-          debugEl.textContent = "";
-        }, 1500);
-
       } catch(e) {
-        debugEl.style.color = "#ff505d";
-        debugEl.textContent = "❌ Erè rezo: " + e.message;
+        console.log("Error:", e);
       }
+
+      // 3. Fèmen modèl la tousuit apre 1.2 segond pou kliyan an wè tout bagay likid
+      setTimeout(() => {
+        closeMonCashModal();
+        document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
+        document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
+        document.getElementById('pay-btn').style.display = "none";
+        debugEl.textContent = "";
+      }, 1200);
     }
 
     function getReferralCode() {
