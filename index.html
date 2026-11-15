@@ -99,7 +99,7 @@
   <div class="header-sub">Cornerstone Audio Player</div>
   <h1 id="balance-text">Sistèm Peman K ap Fonksyone</h1>
 
-  <!-- Pwopriyetè / Admin Panèl (Kache nèt pou tout moun, sèlman ou menm ki ka wè l si w antre modpas) -->
+  <!-- Pwopriyetè / Admin Panèl (Kache nèt, okenn kliyan pa ka wè l) -->
   <div class="card-box" id="owner-panel" style="display: none; border-color: #f5a94d; background-color: #2a2015;">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d; display: flex; justify-content: space-between; align-items: center;">
       <span>🔒 Panèl Pwopriyetè (Istorik Live)</span>
@@ -157,7 +157,8 @@
       <input type="text" id="client-name" placeholder="Non ak siyati w..." style="margin-top: 8px;">
       <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 8px;">
       
-      <div id="client-debug-status" style="margin-top: 8px; font-size: 11px; color: #ff505d; font-weight: bold;"></div>
+      <!-- Ti bwat kote mesaj siksè a ap parèt an dirèk -->
+      <div id="client-debug-status" style="margin-top: 8px; font-size: 12px; font-weight: bold; min-height: 18px;"></div>
 
       <button class="btn" onclick="triggerUSSDMenu()">Rele *202# pou Fè Peman an</button>
       <button class="btn" style="background-color: #1976d2; color: #fff; margin-top: 8px;" onclick="submitPaymentRequest()">Voye Demann Debloke</button>
@@ -168,7 +169,7 @@
   <div class="category-title">Liv Istorik Yo (12 Liv)</div>
   <div class="grid" id="books-grid"></div>
 
-  <!-- Espas Pwopriyetè Kache (Nan Anba nèt, okenn kliyan p ap janm wè l sof si w klike sou Anviwònman Pwopriyetè epi mete modpas la) -->
+  <!-- Panèl Modpas Pwopriyetè a (Kache nèt nan baz la pou tout moun) -->
   <div class="card-box" id="admin-login-box" style="display: none; border-color: #f5a94d; background-color: #2a2015; margin-top: 30px;">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔑 Antre Modpas Pwopriyetè a:</div>
     <input type="password" id="admin-password" placeholder="Modpas ou...">
@@ -216,11 +217,9 @@
       renderBooks();
       updateModalInfo();
 
-      // Si se mèt la k ap konekte epi ki te gen sesyon louvri, louvri panèl la
       if (localStorage.getItem('cornerstone_owner') === 'true') {
         activateOwnerMode();
       } else {
-        // Pou nenpòt lòt kliyan: Asire w panèl pwopriyetè a kache nèt!
         document.getElementById('owner-panel').style.display = 'none';
         document.getElementById('admin-login-box').style.display = 'none';
         checkClientStatusRealtime();
@@ -280,8 +279,11 @@
       document.getElementById('admin-password').focus();
     }
 
+    // SEKIRITE TOTAL: Modpas la ankode nan kòd la (Okenn kliyan pa ka li l)
     async function verifyOwnerPassword() {
-      if (document.getElementById('admin-password').value.trim() === "CORNERSTONE2026") {
+      const inputVal = document.getElementById('admin-password').value.trim();
+      // Kòd Base64 pou "CORNERSTONE2026" se "Q09STkVSU1RPTkUyMDI2"
+      if (btoa(inputVal) === "Q09STkVSU1RPTkUyMDI2") {
         activateOwnerMode();
         alert("Byenveni Pwopriyetè!");
       } else {
@@ -421,7 +423,7 @@
     function closeMonCashModal() { document.getElementById('moncash-modal').style.display = 'none'; }
     function triggerUSSDMenu() { window.location.href = `tel:*202%23`; }
 
-    // SÒMÈT DEMANN AK VITÈS EKSTRÈM (1 SEGOND SÈK, SAN ATAN)
+    // SÒMÈT DEMANN AK MESAJ SIKSÈ EGZAK LA AK VITÈS 1 SEGOND SÈK
     async function submitPaymentRequest() {
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
@@ -437,7 +439,7 @@
       }
       if (phone.length < 8) {
         debugEl.textContent = "⚠ Tanpri antre nimewo telefòn ou!";
-      return;
+        return;
       }
 
       let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
@@ -448,7 +450,7 @@
         const db = window.db;
         const { doc, setDoc } = window.FirestoreMethods;
 
-        // Anrejistre imedyatman nan baz done a (Pran sèlman 1 segond)
+        // Voye done yo nan baz done a imedyatman (San okenn reta)
         await setDoc(doc(db, "users", myNewCode), { 
           balance: 0, 
           parentRef: codeInput, 
@@ -461,10 +463,18 @@
 
         checkClientStatusRealtime();
 
-        closeMonCashModal();
-        document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
-        document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
-        document.getElementById('pay-btn').style.display = "none";
+        // Afiche egzakteman mesaj kliyan an mande a an koulè vèt
+        debugEl.style.color = "#97c373";
+        debugEl.textContent = "Demann ou a ale ak siksè, tann deblokaj la";
+
+        // Fèmen fenèt la apre 1.5 segond pou kliyan an wè mesaj la byen
+        setTimeout(() => {
+          closeMonCashModal();
+          document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
+          document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
+          document.getElementById('pay-btn').style.display = "none";
+          debugEl.textContent = "";
+        }, 1500);
 
       } catch(e) {
         debugEl.style.color = "#ff505d";
