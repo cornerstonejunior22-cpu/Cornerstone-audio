@@ -424,8 +424,8 @@
     function closeMonCashModal() { document.getElementById('moncash-modal').style.display = 'none'; }
     function triggerUSSDMenu() { window.location.href = `tel:*202%23`; }
 
-    // SÒMÈT DEMANN KLIYAN RAPID AK SÈKÈL SILANSYE (OPTIMISTIC BACKGROUND SYNC)
-    function submitPaymentRequest() {
+    // SÒMÈT DEMANN KLIYAN AK AFICHAJ ERÈ KÒRÈK SI YON BAGAY BLOKE
+    async function submitPaymentRequest() {
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
       const network = document.getElementById('payment-network').value;
@@ -442,43 +442,53 @@
         return;
       }
 
+      debugEl.style.color = "#f5a94d";
+      debugEl.innerHTML = `<span>Ap voye demann lan...</span>`;
+
       let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
       localStorage.setItem('my_personal_ref_code', myNewCode);
 
-      // 1. Bay kliyan an konfimasyon siksè a tousuit nan 0.1 segond (Pa gen tan pou l dekouraje!)
-      debugEl.style.color = "#97c373";
-      debugEl.textContent = "Demann ou a ale ak siksè, tann deblokaj la";
-
-      // 2. Voye done yo nan baz done a an kachèt nan dèyè ekran an (Background Sync)
       try {
         const db = window.db;
-        if (db) {
-          const { doc, setDoc } = window.FirestoreMethods;
-          setDoc(doc(db, "users", myNewCode), { 
-            balance: 0, 
-            parentRef: codeInput, 
-            clientName: clientName,
-            phone: phone, 
-            network: network, 
-            status: "pending", 
-            createdAt: new Date().toISOString() 
-          }, { merge: true }).catch(err => console.log("Sync error:", err));
-          
-          checkClientStatusRealtime();
+        if (!db) {
+          debugEl.style.color = "#ff505d";
+          debugEl.textContent = "❌ Erè: Baz done a pa pare.";
+          return;
         }
-      } catch(e) {
-        console.log("Error:", e);
-      }
 
-      // 3. Fèmen modèl la tousuit apre 1.2 segond pou kliyan an wè tout bagay likid
-      setTimeout(() => {
-        closeMonCashModal();
-        document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
-        document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
-        document.getElementById('pay-btn').style.display = "none";
-        debugEl.textContent = "";
-      }, 1200);
+        const { doc, setDoc } = window.FirestoreMethods;
+        
+        // Nou voye done yo epi n ap tann konfimasyon reyèl la soti sou sèvè a
+        await setDoc(doc(db, "users", myNewCode), { 
+          balance: 0, 
+          parentRef: codeInput, 
+          clientName: clientName,
+          phone: phone, 
+          network: network, 
+          status: "pending", 
+          createdAt: new Date().toISOString() 
+        }, { merge: true });
+
+        checkClientStatusRealtime();
+
+        debugEl.style.color = "#97c373";
+        debugEl.textContent = "Demann ou a ale ak siksè, tann deblokaj la";
+
+        setTimeout(() => {
+          closeMonCashModal();
+          document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
+          document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
+          document.getElementById('pay-btn').style.display = "none";
+          debugEl.textContent = "";
+        }, 1500);
+
+      } catch(e) {
+        // Si gen yon erè pèmisyon ankò, n ap wè l an wouj klè sou ekran an!
+        debugEl.style.color = "#ff505d";
+        debugEl.textContent = "❌ Erè Firebase: " + e.message;
+        console.error("Firebase write error:", e);
+      }
     }
 
     function getReferralCode() {
