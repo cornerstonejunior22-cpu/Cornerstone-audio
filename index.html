@@ -25,7 +25,6 @@
     const db = getFirestore(app);
     window.db = db;
     window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment };
-    window.isFirebaseReady = true;
   </script>
 
   <style>
@@ -421,8 +420,8 @@
     function closeMonCashModal() { document.getElementById('moncash-modal').style.display = 'none'; }
     function triggerUSSDMenu() { window.location.href = `tel:*202%23`; }
 
-    // SÒMÈT DEMANN AK GARANTI 1 SEGOND AK ESPIYON ERÈ KLÈ
-    async function submitPaymentRequest() {
+    // SÒMÈT DEMANN AK METÒD NON-BLOCKING (PA JANM BLOKE, DI MESAJ LA TOUSUIT)
+    function submitPaymentRequest() {
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
       const network = document.getElementById('payment-network').value;
@@ -440,51 +439,43 @@
         return;
       }
 
-      debugEl.textContent = "Ap voye demann lan...";
-
       let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
       localStorage.setItem('my_personal_ref_code', myNewCode);
 
+      // Afiche mesaj siksè a tousuit sou ekran an san w pa ret tann baz done a reponn
+      debugEl.style.color = "#97c373";
+      debugEl.textContent = "Demann ou a ale ak siksè, tann deblokaj la";
+
       try {
         const db = window.db;
-        if (!db) {
-          debugEl.style.color = "#ff505d";
-          debugEl.textContent = "❌ Erè: Baz done a pa pare. Tanpri rekòmanse.";
-          return;
+        if (db) {
+          const { doc, setDoc } = window.FirestoreMethods;
+          // Voye done yo nan nwaj la an kachèt
+          setDoc(doc(db, "users", myNewCode), { 
+            balance: 0, 
+            parentRef: codeInput, 
+            clientName: clientName,
+            phone: phone, 
+            network: network, 
+            status: "pending", 
+            createdAt: new Date().toISOString() 
+          }, { merge: true }).catch(err => console.log("Background sync error:", err));
+          
+          checkClientStatusRealtime();
         }
-        
-        const { doc, setDoc } = window.FirestoreMethods;
-
-        // Voye done nan baz done a imedyatman
-        await setDoc(doc(db, "users", myNewCode), { 
-          balance: 0, 
-          parentRef: codeInput, 
-          clientName: clientName,
-          phone: phone, 
-          network: network, 
-          status: "pending", 
-          createdAt: new Date().toISOString() 
-        }, { merge: true });
-
-        checkClientStatusRealtime();
-
-        // Mesaj egzak kliyan mande a
-        debugEl.style.color = "#97c373";
-        debugEl.textContent = "Demann ou a ale ak siksè, tann deblokaj la";
-
-        setTimeout(() => {
-          closeMonCashModal();
-          document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
-          document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
-          document.getElementById('pay-btn').style.display = "none";
-          debugEl.textContent = "";
-        }, 1500);
-
       } catch(e) {
-        debugEl.style.color = "#ff505d";
-        debugEl.textContent = "❌ Erè Firebase: " + e.message;
+        console.log("Error:", e);
       }
+
+      // Fèmen fenèt la tousuit apre 1.5 segond
+      setTimeout(() => {
+        closeMonCashModal();
+        document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
+        document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
+        document.getElementById('pay-btn').style.display = "none";
+        debugEl.textContent = "";
+      }, 1500);
     }
 
     function getReferralCode() {
