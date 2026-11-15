@@ -252,7 +252,7 @@
         onSnapshot(doc(db, "users", myCode), (docSnap) => {
           if (docSnap.exists()) {
             const data = docSnap.data();
-            if (data.status === "approved") {
+            if (data.hasPaid === true || data.status === "approved") {
               activateClientUnlockedMode();
             }
           }
@@ -315,10 +315,10 @@
           querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
             if (docSnap.id !== OWNER_REF_CODE) {
-              const clientName = data.clientName || "Kliyan San Non";
+              const clientName = data.clientName || data.name || "Kliyan San Non";
               const phoneNum = data.phone || "Pa gen nimewo";
-              const parentRef = data.parentRef || "Okenn";
-              const isApproved = (data.status === "approved");
+              const parentRef = data.parentRef || data.myReferralCode || "Okenn";
+              const isApproved = (data.hasPaid === true || data.status === "approved");
 
               html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid ${isApproved ? '#2e7d32' : '#ff505d'};">
                 <div>Non: <b style="color:#f5a94d;">${clientName}</b></div>
@@ -327,7 +327,7 @@
                 <div>Estati: <b>${isApproved ? '✔ Deja Debloke (Apwouve)' : '⏳ Ap tann Peman'}</b></div>
                 
                 <div style="display: flex; gap: 6px; margin-top: 8px;">
-                  ${!isApproved ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:6px; margin-top:0; font-size:11px; flex:1;" onclick="approveClient('${docSnap.id}', '${data.parentRef || ''}')">✔ Apwouve & Debloke</button>` : `<div style="color:#97c373; font-size:11px; flex:1; align-self:center;">Aksè Louvri</div>`}
+                  ${!isApproved ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:6px; margin-top:0; font-size:11px; flex:1;" onclick="approveClient('${docSnap.id}', '${parentRef}')">✔ Apwouve & Debloke</button>` : `<div style="color:#97c373; font-size:11px; flex:1; align-self:center;">Aksè Louvri</div>`}
                   <button class="btn-outline" style="border-color:#ff505d; color:#ff505d; padding:6px; margin-top:0; font-size:11px; width: auto;" onclick="deleteClientRecord('${docSnap.id}')">🗑️ Siprime</button>
                 </div>
               </div>`;
@@ -374,7 +374,7 @@
         const db = window.db;
         const { doc, updateDoc, setDoc, increment } = window.FirestoreMethods;
         
-        await updateDoc(doc(db, "users", clientCode), { status: "approved" });
+        await updateDoc(doc(db, "users", clientCode), { hasPaid: true, status: "approved" });
 
         if (parentRefCode && parentRefCode !== OWNER_REF_CODE && parentRefCode !== "") {
           await setDoc(doc(db, "users", parentRefCode), { balance: increment(250) }, { merge: true });
@@ -424,7 +424,7 @@
     function closeMonCashModal() { document.getElementById('moncash-modal').style.display = 'none'; }
     function triggerUSSDMenu() { window.location.href = `tel:*202%23`; }
 
-    // SÒMÈT DEMANN KLIYAN AK AFICHAJ ERÈ KÒRÈK SI YON BAGAY BLOKE
+    // SÒMÈT DEMANN KLIYAN (MATCHE EGZAKTMAN AK BAZ DONE A)
     async function submitPaymentRequest() {
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
@@ -459,14 +459,16 @@
 
         const { doc, setDoc } = window.FirestoreMethods;
         
-        // Nou voye done yo epi n ap tann konfimasyon reyèl la soti sou sèvè a
+        // Nou anrejistre done yo ak tout jaden ki matche tou de bò yo
         await setDoc(doc(db, "users", myNewCode), { 
           balance: 0, 
-          parentRef: codeInput, 
+          hasPaid: false,
+          status: "pending",
           clientName: clientName,
           phone: phone, 
-          network: network, 
-          status: "pending", 
+          network: network,
+          myReferralCode: codeInput,
+          parentRef: codeInput,
           createdAt: new Date().toISOString() 
         }, { merge: true });
 
@@ -484,10 +486,8 @@
         }, 1500);
 
       } catch(e) {
-        // Si gen yon erè pèmisyon ankò, n ap wè l an wouj klè sou ekran an!
         debugEl.style.color = "#ff505d";
-        debugEl.textContent = "❌ Erè Firebase: " + e.message;
-        console.error("Firebase write error:", e);
+        debugEl.textContent = "❌ Erè: " + e.message;
       }
     }
 
