@@ -7,7 +7,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="512x512" href="512.png">
   
-  <!-- Firebase SDKs & Initialization Garantye -->
+  <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -26,7 +26,6 @@
     window.db = db;
     window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment };
     
-    // Lè Firebase pare nèt, l ap lanse koòdone a otomatman san erè
     if (window.initializeAppUI) {
       window.initializeAppUI();
     }
@@ -77,6 +76,23 @@
     .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     .btn-outline { background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
     
+    /* Ti wonn k ap vire (Loading Spinner) */
+    .spinner {
+      border: 3px solid #18130e;
+      border-top: 3px solid #f5a94d;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -162,11 +178,12 @@
       <input type="text" id="client-name" placeholder="Non ak siyati w..." style="margin-top: 8px;">
       <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 8px;">
       
-      <div id="client-debug-status" style="margin-top: 8px; font-size: 12px; font-weight: bold; min-height: 18px;"></div>
+      <!-- Bwat estati ak ti wonn k ap vire -->
+      <div id="client-debug-status" style="margin-top: 10px; font-size: 13px; font-weight: bold; min-height: 24px; display: flex; align-items: center; justify-content: center;"></div>
 
       <button class="btn" onclick="triggerUSSDMenu()">Rele *202# pou Fè Peman an</button>
-      <button class="btn" style="background-color: #1976d2; color: #fff; margin-top: 8px;" onclick="submitPaymentRequest()">Voye Demann Debloke</button>
-      <button class="btn-outline" onclick="closeMonCashModal()" style="margin-top: 8px; border-color: #ff505d; color: #ff505d;">Anile</button>
+      <button class="btn" id="submit-btn" style="background-color: #1976d2; color: #fff; margin-top: 8px;" onclick="submitPaymentRequest()">Voye Demann Debloke</button>
+      <button class="btn-outline" id="cancel-btn" onclick="closeMonCashModal()" style="margin-top: 8px; border-color: #ff505d; color: #ff505d;">Anile</button>
     </div>
   </div>
 
@@ -217,7 +234,6 @@
     const titlingDisplay = document.getElementById('selected-title');
     const OWNER_REF_CODE = "CORNERSTONE-OWNER";
 
-    // Fonksyon prensipal lanse sèlman lè Firebase pare nèt
     window.initializeAppUI = function() {
       renderBooks();
       updateModalInfo();
@@ -242,7 +258,6 @@
       }
     };
 
-    // Siveye estati kliyan an an dirèk (Live Listener pou kliyan an)
     function checkClientStatusRealtime() {
       let myCode = localStorage.getItem('my_personal_ref_code');
       if (!myCode) return;
@@ -383,7 +398,7 @@
           await setDoc(doc(db, "users", parentRefCode), { balance: increment(250) }, { merge: true });
         }
 
-        alert("✔ Demann nan apwouve ak siksè!");
+        alert("✔ Demann nan apwouve ak siksè! Kliyan an debloke sou telefòn li.");
       } catch(e) {
         alert("Echèk nan apwobasyon an: " + e.message);
       }
@@ -427,59 +442,70 @@
     function closeMonCashModal() { document.getElementById('moncash-modal').style.display = 'none'; }
     function triggerUSSDMenu() { window.location.href = `tel:*202%23`; }
 
-    // SÒMÈT DEMANN KLIYAN
-    function submitPaymentRequest() {
+    // SÒMÈT DEMANN AK TI WONN K AP VIRE (LOADING SPINNER)
+    async function submitPaymentRequest() {
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
       const network = document.getElementById('payment-network').value;
       const debugEl = document.getElementById('client-debug-status');
 
-      debugEl.style.color = "#f5a94d";
-      debugEl.textContent = "";
-
       if (clientName.length < 2) {
+        debugEl.style.color = "#ff505d";
         debugEl.textContent = "⚠ Tanpri antre non ak siyati w!";
         return;
       }
       if (phone.length < 8) {
+        debugEl.style.color = "#ff505d";
         debugEl.textContent = "⚠ Tanpri antre nimewo telefòn ou!";
         return;
       }
+
+      // Montre ti wonn k ap vire a (Loading Spinner)
+      debugEl.style.color = "#f5a94d";
+      debugEl.innerHTML = `<div class="spinner"></div><span>Ap voye demann lan...</span>`;
 
       let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
       localStorage.setItem('my_personal_ref_code', myNewCode);
 
-      debugEl.style.color = "#97c373";
-      debugEl.textContent = "Demann ou a ale ak siksè, tann deblokaj la";
-
       try {
         const db = window.db;
-        if (db) {
-          const { doc, setDoc } = window.FirestoreMethods;
-          setDoc(doc(db, "users", myNewCode), { 
-            balance: 0, 
-            parentRef: codeInput, 
-            clientName: clientName,
-            phone: phone, 
-            network: network, 
-            status: "pending", 
-            createdAt: new Date().toISOString() 
-          }, { merge: true }).catch(err => console.log("Sync error:", err));
-          
-          checkClientStatusRealtime();
+        if (!db) {
+          debugEl.innerHTML = "❌ Erè: Baz done a pa pare.";
+          return;
         }
-      } catch(e) {
-        console.log("Error:", e);
-      }
 
-      setTimeout(() => {
-        closeMonCashModal();
-        document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
-        document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
-        document.getElementById('pay-btn').style.display = "none";
-        debugEl.textContent = "";
-      }, 1500);
+        const { doc, setDoc } = window.FirestoreMethods;
+        
+        // Voye nan Firebase epi tann konfimasyon an
+        await setDoc(doc(db, "users", myNewCode), { 
+          balance: 0, 
+          parentRef: codeInput, 
+          clientName: clientName,
+          phone: phone, 
+          network: network, 
+          status: "pending", 
+          createdAt: new Date().toISOString() 
+        }, { merge: true });
+
+        checkClientStatusRealtime();
+
+        // Si l fin voye l ak siksè, afiche mesaj egzakt la
+        debugEl.style.color = "#97c373";
+        debugEl.textContent = "Demann ou a ale ak siksè, tann deblokaj la";
+
+        setTimeout(() => {
+          closeMonCashModal();
+          document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
+          document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
+          document.getElementById('pay-btn').style.display = "none";
+          debugEl.textContent = "";
+        }, 1500);
+
+      } catch(e) {
+        debugEl.style.color = "#ff505d";
+        debugEl.textContent = "❌ Erè: " + e.message;
+      }
     }
 
     function getReferralCode() {
