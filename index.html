@@ -7,7 +7,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="512x512" href="512.png">
   
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs & Initialization Garantye -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -25,6 +25,11 @@
     const db = getFirestore(app);
     window.db = db;
     window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment };
+    
+    // Lè Firebase pare nèt, l ap lanse koòdone a otomatman san erè
+    if (window.initializeAppUI) {
+      window.initializeAppUI();
+    }
   </script>
 
   <style>
@@ -99,7 +104,7 @@
   <div class="header-sub">Cornerstone Audio Player</div>
   <h1 id="balance-text">Sistèm Peman K ap Fonksyone</h1>
 
-  <!-- Panèl Pwopriyetè Kache -->
+  <!-- Panèl Pwopriyetè Kache Totalman -->
   <div class="card-box" id="owner-panel" style="display: none; border-color: #f5a94d; background-color: #2a2015;">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d; display: flex; justify-content: space-between; align-items: center;">
       <span>🔒 Panèl Pwopriyetè (Istorik Live)</span>
@@ -168,7 +173,7 @@
   <div class="category-title">Liv Istorik Yo (12 Liv)</div>
   <div class="grid" id="books-grid"></div>
 
-  <!-- Panèl Modpas Pwopriyetè a -->
+  <!-- Panèl Modpas Pwopriyetè a (Kache nèt) -->
   <div class="card-box" id="admin-login-box" style="display: none; border-color: #f5a94d; background-color: #2a2015; margin-top: 30px;">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔑 Antre Modpas Pwopriyetè a:</div>
     <input type="password" id="admin-password" placeholder="Modpas ou...">
@@ -212,7 +217,8 @@
     const titlingDisplay = document.getElementById('selected-title');
     const OWNER_REF_CODE = "CORNERSTONE-OWNER";
 
-    window.onload = async function() {
+    // Fonksyon prensipal lanse sèlman lè Firebase pare nèt
+    window.initializeAppUI = function() {
       renderBooks();
       updateModalInfo();
 
@@ -236,6 +242,7 @@
       }
     };
 
+    // Siveye estati kliyan an an dirèk (Live Listener pou kliyan an)
     function checkClientStatusRealtime() {
       let myCode = localStorage.getItem('my_personal_ref_code');
       if (!myCode) return;
@@ -420,7 +427,7 @@
     function closeMonCashModal() { document.getElementById('moncash-modal').style.display = 'none'; }
     function triggerUSSDMenu() { window.location.href = `tel:*202%23`; }
 
-    // SÒMÈT DEMANN AK METÒD NON-BLOCKING (PA JANM BLOKE, DI MESAJ LA TOUSUIT)
+    // SÒMÈT DEMANN KLIYAN
     function submitPaymentRequest() {
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
@@ -443,7 +450,6 @@
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
       localStorage.setItem('my_personal_ref_code', myNewCode);
 
-      // Afiche mesaj siksè a tousuit sou ekran an san w pa ret tann baz done a reponn
       debugEl.style.color = "#97c373";
       debugEl.textContent = "Demann ou a ale ak siksè, tann deblokaj la";
 
@@ -451,7 +457,6 @@
         const db = window.db;
         if (db) {
           const { doc, setDoc } = window.FirestoreMethods;
-          // Voye done yo nan nwaj la an kachèt
           setDoc(doc(db, "users", myNewCode), { 
             balance: 0, 
             parentRef: codeInput, 
@@ -460,7 +465,7 @@
             network: network, 
             status: "pending", 
             createdAt: new Date().toISOString() 
-          }, { merge: true }).catch(err => console.log("Background sync error:", err));
+          }, { merge: true }).catch(err => console.log("Sync error:", err));
           
           checkClientStatusRealtime();
         }
@@ -468,7 +473,6 @@
         console.log("Error:", e);
       }
 
-      // Fèmen fenèt la tousuit apre 1.5 segond
       setTimeout(() => {
         closeMonCashModal();
         document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
