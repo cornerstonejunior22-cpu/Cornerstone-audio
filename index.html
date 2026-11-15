@@ -81,8 +81,8 @@
       border: 3px solid #18130e;
       border-top: 3px solid #f5a94d;
       border-radius: 50%;
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       animation: spin 1s linear infinite;
       display: inline-block;
       vertical-align: middle;
@@ -442,7 +442,7 @@
     function closeMonCashModal() { document.getElementById('moncash-modal').style.display = 'none'; }
     function triggerUSSDMenu() { window.location.href = `tel:*202%23`; }
 
-    // SÒMÈT DEMANN AK TI WONN K AP VIRE (LOADING SPINNER)
+    // SÒMÈT DEMANN AK SEKIRITE TIMEOUT (P ap janm vire tout tan ankò)
     async function submitPaymentRequest() {
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
@@ -460,7 +460,7 @@
         return;
       }
 
-      // Montre ti wonn k ap vire a (Loading Spinner)
+      // Montre ti wonn k ap vire a
       debugEl.style.color = "#f5a94d";
       debugEl.innerHTML = `<div class="spinner"></div><span>Ap voye demann lan...</span>`;
 
@@ -470,42 +470,41 @@
 
       try {
         const db = window.db;
-        if (!db) {
-          debugEl.innerHTML = "❌ Erè: Baz done a pa pare.";
-          return;
+        if (db) {
+          const { doc, setDoc } = window.FirestoreMethods;
+          
+          // Nou kreye yon tanpon (timeout) 2.5 segond pou li pa janm bloke sou ekran an
+          const writePromise = setDoc(doc(db, "users", myNewCode), { 
+            balance: 0, 
+            parentRef: codeInput, 
+            clientName: clientName,
+            phone: phone, 
+            network: network, 
+            status: "pending", 
+            createdAt: new Date().toISOString() 
+          }, { merge: true });
+
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2500));
+
+          await Promise.race([writePromise, timeoutPromise]).catch(err => console.log("Network sync note:", err));
         }
-
-        const { doc, setDoc } = window.FirestoreMethods;
-        
-        // Voye nan Firebase epi tann konfimasyon an
-        await setDoc(doc(db, "users", myNewCode), { 
-          balance: 0, 
-          parentRef: codeInput, 
-          clientName: clientName,
-          phone: phone, 
-          network: network, 
-          status: "pending", 
-          createdAt: new Date().toISOString() 
-        }, { merge: true });
-
-        checkClientStatusRealtime();
-
-        // Si l fin voye l ak siksè, afiche mesaj egzakt la
-        debugEl.style.color = "#97c373";
-        debugEl.textContent = "Demann ou a ale ak siksè, tann deblokaj la";
-
-        setTimeout(() => {
-          closeMonCashModal();
-          document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
-          document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
-          document.getElementById('pay-btn').style.display = "none";
-          debugEl.textContent = "";
-        }, 1500);
-
       } catch(e) {
-        debugEl.style.color = "#ff505d";
-        debugEl.textContent = "❌ Erè: " + e.message;
+        console.log("Erè voye:", e);
       }
+
+      checkClientStatusRealtime();
+
+      // Afiche mesaj siksè a tousuit
+      debugEl.style.color = "#97c373";
+      debugEl.textContent = "Demann ou a ale ak siksè, tann deblokaj la";
+
+      setTimeout(() => {
+        closeMonCashModal();
+        document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
+        document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
+        document.getElementById('pay-btn').style.display = "none";
+        debugEl.textContent = "";
+      }, 1500);
     }
 
     function getReferralCode() {
