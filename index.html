@@ -1,505 +1,871 @@
 <!DOCTYPE html>
-<html>
+<html lang="ht">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cornerstone - Bible Audio</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ANGE JUNIORCORNERSTONE</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" sizes="512x512" href="512.png">
   
-  <!-- Firebase SDKs -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAV07bab01c879c608f54086287953032",
-      authDomain: "bible-audio-205e4.firebaseapp.com",
-      projectId: "bible-audio-205e4",
-      storageBucket: "bible-audio-205e4.appspot.com",
-      messagingSenderId: "879530329111",
-      appId: "1:879530329111:web:07bab01c879c608f540862"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    window.db = db;
-    window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment };
-    
-    if (window.initializeAppUI) {
-      window.initializeAppUI();
-    }
-  </script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background-color: #1f1b14;
-      color: #f4d7cf;
-      font-family: Georgia, serif;
-      padding: 10px;
-      margin: 0;
-      padding-bottom: 160px;
-    }
-    .header-sub { color: #f5a94d; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; user-select: none; }
-    h1 { color: #f5a94d; font-size: 22px; margin-top: 5px; }
-    .card-box { background-color: #221b14; border: 1px solid #332025; padding: 15px; border-radius: 8px; margin-top: 15px; }
-    .category-title { color: #f9c077; font-size: 13px; letter-spacing: 1px; border-bottom: 1px solid #332025; padding-top: 15px; margin-bottom: 10px; }
-    .grid { display: flex; flex-direction: column; gap: 8px; }
-    .book-card {
-      padding: 14px;
-      border-radius: 6px;
-      border: 1px solid #332025;
-      background-color: #221b14;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .book-card.active { border-color: #f5a94d; background-color: #27271c; }
-    .book-title { font-weight: bold; font-size: 15px; color: #f4d7cf; }
-    .player-box {
-      position: fixed;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: calc(100% - 20px);
-      max-width: 600px;
-      background-color: #1f1b0b;
-      border: 1px solid #f5a94d;
-      padding: 12px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-      box-sizing: border-box;
-    }
-    audio { width: 100%; height: 40px; margin-top: 8px; filter: invert(0.8); }
-    input[type="text"], input[type="password"], select { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
-    .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-    .btn-outline { background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
-    
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.85);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      display: none;
-    }
-    .modal-content {
-      background: #221b14;
-      border: 2px solid #f5a94d;
-      padding: 20px;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 400px;
-      box-sizing: border-box;
+      background: #0d0d0d;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       text-align: center;
+      padding: 0;
+      margin: 0;
+      overflow-x: hidden;
+      user-select: none;
     }
+    .header-logo {
+      width: 90px; height: 90px; border-radius: 18px;
+      border: 2px solid #ffd700; margin: 10px 0 6px 0;
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); cursor: pointer;
+    }
+    h2 { font-size: 18px; color: #ffd700; margin-bottom: 10px; text-transform: uppercase; }
+    
+    .dashboard {
+      background: rgba(26, 26, 26, 0.9); border: 1px solid #ffd700;
+      border-radius: 12px; padding: 12px; margin: 0 15px 12px 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    .stat-title { color: #bbb; font-size: 12px; margin-top: 2px; }
+    .stat-val { font-size: 22px; font-weight: bold; color: #ffd700; }
+    
+    .pay-section {
+      background: #181818; border: 1px dashed #ffd700;
+      border-radius: 10px; padding: 10px; margin: 0 15px 12px 15px;
+    }
+    .input-field, .select-field {
+      width: 90%; padding: 8px; border-radius: 6px;
+      border: 1px solid #444; background: #222; color: #fff;
+      text-align: center; font-size: 13px; margin-top: 4px; margin-bottom: 6px;
+    }
+    .btn-pay {
+      background: #28a745; color: #fff; font-weight: bold; padding: 6px 10px;
+      border: none; border-radius: 15px; font-size: 12px; cursor: pointer; margin: 2px;
+    }
+    .btn-ussd {
+      background: #007bff; color: #fff; font-weight: bold; padding: 6px 10px;
+      border: none; border-radius: 15px; font-size: 12px; cursor: pointer; text-decoration: none; display: inline-block; margin: 2px;
+    }
+    .btn-action {
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #000; font-weight: bold; padding: 10px 20px; border: none;
+      border-radius: 25px; font-size: 15px; cursor: pointer; width: 90%; max-width: 340px;
+      box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+    }
+
+    #game-arena {
+      display: block; position: relative; width: calc(100% - 30px);
+      height: 440px; margin: 0 auto 20px auto;
+      background: #111 url('court_bg.png') no-repeat center center;
+      background-size: cover; border: 2px solid #ffd700;
+      border-radius: 15px; overflow: hidden; box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
+    }
+
+    #game-arena.full-screen-mode {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      margin: 0; border: none; border-radius: 0; z-index: 1000;
+    }
+
+    .live-indicator {
+      position: absolute; top: 15px; left: 15px; background: rgba(255, 69, 0, 0.9);
+      color: #fff; font-size: 10px; font-weight: bold; padding: 5px 10px;
+      border-radius: 12px; z-index: 15; animation: blinkLive 1.2s infinite;
+    }
+    @keyframes blinkLive { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .chances-card {
+      position: absolute; top: 15px; right: 15px; background: rgba(0, 15, 35, 0.85);
+      border: 2px solid #ffd700; border-radius: 10px; padding: 8px 12px; text-align: right; z-index: 15;
+    }
+    .chances-title { color: #fff; font-weight: bold; font-size: 11px; letter-spacing: 1px; margin-bottom: 4px; }
+    .chance-item { display: flex; align-items: center; justify-content: flex-end; gap: 6px; color: #fff; font-size: 12px; margin-top: 3px; }
+    .ball-icon { width: 18px; height: 18px; background: radial-gradient(circle at 5px 5px, #ff8c00, #d2691e); border-radius: 50%; border: 1px solid #000; }
+    .ball-icon.off { opacity: 0.2; }
+
+    .pos-btn-3d {
+      position: absolute; width: 38px; height: 28px; border-radius: 50%;
+      background: radial-gradient(circle, #ffd700, #ff8c00); color: #000; font-weight: bold;
+      border: 2px solid #fff; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; font-size: 14px;
+    }
+    .pos-btn-3d.active { background: radial-gradient(circle, #ff4500, #dc3545); color: #fff; transform: scale(1.3); }
+
+    #pos-1 { top: 52%; left: 12%; }
+    #pos-2 { top: 45%; left: 48%; }
+    #pos-3 { top: 52%; right: 12%; }
+    #pos-4 { top: 64%; left: 32%; }
+    #pos-5 { top: 68%; left: 48%; }
+    #pos-6 { top: 64%; right: 32%; }
+    #pos-7 { top: 82%; left: 48%; }
+
+    .shoot-btn-3d {
+      position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+      width: 75%; max-width: 250px; padding: 12px; background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #000; font-weight: bold; font-size: 16px; border: none; border-radius: 30px; cursor: pointer; z-index: 15;
+    }
+    .shoot-btn-3d:disabled { background: #555; color: #888; cursor: not-allowed; }
+
+    #game-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; }
+
+    /* PANÈL SEKRÈ PWOPRIYETÈ A */
+    #secret-admin-modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #111; z-index: 9999; padding: 15px; overflow-y: auto; text-align: left;
+    }
+    .admin-tab-btn {
+      background: #222; color: #ffd700; border: 1px solid #ffd700; padding: 8px 15px;
+      border-radius: 8px; font-weight: bold; cursor: pointer; margin-right: 5px; margin-bottom: 15px;
+    }
+    .admin-tab-btn.active { background: #ffd700; color: #000; }
+
+    .admin-group-card { background: #1a1a1a; border: 1px solid #ffd700; border-radius: 10px; padding: 12px; margin-bottom: 15px; }
+    .group-title { font-size: 15px; color: #ffd700; font-weight: bold; border-bottom: 1px dashed #444; padding-bottom: 5px; margin-bottom: 8px; }
+    .btn-close-admin { background: #dc3545; color: #fff; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; float: right; cursor: pointer; }
+
+    /* EKRAN BLOKAJ POU NOUVO MÒN */
+    #blocked-screen {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95); z-index: 99999; align-items: center; justify-content: center; padding: 20px; text-align: center;
+    }
+    .blocked-box { background: #1e1e1e; border: 2px solid #ff4500; border-radius: 15px; padding: 25px; max-width: 350px; }
+
+    /* EKRAN ANPLWAYE A DISTANS (KAPACHE POU KLIDYAN OUVÈ SÈLMAN SI W VOYE LYEN AN) */
+    #worker-screen {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #111; z-index: 99998; padding: 15px; overflow-y: auto; text-align: left;
+    }
+
+    #winner-banner-modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.92); z-index: 10000; align-items: center; justify-content: center; padding: 20px;
+    }
+    .winner-box { background: #1e1e1e; border: 2px solid #ffd700; border-radius: 15px; padding: 20px; text-align: center; width: 90%; max-width: 360px; }
   </style>
 </head>
 <body>
 
-  <div class="header-sub">Cornerstone Audio Player</div>
-  <h1 id="balance-text">Sistèm Peman K ap Fonksyone</h1>
-
-  <!-- Panèl Pwopriyetè Kache Totalman -->
-  <div class="card-box" id="owner-panel" style="display: none; border-color: #f5a94d; background-color: #2a2015;">
-    <div style="font-size: 14px; font-weight: bold; color: #f5a94d; display: flex; justify-content: space-between; align-items: center;">
-      <span>🔒 Panèl Pwopriyetè (Istorik Live)</span>
-      <button class="btn-outline" style="width: auto; padding: 4px 8px; font-size: 11px; margin-top: 0; border-color: #ff505d; color: #ff505d;" onclick="logoutOwner()">Soti</button>
-    </div>
-
-    <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 12px; font-size: 13px;" onclick="switchToClientView()">👁️ Wè koòdone kliyan an</button>
-    
-    <div style="font-size: 12px; color: #f4d7cf; margin-top: 10px;">Lyen Parrenaj ou a:</div>
-    <input type="text" id="owner-referral-link" readonly onclick="this.select()">
-    
-    <div class="category-title" style="margin-top: 15px;">Istorik Tout Demann Kliyan yo:</div>
-    <div id="pending-clients-list" style="font-size: 13px; margin-top: 8px; max-height: 300px; overflow-y: auto;">
-      Ap tann demann...
+  <!-- EKRAN BLOKAJ POU LÒT MÒN KI VINI APRE 10 PREMYE MINIT YO -->
+  <div id="blocked-screen">
+    <div class="blocked-box">
+      <h3 style="color: #ff4500; margin-bottom: 15px;">⚠️ Jwèt la Gentan Demare</h3>
+      <p style="font-size: 14px; color: #fff;">Jwèt la ankourajman nan dezyèm faz 10 minit li a. Tan an ap koule, tann yon ti moman s.v.p. pou pwochen sesyon an!</p>
     </div>
   </div>
 
-  <div id="back-to-master-btn-container" style="display: none; margin-top: 15px;">
-    <button class="btn" style="background-color: #c62828; color: #fff; font-size: 13px;" onclick="backToMasterPanel()">👑 Tounen nan Panèl Mèt</button>
+  <!-- EKRAN ANPLWAYE A DISTANS (APARÈT SÈLMAN SI W VOYE LYEN ?role=worker) -->
+  <div id="worker-screen">
+    <h3 style="color:#ffd700; margin-bottom:10px;">Espace Travay Anplwaye a Distans</h3>
+    <div id="worker-signup-form" class="admin-group-card">
+      <div class="group-title">Enfòmasyon Pèsonèl Anplwaye</div>
+      <input type="text" id="w-fullname" class="input-field" placeholder="Non ak Prénom">
+      <input type="text" id="w-phone" class="input-field" placeholder="Nimewo Telefòn">
+      <input type="text" id="w-address" class="input-field" placeholder="Adrès Ou">
+      <input type="text" id="w-id" class="input-field" placeholder="NIF oswa CIN">
+      <button class="btn-action" style="margin-top:10px;" onclick="registerEmployee()">Enregistre</button>
+    </div>
+    <div id="worker-dashboard" style="display:none;">
+      <h4 style="color:#fff; margin-bottom:10px;">Lis Demann Kòd pou Valide:</h4>
+      <div id="worker-requests-list">
+        <p style="color:#aaa;">N ap chaje demann yo...</p>
+      </div>
+    </div>
   </div>
 
-  <!-- Seksyon Peman pou Kliyan -->
-  <div class="card-box" id="payment-section">
-    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Debloke 12 Liv Istorik Yo (1,000 Gdes)</div>
-    <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Ou dwe fè peman an epi voye demann lan bay pwopriyetè a pou valider l.</div>
-    
-    <input type="text" id="referral-input" placeholder="Kòd parrenaj..." style="display:none;">
-    
-    <button class="btn" id="pay-btn" onclick="openMonCashModal()">Peye 1,000 Gdes (MonCash / Natcash)</button>
-    <button class="btn-outline" id="share-btn-container" onclick="getReferralCode()" style="display:none;">Jwenn Kòd Parenn mwen pou m pataje</button>
-    <div id="api-response" style="margin-top: 10px; font-size: 12px; color: #ff505d;"></div>
-  </div>
-
-  <!-- Modal Pou Chwazi Rezo a ak Soumèt Demann -->
-  <div class="modal-overlay" id="moncash-modal">
-    <div class="modal-content">
-      <div style="color: #f5a94d; font-weight: bold; font-size: 16px; margin-bottom: 10px;">📱 Enfòmasyon Peman</div>
+  <!-- EKRAN MAIN JWÈT LA (KLIYAN ÒDINÈ) -->
+  <div id="main-app-content">
+    <div id="setup-screen">
+      <img src="logo.png" onerror="this.src='https://placehold.co/90x90/ffd700/000?text=ANG';" alt="Logo" class="header-logo" id="app-logo" onclick="handleSecretClick()">
+      <h2>ANGE JUNIORCORNERSTONE</h2>
       
-      <div style="background: #18130e; border: 1px solid #f5a94d; padding: 12px; border-radius: 6px; margin-bottom: 12px; text-align: left;">
-        <div style="font-size: 12px; color: #f9c077; font-weight: bold;">Rezo w chwazi a:</div>
-        <div id="display-network-name" style="font-size: 14px; color: #f4d7cf; margin-bottom: 6px;">Digicel MonCash</div>
-        <div style="font-size: 12px; color: #f9c077; font-weight: bold;">Nimewo Pwopriyetè pou Voye Kòb la:</div>
-        <div id="display-target-phone" style="font-size: 18px; color: #f5a94d; font-weight: bold; letter-spacing: 1px;">38258915</div>
-        <div style="font-size: 11px; color: #aaa; margin-top: 4px;">Montan: <b>1,000 Gdes</b></div>
+      <div class="dashboard">
+        <div class="stat-title" id="timer-label">Tan Rasanbleman (10 minit):</div>
+        <div class="stat-val" id="timer">10:00</div>
       </div>
 
-      <button class="btn" style="background-color: #2e7d32; color: #fff; margin-bottom: 10px; font-size: 13px;" onclick="copyOwnerNumber()">📋 Kopye Nimewo sa a</button>
-      <div id="copy-feedback" style="font-size: 11px; color: #97c373; margin-bottom: 8px; display: none;">✔ Nimewo a kopye!</div>
+      <div class="pay-section" id="pay-box">
+        <p style="font-size: 12px; color: #ffd700; margin-bottom: 6px;">Achte kòd inik ou (1,250 / 250 / 100 Gdes)</p>
+        <div style="font-size: 12px; background: #222; padding: 6px; border-radius: 6px; margin-bottom: 6px; text-align: left;">
+          <p><b>MonCash :</b> +509 3825-8915 <button class="btn-pay" onclick="copyNum('38258915')">Kopye</button></p>
+          <p style="margin-top: 3px;"><b>Natcash :</b> +509 4212-5630 <button class="btn-pay" onclick="copyNum('42125630')">Kopye</button></p>
+        </div>
+        
+        <a href="tel:*202%23" class="btn-ussd">*202# MonCash</a>
+        <a href="tel:*202%23" class="btn-ussd" style="background:#dc3545;">*202# Natcash</a>
 
-      <select id="payment-network" onchange="updateModalInfo()">
-        <option value="moncash">Digicel MonCash</option>
-        <option value="natcash">Natcom Natcash</option>
-      </select>
+        <select id="group-select" class="select-field">
+          <option value="1250">Gwoup 1 - Code 1,250 Gdes</option>
+          <option value="250">Gwoup 2 - Code 250 Gdes</option>
+          <option value="100">Gwoup 3 - Code 100 Gdes</option>
+        </select>
 
-      <input type="text" id="client-name" placeholder="Non ak siyati w..." style="margin-top: 8px;">
-      <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 8px;">
-      
-      <div id="client-debug-status" style="margin-top: 10px; font-size: 13px; font-weight: bold; min-height: 24px;"></div>
+        <input type="text" id="player-name" class="input-field" placeholder="Non ou ak Siyati ou">
+        <input type="text" id="player-phone" class="input-field" placeholder="Nimewo ou voye kòb la">
+        
+        <button class="btn-action" style="font-size: 13px; padding: 8px;" onclick="submitPaymentRequest()">Mande Kòd Inik Mwen</button>
+        
+        <div style="margin-top: 8px;">
+          <input type="text" id="game-code" class="input-field" placeholder="Antre Kòd Inik ou resevwa a">
+          <button class="btn-action" style="font-size: 13px; padding: 6px;" onclick="validateCode()">Valide Kòd la</button>
+        </div>
+      </div>
+    </div>
 
-      <button class="btn" onclick="triggerUSSDMenu()">Rele *202# pou Fè Peman an</button>
-      <button class="btn" id="submit-btn" style="background-color: #1976d2; color: #fff; margin-top: 8px;" onclick="submitPaymentRequest()">Voye Demann Debloke</button>
-      <button class="btn-outline" id="cancel-btn" onclick="closeMonCashModal()" style="margin-top: 8px; border-color: #ff505d; color: #ff505d;">Anile</button>
+    <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren Jwèt 3D a :</p>
+
+    <div id="game-arena">
+      <div class="live-indicator" id="game-status-indicator">🔴 RASANBLEMAN AP FÈ...</div>
+
+      <div class="chances-card">
+        <div class="chances-title">TES CHANS</div>
+        <div class="chance-item"><div class="ball-icon" id="c1"></div> 1 Chans</div>
+        <div class="chance-item"><div class="ball-icon" id="c2"></div> 2 Chans</div>
+        <div class="chance-item"><div class="ball-icon" id="c3"></div> 3 Chans</div>
+      </div>
+
+      <canvas id="game-canvas"></canvas>
+
+      <div class="pos-btn-3d active" id="pos-1" onclick="selectPos3D(1)">1</div>
+      <div class="pos-btn-3d" id="pos-2" onclick="selectPos3D(2)">2</div>
+      <div class="pos-btn-3d" id="pos-3" onclick="selectPos3D(3)">3</div>
+      <div class="pos-btn-3d" id="pos-4" onclick="selectPos3D(4)">4</div>
+      <div class="pos-btn-3d" id="pos-5" onclick="selectPos3D(5)">5</div>
+      <div class="pos-btn-3d" id="pos-6" onclick="selectPos3D(6)">6</div>
+      <div class="pos-btn-3d" id="pos-7" onclick="selectPos3D(7)">7</div>
+
+      <button class="shoot-btn-3d" id="shoot-btn-3d" onclick="shootBall3D()" disabled>TANN LÈ A RIVE...</button>
     </div>
   </div>
 
-  <div class="category-title">Liv Istorik Yo (12 Liv)</div>
-  <div class="grid" id="books-grid"></div>
+  <!-- PANÈL SEKRÈ PWOPRIYETÈ A -->
+  <div id="secret-admin-modal">
+    <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen / Tounen</button>
+    <h3 style="color: #ffd700; margin-bottom: 15px;">Panèl Sekrè Pwopriyetè</h3>
 
-  <!-- Panèl Modpas Pwopriyetè a (Kache nèt) -->
-  <div class="card-box" id="admin-login-box" style="display: none; border-color: #f5a94d; background-color: #2a2015; margin-top: 30px;">
-    <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔑 Antre Modpas Pwopriyetè a:</div>
-    <input type="password" id="admin-password" placeholder="Modpas ou...">
-    <button class="btn" onclick="verifyOwnerPassword()">Konekte kòm Pwopriyetè</button>
+    <div>
+      <button class="admin-tab-btn active" id="tab-btn-1" onclick="switchAdminTab(1)">Paj 1: Finans & Demann</button>
+      <button class="admin-tab-btn" id="tab-btn-2" onclick="switchAdminTab(2)">Paj 2: Jesyon Anplwaye</button>
+      <button class="admin-tab-btn" style="background:#007bff; color:#fff;" onclick="moveToHistory()">📦 Voye nan Istorik</button>
+    </div>
+
+    <div id="admin-page-1">
+      <div class="admin-group-card">
+        <div class="group-title">Gwoup 1,250 Gdes</div>
+        <div>Kantite Moun (X): <b><span id="p1250-count">0</span> / 220</b></div>
+        <div>Gran Total: <b><span id="p1250-total">0</span> Gdes</b></div>
+        <div>Maksimòm Avantaj Pwopriyetè: <b style="color:#28a745;"><span id="p1250-owner">0</span> Gdes</b></div>
+        <div>Minimòm Avantaj Ganyan: <b style="color:#ffd700;"><span id="p1250-winner">0</span> Gdes</b></div>
+      </div>
+
+      <div class="admin-group-card">
+        <div class="group-title">Gwoup 250 Gdes</div>
+        <div>Kantite Moun (X): <b><span id="p250-count">0</span> / 220</b></div>
+        <div>Gran Total: <b><span id="p250-total">0</span> Gdes</b></div>
+        <div>Maksimòm Avantaj Pwopriyetè: <b style="color:#28a745;"><span id="p250-owner">0</span> Gdes</b></div>
+        <div>Minimòm Avantaj Ganyan: <b style="color:#ffd700;"><span id="p250-winner">0</span> Gdes</b></div>
+      </div>
+
+      <div class="admin-group-card">
+        <div class="group-title">Gwoup 100 Gdes</div>
+        <div>Kantite Moun (X): <b><span id="p100-count">0</span> / 220</b></div>
+        <div>Gran Total: <b><span id="p100-total">0</span> Gdes</b></div>
+        <div>Maksimòm Avantaj Pwopriyetè: <b style="color:#28a745;"><span id="p100-owner">0</span> Gdes</b></div>
+        <div>Minimòm Avantaj Ganyan: <b style="color:#ffd700;"><span id="p100-winner">0</span> Gdes</b></div>
+      </div>
+
+      <div class="admin-group-card" style="border-color: #ff4500;">
+        <div class="group-title" style="color: #ff4500;">Bouton Sekrè: Chwazi Ganyan an</div>
+        <input type="text" id="forced-winner-phone" class="input-field" placeholder="Nimewo moun ou vle fè genyen an">
+        <button class="btn-action" style="background: #ff4500; color: #fff; width:100%;" onclick="setForcedWinner()">Chwazi Moun Sa a kòm Ganyan</button>
+      </div>
+
+      <h4 style="color: #fff; margin-bottom: 10px;">Demann Kòd & Peman Ganyan:</h4>
+      <div id="admin-requests-list">
+        <p style="color: #aaa;">N ap chaje demann yo...</p>
+      </div>
+    </div>
+
+    <div id="admin-page-2" style="display:none;">
+      <h4 style="color:#ffd700; margin-bottom:10px;">Jesyon ak Jenewatè Lyen Anplwaye:</h4>
+      <div style="background:#222; padding:12px; border-radius:10px; margin-bottom:15px; border:1px solid #ffd700; text-align:center;">
+        <button class="btn-action" style="font-size:14px; width:100%;" onclick="generateNewWorkerLink()">➕ Klike La Pou w Kreye yon Nouvo Lyen Anplwaye</button>
+        <div id="generated-link-box" style="display:none; margin-top:12px;">
+          <input type="text" id="new-worker-link-input" class="input-field" readonly style="font-size:11px; margin-top:5px; color:#ffd700;">
+          <button class="btn-pay" style="background:#007bff; width:100%; margin-top:5px; font-size:13px; padding:8px;" onclick="copyGeneratedWorkerLink()">📋 Kopye Lyen Sa A</button>
+        </div>
+      </div>
+      <h4 style="color:#fff; margin-bottom:10px;">Lis Anplwaye ki Anrejistre yo:</h4>
+      <div id="employees-list-container">
+        <p style="color:#888;">N ap chaje lis anplwaye yo...</p>
+      </div>
+    </div>
   </div>
 
-  <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;">
-    <span style="font-size: 11px; color: #554433; cursor: pointer; text-decoration: underline;" onclick="revealAdminBox()">Anviwònman Pwopriyetè</span>
-  </div>
-
-  <div class="player-box">
-    <div style="font-size: 11px; color: #c59b77; text-transform: uppercase;">M ap koute kounye a:</div>
-    <div id="selected-title" style="font-weight: bold; font-size: 14px; color: #f5a94d; margin: 2px 0;">Chwazi yon liv</div>
-    
-    <audio id="audio-player" controls preload="auto">
-      <source id="audio-source" src="" type="audio/mpeg">
-      Navigatè w la pa sipòte baliz odyo a.
-    </audio>
+  <!-- POPUP ANONS GANYAN -->
+  <div id="winner-banner-modal">
+    <div class="winner-box">
+      <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 GANYAN DETEKTE! 🏆</h2>
+      <h3 style="color: #00ffcc;" id="winner-name-display">---</h3>
+      <p style="margin-top: 8px; font-size: 13px;">Li genyen : <b style="color: #ffd700;" id="winner-amount-display">0 Gdes</b></p>
+      <button class="btn-action" style="margin-top: 15px;" onclick="closeWinnerBanner()">OK</button>
+    </div>
   </div>
 
   <script>
-    const books = [
-      { id: 'jozye', title: 'JOZYÉ', file: 'https://archive.org/download/e-ste-1-12-1/06_JOZYE.mp3' },
-      { id: 'jij', title: 'JIJ', file: 'https://archive.org/download/e-ste-1-12-1/07_JIJ.mp3' },
-      { id: 'rit', title: 'RIT', file: 'https://archive.org/download/e-ste-1-12-1/08_RIT.mp3' },
-      { id: '1samyel', title: '1 SAMYÈL', file: 'https://archive.org/download/e-ste-1-12-1/09_1SAMY%C3%88L.mp3' },
-      { id: '2samyel', title: '2 SAMYÈL', file: 'https://archive.org/download/e-ste-1-12-1/10_2SAMY%C3%88L.mp3' },
-      { id: '1wa', title: '1 WA', file: 'https://archive.org/download/e-ste-1-12-1/11_1WA.mp3' },
-      { id: '2wa', title: '2 WA', file: 'https://archive.org/download/e-ste-1-12-1/12_2WA.mp3' },
-      { id: '1istwa', title: '1 ISTWA', file: 'https://archive.org/download/e-ste-1-12-1/13_1ISTWA%20.mp3' },
-      { id: '2istwa', title: '2 ISTWA', file: 'https://archive.org/download/e-ste-1-12-1/14_2ISTWA.mp3' },
-      { id: 'esdras', title: 'ESDRAS', file: 'https://archive.org/download/e-ste-1-12-1/15_ESDRAS.mp3' },
-      { id: 'neyemi', title: 'NEYEMI', file: 'https://archive.org/download/e-ste-1-12-1/16_NEYEMI.mp3' },
-      { id: 'este', title: 'ESTÈ', file: 'https://archive.org/download/e-ste-1-12-1/17_EST%C3%88.mp3' }
-    ];
-
-    let isUnlocked = false;
-    const grid = document.getElementById('books-grid');
-    const player = document.getElementById('audio-player');
-    const audioSource = document.getElementById('audio-source');
-    const titlingDisplay = document.getElementById('selected-title');
-    const OWNER_REF_CODE = "CORNERSTONE-OWNER";
-
-    window.initializeAppUI = function() {
-      renderBooks();
-      updateModalInfo();
-
-      if (localStorage.getItem('cornerstone_owner') === 'true') {
-        activateOwnerMode();
-      } else {
-        document.getElementById('owner-panel').style.display = 'none';
-        document.getElementById('admin-login-box').style.display = 'none';
-        checkClientStatusRealtime();
-      }
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const refCode = urlParams.get('ref');
-      const inputField = document.getElementById('referral-input');
-      
-      if (refCode && refCode.trim() !== "") {
-        inputField.value = refCode;
-        localStorage.setItem('my_parent_ref', refCode);
-      } else {
-        inputField.value = OWNER_REF_CODE;
-      }
+    const firebaseConfig = {
+      apiKey: "AIzaSyBhVu7dY94w7c9v5ubojO4QRvntKHrkGkY",
+      authDomain: "ange-juniorcornerstone.firebaseapp.com",
+      projectId: "ange-juniorcornerstone",
+      storageBucket: "ange-juniorcornerstone.firebasestorage.app",
+      messagingSenderId: "201645186040",
+      appId: "1:201645186040:web:58b124ac07465a44fad40d",
+      measurementId: "G-5LK9JTTTHJ"
     };
 
-    function checkClientStatusRealtime() {
-      let myCode = localStorage.getItem('my_personal_ref_code');
-      if (!myCode) return;
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-      try {
-        const db = window.db;
-        if (!db) return;
-        const { doc, onSnapshot } = window.FirestoreMethods;
+    let currentPos = 1;
+    let chances = 3;
+    let userGroup = "1250";
+    let isCodeValidated = false;
+    let forcedWinnerPhone = "";
 
-        onSnapshot(doc(db, "users", myCode), (docSnap) => {
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            if (data.hasPaid === true || data.status === "approved") {
-              activateClientUnlockedMode();
-            }
-          }
-        });
-      } catch(e) {
-        console.log("Erè estati:", e);
+    let sessionState = "collecting"; 
+    let blockSecondsLeft = 600;      
+    let gamePlaySecondsLeft = 600;   
+
+    let logoClickCount = 0;
+    let clickTimer;
+    let currentWorkerId = localStorage.getItem('employee_doc_id') || "";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('role') === 'worker') {
+      document.getElementById('main-app-content').style.display = 'none';
+      document.getElementById('worker-screen').style.display = 'block';
+      checkWorkerAccess();
+    }
+
+    function handleSecretClick() {
+      logoClickCount++;
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => { logoClickCount = 0; }, 1200);
+      if (logoClickCount === 3) {
+        logoClickCount = 0;
+        const pin = prompt("Antre PIN Sekrè Pwopriyetè a :");
+        if (pin === "482915") { openAdminPanel(); }
+        else if(pin !== null) { alert("PIN pa bon! Aksè refize."); }
       }
     }
 
-    function updateModalInfo() {
-      const network = document.getElementById('payment-network').value;
-      document.getElementById('display-network-name').textContent = (network === "moncash") ? "Digicel MonCash" : "Natcom Natcash";
-      document.getElementById('display-target-phone').textContent = (network === "moncash") ? "38258915" : "42125630";
+    function openAdminPanel() {
+      document.getElementById('secret-admin-modal').style.display = 'block';
+      loadAdminRequests();
+      loadEmployeesList();
     }
 
-    function copyOwnerNumber() {
-      const phoneText = document.getElementById('display-target-phone').textContent.trim();
-      navigator.clipboard.writeText(phoneText).then(() => {
-        const feedback = document.getElementById('copy-feedback');
-        feedback.style.display = "block";
-        setTimeout(() => { feedback.style.display = "none"; }, 4000);
+    function closeAdminPanel() { document.getElementById('secret-admin-modal').style.display = 'none'; }
+
+    function switchAdminTab(pageNum) {
+      document.getElementById('tab-btn-1').classList.remove('active');
+      document.getElementById('tab-btn-2').classList.remove('active');
+      document.getElementById('admin-page-1').style.display = 'none';
+      document.getElementById('admin-page-2').style.display = 'none';
+      document.getElementById('tab-btn-' + pageNum).classList.add('active');
+      document.getElementById('admin-page-' + pageNum).style.display = 'block';
+    }
+
+    function generateNewWorkerLink() {
+      const baseUrl = window.location.href.split('?')[0];
+      const uniqueWorkerKey = "EMP-" + Math.floor(10000 + Math.random() * 90000);
+      document.getElementById('new-worker-link-input').value = baseUrl + "?role=worker&emp_key=" + uniqueWorkerKey;
+      document.getElementById('generated-link-box').style.display = 'block';
+    }
+
+    function copyGeneratedWorkerLink() {
+      navigator.clipboard.writeText(document.getElementById('new-worker-link-input').value);
+      alert("Lyen Anplwaye a kopye!");
+    }
+
+    function getGroupCalculations(groupPrice, count) {
+      let total = count * groupPrice;
+      let winnerPrize = 0;
+      let ownerShare = total;
+      if (count >= 5) {
+        if (groupPrice === 1250) winnerPrize = 2000 + (count - 5) * 225;
+        else if (groupPrice === 250) winnerPrize = 400 + (count - 5) * 45;
+        else if (groupPrice === 100) winnerPrize = 150 + (count - 5) * 18;
+        ownerShare = total - winnerPrize;
+      }
+      return { total, ownerShare, winnerPrize };
+    }
+
+    function listenAllGroups() {
+      ["1250", "250", "100"].forEach(grp => {
+        db.collection("game_blocks").doc("block_" + grp).onSnapshot(doc => {
+          let count = doc.exists ? (parseInt(doc.data().playersCount) || 0) : 0;
+          let calc = getGroupCalculations(parseInt(grp), count);
+          document.getElementById('p' + grp + '-count').innerText = count;
+          document.getElementById('p' + grp + '-total').innerText = calc.total.toLocaleString();
+          document.getElementById('p' + grp + '-owner').innerText = calc.ownerShare.toLocaleString();
+          document.getElementById('p' + grp + '-winner').innerText = calc.winnerPrize.toLocaleString();
+        });
+      });
+    }
+    listenAllGroups();
+
+    function setForcedWinner() {
+      forcedWinnerPhone = document.getElementById('forced-winner-phone').value.trim();
+      if(forcedWinnerPhone === "") { alert("Antre yon nimewo!"); return; }
+      alert("Moun ak nimewo " + forcedWinnerPhone + " la ap genyen fòseman!");
+    }
+
+    async function deleteRequest(docId) {
+      if(confirm("Èske w sèten ou vle siprime demann sa a?")) {
+        await db.collection("payment_requests").doc(docId).delete();
+        alert("Demann nan siprime ak siksè!");
+      }
+    }
+
+    async function moveToHistory() {
+      if(confirm("Èske w vle voye tout demann aktyèl yo nan istorik (netwaye panèl la)?")) {
+        const snapshot = await db.collection("payment_requests").get();
+        const batch = db.batch();
+        snapshot.forEach(doc => { batch.delete(doc.ref); });
+        await batch.commit();
+        alert("Panèl la netwaye epi voye nan istorik ak siksè!");
+      }
+    }
+
+    function loadAdminRequests() {
+      db.collection("payment_requests").onSnapshot((snapshot) => {
+        const container = document.getElementById('admin-requests-list');
+        container.innerHTML = "";
+        if (snapshot.empty) { container.innerHTML = '<p style="color: #888;">Pa gen okenn demann.</p>'; return; }
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const id = doc.id;
+          const card = document.createElement('div');
+          card.className = "admin-group-card";
+
+          let name = data.playerName || 'San non';
+          let phone = data.playerPhone || '';
+          let group = data.groupPrice || '1250';
+
+          let actionHTML = '';
+          if (data.status === "pending" || !data.status) {
+            actionHTML = `<button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${id}')">Konfime & Bay Kòd</button>`;
+          } else if (data.status === "confirmed") {
+            let cleanPhone = phone.replace(/\D/g, '');
+            let waMessage = encodeURIComponent(`Salut ${name}, men kòd inik ou pou jwèt la: *${data.generatedCode}*.`);
+            actionHTML = `
+              <div style="color:#00ffcc; margin-top:6px; font-size:14px;">Kòd Inik : <b>${data.generatedCode}</b></div>
+              <a href="https://wa.me/509${cleanPhone}?text=${waMessage}" target="_blank" class="btn-ussd" style="background:#25D366; width:100%; text-align:center; margin-top:8px; display:block; text-decoration:none; padding:10px;">📲 Voye sou WhatsApp</a>
+            `;
+          }
+
+          card.innerHTML = `
+            <button style="float:right; background:#dc3545; color:#fff; border:none; padding:4px 8px; border-radius:5px; cursor:pointer;" onclick="deleteRequest('${id}')">❌ Siprime</button>
+            <div><b>Non :</b> ${name}</div>
+            <div><b>Tel :</b> ${phone}</div>
+            <div><b>Gwoup :</b> <span style="color:#ffd700;">${group} Gdes</span></div>
+            ${actionHTML}
+          `;
+          container.appendChild(card);
+        });
       });
     }
 
-    function revealAdminBox() {
-      document.getElementById('admin-login-box').style.display = "block";
-      document.getElementById('admin-password').focus();
-    }
-
-    async function verifyOwnerPassword() {
-      const inputVal = document.getElementById('admin-password').value.trim();
-      if (btoa(inputVal) === "Q09STkVSU1RPTkUyMDI2") {
-        activateOwnerMode();
-        alert("Byenveni Pwopriyetè!");
-      } else {
-        alert("Modpas la pa bon!");
-      }
-    }
-
-    async function activateOwnerMode() {
-      isUnlocked = true;
-      localStorage.setItem('cornerstone_owner', 'true');
-      document.getElementById('admin-login-box').style.display = "none";
-      document.getElementById('payment-section').style.display = "block";
-      document.getElementById('owner-panel').style.display = "block";
-      
-      document.getElementById('owner-referral-link').value = window.location.origin + window.location.pathname + "?ref=" + OWNER_REF_CODE;
-      initAdminLiveListener();
-    }
-
-    function initAdminLiveListener() {
-      const listContainer = document.getElementById('pending-clients-list');
-      try {
-        const db = window.db;
-        if (!db) { listContainer.innerHTML = "Baz done a pa disponib."; return; }
-        const { collection, onSnapshot } = window.FirestoreMethods;
-
-        onSnapshot(collection(db, "users"), (querySnapshot) => {
-          let html = "";
-          querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            if (docSnap.id !== OWNER_REF_CODE) {
-              const clientName = data.clientName || data.name || "Kliyan San Non";
-              const phoneNum = data.phone || "Pa gen nimewo";
-              const parentRef = data.parentRef || data.myReferralCode || "Okenn";
-              const isApproved = (data.hasPaid === true || data.status === "approved");
-
-              html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid ${isApproved ? '#2e7d32' : '#ff505d'};">
-                <div>Non: <b style="color:#f5a94d;">${clientName}</b></div>
-                <div>Nimewo: <b>${phoneNum}</b> | Kòd: <b>${docSnap.id}</b></div>
-                <div>Parènaj: <b style="color:#f5a94d;">${parentRef}</b></div>
-                <div>Estati: <b>${isApproved ? '✔ Deja Debloke (Apwouve)' : '⏳ Ap tann Peman'}</b></div>
-                
-                <div style="display: flex; gap: 6px; margin-top: 8px;">
-                  ${!isApproved ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:6px; margin-top:0; font-size:11px; flex:1;" onclick="approveClient('${docSnap.id}', '${parentRef}')">✔ Apwouve & Debloke</button>` : `<div style="color:#97c373; font-size:11px; flex:1; align-self:center;">Aksè Louvri</div>`}
-                  <button class="btn-outline" style="border-color:#ff505d; color:#ff505d; padding:6px; margin-top:0; font-size:11px; width: auto;" onclick="deleteClientRecord('${docSnap.id}')">🗑️ Siprime</button>
-                </div>
-              </div>`;
-            }
-          });
-          listContainer.innerHTML = html || "Pa gen okenn demann nan istorik la pou kounye a.";
-        });
-      } catch(e) {
-        listContainer.innerHTML = "Erè nan koneksyon an dirèk: " + e.message;
-      }
-    }
-
-    async function deleteClientRecord(clientCode) {
-      if (confirm("Èske w sèten ou vle siprime kliyan sa a nan istorik la?")) {
-        try {
-          const db = window.db;
-          const { doc, deleteDoc } = window.FirestoreMethods;
-          await deleteDoc(doc(db, "users", clientCode));
-        } catch(e) {
-          alert("Echèk nan sippresyon an: " + e.message);
-        }
-      }
-    }
-
-    function switchToClientView() {
-      document.getElementById('owner-panel').style.display = "none";
-      document.getElementById('back-to-master-btn-container').style.display = "block";
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function backToMasterPanel() {
-      document.getElementById('back-to-master-btn-container').style.display = "none";
-      document.getElementById('owner-panel').style.display = "block";
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function logoutOwner() {
-      localStorage.removeItem('cornerstone_owner');
-      location.reload();
-    }
-
-    async function approveClient(clientCode, parentRefCode) {
-      try {
-        const db = window.db;
-        const { doc, updateDoc, setDoc, increment } = window.FirestoreMethods;
-        
-        await updateDoc(doc(db, "users", clientCode), { hasPaid: true, status: "approved" });
-
-        if (parentRefCode && parentRefCode !== OWNER_REF_CODE && parentRefCode !== "") {
-          await setDoc(doc(db, "users", parentRefCode), { balance: increment(250) }, { merge: true });
-        }
-
-        alert("✔ Demann nan apwouve ak siksè! Kliyan an debloke sou telefòn li.");
-      } catch(e) {
-        alert("Echèk nan apwobasyon an: " + e.message);
-      }
-    }
-
-    function activateClientUnlockedMode() {
-      isUnlocked = true;
-      document.getElementById('access-status').textContent = "🔓 Kont ou a Debloke nèt!";
-      document.getElementById('warning-msg').style.display = "none";
-      document.getElementById('pay-btn').style.display = "none";
-      document.getElementById('referral-input').style.display = "none";
-      document.getElementById('share-btn-container').style.display = "block";
-    }
-
-    function renderBooks() {
-      grid.innerHTML = '';
-      books.forEach((book, index) => {
-        const card = document.createElement('div');
-        card.className = 'book-card' + (index === 0 ? ' active' : '');
-        card.innerHTML = `<span class="book-title">${book.title}</span> <span style="color: #f5a94d;">🔊</span>`;
-        
-        card.onclick = () => {
-          if (!isUnlocked) {
-            alert("Aksè a fèmen! Ou dwe tann pwopriyetè a konfime peman an.");
-            return;
-          }
-          document.querySelectorAll('.book-card').forEach(el => el.classList.remove('active'));
-          card.classList.add('active');
-          titlingDisplay.textContent = book.title;
-          audioSource.src = book.file;
-          player.load();
-          player.play().catch(e => { console.log(e); });
-        };
-        grid.appendChild(card);
+    async function confirmPaymentAdmin(docId) {
+      const uniqueCode = "ANG-" + Math.floor(1000 + Math.random() * 9000);
+      await db.collection("payment_requests").doc(docId).update({
+        status: "confirmed", generatedCode: uniqueCode
       });
-      audioSource.src = books[0].file;
-      player.load();
+      alert("Peman konfime! Kòd ba li: " + uniqueCode);
     }
 
-    function openMonCashModal() { document.getElementById('moncash-modal').style.display = 'flex'; }
-    function closeMonCashModal() { document.getElementById('moncash-modal').style.display = 'none'; }
-    function triggerUSSDMenu() { window.location.href = `tel:*202%23`; }
+    async function registerEmployee() {
+      const name = document.getElementById('w-fullname').value.trim();
+      const phone = document.getElementById('w-phone').value.trim();
+      const address = document.getElementById('w-address').value.trim();
+      const idNum = document.getElementById('w-id').value.trim();
+      if(!name || !phone || !address || !idNum) { alert("Ranpli tout bwat yo!"); return; }
+      const docRef = await db.collection("employees").add({
+        fullName: name, phone: phone, address: address, idNumber: idNum,
+        status: "ON", timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      currentWorkerId = docRef.id;
+      localStorage.setItem('employee_doc_id', currentWorkerId);
+      checkWorkerAccess();
+    }
 
-    // SÒMÈT DEMANN KLIYAN (MATCHE EGZAKTMAN AK BAZ DONE A)
+    function checkWorkerAccess() {
+      if (!currentWorkerId) {
+        document.getElementById('worker-signup-form').style.display = 'block';
+        document.getElementById('worker-dashboard').style.display = 'none';
+        return;
+      }
+      db.collection("employees").doc(currentWorkerId).onSnapshot(doc => {
+        if (doc.exists && doc.data().status === "ON") {
+          document.getElementById('worker-signup-form').style.display = 'none';
+          document.getElementById('worker-dashboard').style.display = 'block';
+          loadWorkerRequests();
+        } else {
+          document.getElementById('worker-signup-form').style.display = 'block';
+          document.getElementById('worker-dashboard').style.display = 'none';
+        }
+      });
+    }
+
+    function loadWorkerRequests() {
+      db.collection("payment_requests").where("status", "==", "pending").onSnapshot(snapshot => {
+        const container = document.getElementById('worker-requests-list');
+        container.innerHTML = "";
+        if (snapshot.empty) { container.innerHTML = '<p style="color:#888;">Pa gen demann.</p>'; return; }
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const card = document.createElement('div');
+          card.className = "admin-group-card";
+          card.innerHTML = `
+            <div><b>Non :</b> ${data.playerName || 'San non'}</div>
+            <div><b>Tel :</b> ${data.playerPhone || ''}</div>
+            <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice || '1250'} Gdes</span></div>
+            <button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${doc.id}')">Valide Demann Moun Sa a</button>
+          `;
+          container.appendChild(card);
+        });
+      });
+    }
+
+    function loadEmployeesList() {
+      db.collection("employees").onSnapshot(snapshot => {
+        const container = document.getElementById('employees-list-container');
+        container.innerHTML = "";
+        if (snapshot.empty) { container.innerHTML = '<p style="color:#888;">Pa gen anplwaye.</p>'; return; }
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const card = document.createElement('div');
+          card.className = "admin-group-card";
+          card.innerHTML = `
+            <div><b>Non :</b> ${data.fullName}</div>
+            <div><b>Telefòn :</b> ${data.phone}</div>
+            <button class="btn-pay" style="background:#dc3545; width:100%; margin-top:8px;" onclick="db.collection('employees').doc('${doc.id}').delete()">❌ Retire anplwaye</button>
+          `;
+          container.appendChild(card);
+        });
+      });
+    }
+
     async function submitPaymentRequest() {
-      const clientName = document.getElementById('client-name').value.trim();
-      const phone = document.getElementById('client-phone').value.trim();
-      const network = document.getElementById('payment-network').value;
-      const debugEl = document.getElementById('client-debug-status');
-
-      if (clientName.length < 2) {
-        debugEl.style.color = "#ff505d";
-        debugEl.textContent = "⚠ Tanpri antre non ak siyati w!";
+      if (sessionState === "playing" || sessionState === "ended") {
+        alert("Jwèt la gentan demare. Ou pa ka antre ankò!");
         return;
       }
-      if (phone.length < 8) {
-        debugEl.style.color = "#ff505d";
-        debugEl.textContent = "⚠ Tanpri antre nimewo telefòn ou!";
-        return;
-      }
+      const name = document.getElementById('player-name').value.trim();
+      const phone = document.getElementById('player-phone').value.trim();
+      const group = document.getElementById('group-select').value;
+      if(name === "" || phone === "") { alert("Antre non ak telefòn ou!"); return; }
 
-      debugEl.style.color = "#f5a94d";
-      debugEl.innerHTML = `<span>Ap voye demann lan...</span>`;
+      const docRef = await db.collection("payment_requests").add({
+        playerName: name, playerPhone: phone, groupPrice: group,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: "pending"
+      });
+      localStorage.setItem('my_request_id', docRef.id);
+      alert("Demann voye! Tann konfèmasyon.");
+      listenToMyRequest(docRef.id);
+    }
 
-      let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
-      let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
-      localStorage.setItem('my_personal_ref_code', myNewCode);
-
-      try {
-        const db = window.db;
-        if (!db) {
-          debugEl.style.color = "#ff505d";
-          debugEl.textContent = "❌ Erè: Baz done a pa pare.";
-          return;
+    function listenToMyRequest(reqId) {
+      db.collection("payment_requests").doc(reqId).onSnapshot(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          if (data.status === "confirmed" && data.generatedCode) {
+            document.getElementById('game-code').value = data.generatedCode;
+          }
         }
+      });
+    }
 
-        const { doc, setDoc } = window.FirestoreMethods;
-        
-        // Nou anrejistre done yo ak tout jaden ki matche tou de bò yo
-        await setDoc(doc(db, "users", myNewCode), { 
-          balance: 0, 
-          hasPaid: false,
-          status: "pending",
-          clientName: clientName,
-          phone: phone, 
-          network: network,
-          myReferralCode: codeInput,
-          parentRef: codeInput,
-          createdAt: new Date().toISOString() 
-        }, { merge: true });
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedReqId = localStorage.getItem('my_request_id');
+      if (savedReqId) { listenToMyRequest(savedReqId); }
+    });
 
-        checkClientStatusRealtime();
+    async function validateCode() {
+      const codeInput = document.getElementById('game-code').value.trim();
+      userGroup = document.getElementById('group-select').value;
+      if (codeInput === "") { alert("Antre kòd inik ou a!"); return; }
 
-        debugEl.style.color = "#97c373";
-        debugEl.textContent = "Demann ou a ale ak siksè, tann deblokaj la";
+      const blockRef = db.collection("game_blocks").doc("block_" + userGroup);
+      const doc = await blockRef.get();
+      let count = doc.exists ? (parseInt(doc.data().playersCount) || 0) : 0;
+      count++;
+      await blockRef.set({ playersCount: count.toString(), status: "active" }, { merge: true });
 
-        setTimeout(() => {
-          closeMonCashModal();
-          document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
-          document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
-          document.getElementById('pay-btn').style.display = "none";
-          debugEl.textContent = "";
-        }, 1500);
+      isCodeValidated = true;
+      document.getElementById('setup-screen').style.display = 'none';
+      document.getElementById('game-arena').classList.add('full-screen-mode');
+      resizeCanvas();
+    }
 
-      } catch(e) {
-        debugEl.style.color = "#ff505d";
-        debugEl.textContent = "❌ Erè: " + e.message;
+    setInterval(() => {
+      if (sessionState === "collecting") {
+        if (blockSecondsLeft > 0) {
+          blockSecondsLeft--;
+          let m = Math.floor(blockSecondsLeft / 60);
+          let s = blockSecondsLeft % 60;
+          document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+        } else {
+          sessionState = "playing";
+          document.getElementById('timer-label').innerText = "Tan K ap Rete pou Tiren (10 min):";
+          document.getElementById('game-status-indicator').innerText = "🟢 SESYON TIRE A LOUVRI!";
+          if (!isCodeValidated) {
+            document.getElementById('blocked-screen').style.display = 'flex';
+          } else {
+            const shootBtn = document.getElementById('shoot-btn-3d');
+            shootBtn.disabled = false;
+            shootBtn.innerText = "TIRE BOUL LA!";
+          }
+        }
+      } else if (sessionState === "playing") {
+        if (gamePlaySecondsLeft > 0) {
+          gamePlaySecondsLeft--;
+          let m = Math.floor(gamePlaySecondsLeft / 60);
+          let s = gamePlaySecondsLeft % 60;
+          document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+        } else {
+          sessionState = "ended";
+          document.getElementById('timer').innerText = "00:00";
+          document.getElementById('game-status-indicator').innerText = "🔴 SESYON FINI";
+          const shootBtn = document.getElementById('shoot-btn-3d');
+          if (!ball.isShot && chances > 0 && isCodeValidated) {
+            alert("Tan w fini san w pa te tire! Ou pèdi otomatikman.");
+          }
+          shootBtn.disabled = true;
+          shootBtn.innerText = "SESYON FINI";
+        }
+      }
+    }, 1000);
+
+    /* --- ANIMASYON JWÈT 3D AK JWÈ VIRTYÈL KI SANBLE AK YON ATLE --- */
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    function resizeCanvas() {
+      const arena = document.getElementById('game-arena');
+      canvas.width = arena.clientWidth;
+      canvas.height = arena.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let player = { x: 0, y: 0, targetX: 0, targetY: 0, isShooting: false, jumpOffset: 0 };
+    let ball = { x: 0, y: 0, isShot: false, isGoal: false, progress: 0, dribbleOffset: 0, dribbleDir: 1 };
+    let frameCount = 0;
+    let netShake = 0;
+
+    function getPosCoords(posNum) {
+      const btn = document.getElementById('pos-' + posNum);
+      const arena = document.getElementById('game-arena');
+      const arenaRect = arena.getBoundingClientRect();
+      const btnRect = btn.getBoundingClientRect();
+      return { x: btnRect.left - arenaRect.left + btnRect.width / 2, y: btnRect.top - arenaRect.top + btnRect.height / 2 };
+    }
+
+    function selectPos3D(p) {
+      document.querySelectorAll('.pos-btn-3d').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('pos-' + p).classList.add('active');
+      currentPos = p;
+      const coords = getPosCoords(p);
+      player.targetX = coords.x; player.targetY = coords.y;
+    }
+
+    setTimeout(() => {
+      const initialCoords = getPosCoords(1);
+      player.x = initialCoords.x; player.y = initialCoords.y;
+      player.targetX = initialCoords.x; player.targetY = initialCoords.y;
+    }, 300);
+
+    async function shootBall3D() {
+      if (!isCodeValidated) { alert("Antre kòd ou a anvan!"); return; }
+      if (sessionState !== "playing") { alert("Tann sesyon jwèt la louvri nan 2èm 10 minit yo!"); return; }
+      if (chances <= 0 || ball.isShot) return;
+
+      if (chances === 3) document.getElementById('c3').classList.add('off');
+      else if (chances === 2) document.getElementById('c2').classList.add('off');
+      else if (chances === 1) document.getElementById('c1').classList.add('off');
+      chances--;
+
+      const blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
+      let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
+      let userPhone = document.getElementById('player-phone').value.trim();
+
+      let isGoal = false;
+      if (totalPlayers >= 5) {
+        if (forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone) isGoal = true;
+        else isGoal = Math.random() < 0.35;
+      }
+
+      player.isShooting = true;
+      ball.isShot = true;
+      ball.isGoal = isGoal;
+      ball.progress = 0;
+      ball.startX = player.x;
+      ball.startY = player.y - 45;
+      ball.targetX = canvas.width * 0.50;
+      ball.targetY = canvas.height * 0.28;
+
+      if (isGoal) {
+        let calc = getGroupCalculations(parseInt(userGroup), totalPlayers);
+        let userName = document.getElementById('player-name').value.trim();
+        await db.collection("winners_announced").doc("group_" + userGroup).set({
+          winnerName: userName, prizeAmount: calc.winnerPrize.toLocaleString(),
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
       }
     }
 
-    function getReferralCode() {
-      let myCode = localStorage.getItem('my_personal_ref_code');
-      if (!myCode) {
-        myCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
-        localStorage.setItem('my_personal_ref_code', myCode);
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      frameCount++;
+
+      let dx = player.targetX - player.x;
+      let dy = player.targetY - player.y;
+      let dist = Math.hypot(dx, dy);
+      if (dist > 2) {
+        player.x += (dx / dist) * 4;
+        player.y += (dy / dist) * 4;
       }
-      let myShareLink = window.location.origin + window.location.pathname + "?ref=" + myCode;
-      document.getElementById('api-response').innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a ak lòt moun:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
+
+      player.jumpOffset = player.isShooting ? Math.sin(frameCount * 0.25) * 25 : 0;
+      let py = player.y - player.jumpOffset;
+
+      // Ombra jwè a
+      ctx.beginPath();
+      ctx.ellipse(player.x, player.y + 12, 18, 6, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fill();
+
+      // Soulye atlèt
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(player.x - 10, py + 2, 7, 5);
+      ctx.fillRect(player.x + 3, py + 2, 7, 5);
+
+      // Janm
+      ctx.fillStyle = "#8d5524";
+      ctx.fillRect(player.x - 8, py - 18, 5, 20);
+      ctx.fillRect(player.x + 3, py - 18, 5, 20);
+
+      // Pantalon kout
+      ctx.fillStyle = "#0056b3";
+      ctx.fillRect(player.x - 11, py - 30, 22, 14);
+
+      // Maillot kò (Ble klere ak jòn)
+      ctx.fillStyle = "#007bff";
+      ctx.fillRect(player.x - 10, py - 58, 20, 28);
+      ctx.fillStyle = "#ffd700";
+      ctx.font = "bold 11px sans-serif";
+      ctx.fillText("10", player.x - 6, py - 40);
+
+      // Tèt atlèt la
+      ctx.beginPath();
+      ctx.arc(player.x, py - 68, 8, 0, Math.PI * 2);
+      ctx.fillStyle = "#8d5524";
+      ctx.fill();
+
+      // Men ak bra
+      ctx.strokeStyle = "#8d5524";
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      if (player.isShooting) {
+        ctx.moveTo(player.x - 8, py - 50); ctx.lineTo(player.x - 14, py - 75);
+        ctx.moveTo(player.x + 8, py - 50); ctx.lineTo(player.x + 14, py - 75);
+      } else {
+        let dribbleArmY = py - 32 + (ball.dribbleOffset * 22);
+        ctx.moveTo(player.x - 8, py - 50); ctx.lineTo(player.x - 13, py - 32);
+        ctx.moveTo(player.x + 8, py - 50); ctx.lineTo(player.x + 15, dribbleArmY);
+      }
+      ctx.stroke();
+
+      if (!ball.isShot) {
+        ball.dribbleOffset += 0.25 * ball.dribbleDir;
+        if (ball.dribbleOffset > 1 || ball.dribbleOffset < 0) ball.dribbleDir *= -1;
+        let bx = player.x + 16;
+        let by = py - 28 + (ball.dribbleOffset * 28);
+        drawBasketball(bx, by, 8);
+      } else {
+        ball.progress += 0.025;
+        if (ball.progress <= 1) {
+          let currX = ball.startX + (ball.targetX - ball.startX) * ball.progress;
+          let currY = ball.startY + (ball.targetY - ball.startY) * ball.progress - (Math.sin(ball.progress * Math.PI) * 110);
+          let radius = 10 - (ball.progress * 4);
+          drawBasketball(currX, currY, Math.max(radius, 4));
+          if (ball.isGoal && ball.progress > 0.85) netShake = Math.sin(frameCount * 0.8) * 5;
+          draw3DHoop(canvas.width * 0.50, canvas.height * 0.28, netShake);
+        } else if (ball.isGoal && ball.progress <= 1.4) {
+          let dropProgress = (ball.progress - 1) / 0.4;
+          let dropX = canvas.width * 0.50;
+          let dropY = (canvas.height * 0.28 + 10) + (dropProgress * (canvas.height * 0.25));
+          let bounceOffset = Math.abs(Math.sin(dropProgress * Math.PI * 3)) * (10 * (1 - dropProgress));
+          drawBasketball(dropX, dropY - bounceOffset, 6);
+          netShake = Math.sin(frameCount * 0.8) * (5 * (1 - dropProgress));
+          draw3DHoop(canvas.width * 0.50, canvas.height * 0.28, netShake);
+        } else {
+          ball.isShot = false;
+          player.isShooting = false;
+          netShake = 0;
+          const shootBtn = document.getElementById('shoot-btn-3d');
+          if (ball.isGoal) {
+            alert("BOUYEN! 🏀 Boul la rantre pafètman nan panye a!");
+          } else {
+            if (chances > 0) {
+              alert("Oups! Boul la pa antre. Ou rete " + chances + " chans!");
+              shootBtn.disabled = false;
+            } else {
+              alert("Oups! 3 chans ou yo fini.");
+            }
+          }
+        }
+      }
+
+      requestAnimationFrame(gameLoop);
     }
+
+    function draw3DHoop(rimX, rimY, shake) {
+      ctx.save();
+      ctx.translate(shake, 0);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(rimX - 15, rimY + 2); ctx.lineTo(rimX - 6, rimY + 22);
+      ctx.moveTo(rimX + 15, rimY + 2); ctx.lineTo(rimX + 6, rimY + 22);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.ellipse(rimX, rimY, 16, 4.5, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ff3300';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawBasketball(x, y, radius) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      let grad = ctx.createRadialGradient(x - radius/3, y - radius/3, 1, x, y, radius);
+      grad.addColorStop(0, '#ff9900'); grad.addColorStop(1, '#b33c00');
+      ctx.fillStyle = grad; ctx.fill();
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.restore();
+    }
+
+    requestAnimationFrame(gameLoop);
   </script>
 </body>
 </html>
