@@ -466,7 +466,8 @@
 
         const { doc, setDoc } = window.FirestoreMethods;
         
-        await setDoc(doc(db, "users", myNewCode), { 
+        // Kreye yon pwomès ki ka kouri ak yon limit tan (Timeout 8 segond)
+        let savePromise = setDoc(doc(db, "users", myNewCode), { 
           balance: 0, 
           hasPaid: false,
           status: "pending",
@@ -477,6 +478,12 @@
           parentRef: codeInput,
           createdAt: new Date().toISOString() 
         });
+
+        let timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Tan koneksyon an depase (Timeout). Tcheke entènèt ou oswa règ Firebase yo.")), 8000)
+        );
+
+        await Promise.race([savePromise, timeoutPromise]);
 
         checkClientStatusRealtime();
 
@@ -493,7 +500,7 @@
 
       } catch(e) {
         debugEl.style.color = "#ff505d";
-        debugEl.textContent = "❌ Erè Firestore: " + e.message;
+        debugEl.textContent = "❌ Erè: " + e.message;
         console.log("Erè detay:", e);
       }
     }
