@@ -22,8 +22,7 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    // Isit la nou presize baz done a (default) pou li pa pèdi
-    const db = getFirestore(app, "(default)");
+    const db = getFirestore(app);
     window.db = db;
     window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment };
     
@@ -451,7 +450,7 @@
       }
 
       debugEl.style.color = "#f5a94d";
-      debugEl.innerHTML = `<span>Ap voye demann lan nan baz done a...</span>`;
+      debugEl.innerHTML = `<span>Ap voye demann lan...</span>`;
 
       let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
@@ -467,7 +466,8 @@
 
         const { doc, setDoc } = window.FirestoreMethods;
         
-        let savePromise = setDoc(doc(db, "users", myNewCode), { 
+        // Ekri dirèkteman nan baz done a san okenn blokaj tan
+        await setDoc(doc(db, "users", myNewCode), { 
           balance: 0, 
           hasPaid: false,
           status: "pending",
@@ -478,12 +478,6 @@
           parentRef: codeInput,
           createdAt: new Date().toISOString() 
         });
-
-        let timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Tan koneksyon an depase (Timeout). Tcheke entènèt ou oswa règ Firebase yo.")), 8000)
-        );
-
-        await Promise.race([savePromise, timeoutPromise]);
 
         checkClientStatusRealtime();
 
