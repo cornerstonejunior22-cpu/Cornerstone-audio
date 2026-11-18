@@ -22,7 +22,8 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    // Isit la nou presize baz done a (default) pou li pa pèdi
+    const db = getFirestore(app, "(default)");
     window.db = db;
     window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment };
     
@@ -466,7 +467,6 @@
 
         const { doc, setDoc } = window.FirestoreMethods;
         
-        // Kreye yon pwomès ki ka kouri ak yon limit tan (Timeout 8 segond)
         let savePromise = setDoc(doc(db, "users", myNewCode), { 
           balance: 0, 
           hasPaid: false,
