@@ -76,7 +76,6 @@
     .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     .btn-outline { background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
     
-    /* Ti wonn k ap vire (Loading Spinner) */
     .spinner {
       border: 3px solid #18130e;
       border-top: 3px solid #f5a94d;
@@ -178,7 +177,6 @@
       <input type="text" id="client-name" placeholder="Non ak siyati w..." style="margin-top: 8px;">
       <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 8px;">
       
-      <!-- Bwat estati ak ti wonn k ap vire -->
       <div id="client-debug-status" style="margin-top: 10px; font-size: 13px; font-weight: bold; min-height: 24px; display: flex; align-items: center; justify-content: center;"></div>
 
       <button class="btn" onclick="triggerUSSDMenu()">Rele *202# pou Fè Peman an</button>
@@ -190,7 +188,7 @@
   <div class="category-title">Liv Istorik Yo (12 Liv)</div>
   <div class="grid" id="books-grid"></div>
 
-  <!-- Panèl Modpas Pwopriyetè a (Kache nèt) -->
+  <!-- Panèl Modpas Pwopriyetè a -->
   <div class="card-box" id="admin-login-box" style="display: none; border-color: #f5a94d; background-color: #2a2015; margin-top: 30px;">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔑 Antre Modpas Pwopriyetè a:</div>
     <input type="password" id="admin-password" placeholder="Modpas ou...">
@@ -321,6 +319,7 @@
       initAdminLiveListener();
     }
 
+    // FONKSYON 100% LIVE KOTE TOUT DEMANN SOTI NAN NENPÒT TELEFÒN MONTE NAN PANÈL OU A
     function initAdminLiveListener() {
       const listContainer = document.getElementById('pending-clients-list');
       try {
@@ -332,6 +331,7 @@
           let html = "";
           querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
+            // Nou pa afiche mèt la (CORNERSTONE-OWNER), men n ap afiche tout lòt kliyan ki voye demann
             if (docSnap.id !== OWNER_REF_CODE) {
               const clientName = data.clientName || "Kliyan San Non";
               const phoneNum = data.phone || "Pa gen nimewo";
@@ -392,13 +392,15 @@
         const db = window.db;
         const { doc, updateDoc, setDoc, increment } = window.FirestoreMethods;
         
+        // Nou mete estati a approved pou debloke kliyan an a distans
         await updateDoc(doc(db, "users", clientCode), { status: "approved" });
 
+        // Si gen yon paran ki pa mèt la, sistèm nan ba li 250 Gdes otomatman sou kont li
         if (parentRefCode && parentRefCode !== OWNER_REF_CODE && parentRefCode !== "") {
           await setDoc(doc(db, "users", parentRefCode), { balance: increment(250) }, { merge: true });
         }
 
-        alert("✔ Demann nan apwouve ak siksè! Kliyan an debloke sou telefòn li.");
+        alert("✔ Demann nan apwouve ak siksè! Kliyan an ap debloke sou telefòn li otomatikman.");
       } catch(e) {
         alert("Echèk nan apwobasyon an: " + e.message);
       }
@@ -442,7 +444,7 @@
     function closeMonCashModal() { document.getElementById('moncash-modal').style.display = 'none'; }
     function triggerUSSDMenu() { window.location.href = `tel:*202%23`; }
 
-    // SÒMÈT DEMANN AK SEKIRITE TIMEOUT (P ap janm vire tout tan ankò)
+    // SÒMÈT DEMANN AK SEKIRITE TIMEOUT
     async function submitPaymentRequest() {
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
@@ -460,7 +462,6 @@
         return;
       }
 
-      // Montre ti wonn k ap vire a
       debugEl.style.color = "#f5a94d";
       debugEl.innerHTML = `<div class="spinner"></div><span>Ap voye demann lan...</span>`;
 
@@ -473,7 +474,6 @@
         if (db) {
           const { doc, setDoc } = window.FirestoreMethods;
           
-          // Nou kreye yon tanpon (timeout) 2.5 segond pou li pa janm bloke sou ekran an
           const writePromise = setDoc(doc(db, "users", myNewCode), { 
             balance: 0, 
             parentRef: codeInput, 
@@ -494,7 +494,6 @@
 
       checkClientStatusRealtime();
 
-      // Afiche mesaj siksè a tousuit
       debugEl.style.color = "#97c373";
       debugEl.textContent = "Demann ou a ale ak siksè, tann deblokaj la";
 
