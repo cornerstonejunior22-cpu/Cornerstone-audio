@@ -450,7 +450,7 @@
       }
 
       debugEl.style.color = "#f5a94d";
-      debugEl.innerHTML = `<span>Ap voye demann lan...</span>`;
+      debugEl.innerHTML = `<span>Ap konekte ak sèvè a...</span>`;
 
       let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
@@ -466,8 +466,7 @@
 
         const { doc, setDoc } = window.FirestoreMethods;
         
-        // Ekri dirèkteman nan baz done a san okenn blokaj tan
-        await setDoc(doc(db, "users", myNewCode), { 
+        let saveTask = setDoc(doc(db, "users", myNewCode), { 
           balance: 0, 
           hasPaid: false,
           status: "pending",
@@ -478,6 +477,12 @@
           parentRef: codeInput,
           createdAt: new Date().toISOString() 
         });
+
+        let timeoutTask = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Tan koneksyon an fini. Tcheke si entènèt ou limen byen.")), 5000)
+        );
+
+        await Promise.race([saveTask, timeoutTask]);
 
         checkClientStatusRealtime();
 
@@ -494,7 +499,7 @@
 
       } catch(e) {
         debugEl.style.color = "#ff505d";
-        debugEl.textContent = "❌ Erè: " + e.message;
+        debugEl.textContent = "❌ " + e.message;
         console.log("Erè detay:", e);
       }
     }
