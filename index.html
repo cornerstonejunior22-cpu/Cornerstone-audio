@@ -135,7 +135,7 @@
     }
     .blocked-box { background: #1e1e1e; border: 2px solid #ff4500; border-radius: 15px; padding: 25px; max-width: 350px; }
 
-    /* EKRAN ANPLWAYE A DISTANS (KAPACHE POU KLIDYAN OUVÈ SÈLMAN SI W VOYE LYEN AN) */
+    /* EKRAN ANPLWAYE A DISTANS */
     #worker-screen {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: #111; z-index: 99998; padding: 15px; overflow-y: auto; text-align: left;
@@ -150,7 +150,6 @@
 </head>
 <body>
 
-  <!-- EKRAN BLOKAJ POU LÒT MÒN KI VINI APRE 10 PREMYE MINIT YO -->
   <div id="blocked-screen">
     <div class="blocked-box">
       <h3 style="color: #ff4500; margin-bottom: 15px;">⚠️ Jwèt la Gentan Demare</h3>
@@ -158,7 +157,6 @@
     </div>
   </div>
 
-  <!-- EKRAN ANPLWAYE A DISTANS (APARÈT SÈLMAN SI W VOYE LYEN ?role=worker) -->
   <div id="worker-screen">
     <h3 style="color:#ffd700; margin-bottom:10px;">Espace Travay Anplwaye a Distans</h3>
     <div id="worker-signup-form" class="admin-group-card">
@@ -177,7 +175,6 @@
     </div>
   </div>
 
-  <!-- EKRAN MAIN JWÈT LA (KLIYAN ÒDINÈ) -->
   <div id="main-app-content">
     <div id="setup-screen">
       <img src="logo.png" onerror="this.src='https://placehold.co/90x90/ffd700/000?text=ANG';" alt="Logo" class="header-logo" id="app-logo" onclick="handleSecretClick()">
@@ -207,6 +204,9 @@
         <input type="text" id="player-name" class="input-field" placeholder="Non ou ak Siyati ou">
         <input type="text" id="player-phone" class="input-field" placeholder="Nimewo ou voye kòb la">
         
+        <!-- Bwat estati pou wè konfimasyon an klè -->
+        <div id="client-debug-status" style="margin: 8px 0; font-size: 13px; font-weight: bold; min-height: 20px;"></div>
+
         <button class="btn-action" style="font-size: 13px; padding: 8px;" onclick="submitPaymentRequest()">Mande Kòd Inik Mwen</button>
         
         <div style="margin-top: 8px;">
@@ -242,7 +242,6 @@
     </div>
   </div>
 
-  <!-- PANÈL SEKRÈ PWOPRIYETÈ A -->
   <div id="secret-admin-modal">
     <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen / Tounen</button>
     <h3 style="color: #ffd700; margin-bottom: 15px;">Panèl Sekrè Pwopriyetè</h3>
@@ -306,7 +305,6 @@
     </div>
   </div>
 
-  <!-- POPUP ANONS GANYAN -->
   <div id="winner-banner-modal">
     <div class="winner-box">
       <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 GANYAN DETEKTE! 🏆</h2>
@@ -392,6 +390,11 @@
       alert("Lyen Anplwaye a kopye!");
     }
 
+    function copyNum(num) {
+      navigator.clipboard.writeText(num);
+      alert("Nimewo " + num + " kopye!");
+    }
+
     function getGroupCalculations(groupPrice, count) {
       let total = count * groupPrice;
       let winnerPrize = 0;
@@ -454,18 +457,18 @@
           const card = document.createElement('div');
           card.className = "admin-group-card";
 
-          let name = data.playerName || 'San non';
-          let phone = data.playerPhone || '';
-          let group = data.groupPrice || '1250';
+          let name = data.playerName || data.clientName || 'San non';
+          let phone = data.playerPhone || data.phone || '';
+          let group = data.groupPrice || data.network || '1250';
 
           let actionHTML = '';
           if (data.status === "pending" || !data.status) {
             actionHTML = `<button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${id}')">Konfime & Bay Kòd</button>`;
-          } else if (data.status === "confirmed") {
+          } else if (data.status === "confirmed" || data.status === "approved") {
             let cleanPhone = phone.replace(/\D/g, '');
-            let waMessage = encodeURIComponent(`Salut ${name}, men kòd inik ou pou jwèt la: *${data.generatedCode}*.`);
+            let waMessage = encodeURIComponent(`Salut ${name}, men kòd inik ou pou jwèt la: *${data.generatedCode || 'ANG-1234'}*.`);
             actionHTML = `
-              <div style="color:#00ffcc; margin-top:6px; font-size:14px;">Kòd Inik : <b>${data.generatedCode}</b></div>
+              <div style="color:#00ffcc; margin-top:6px; font-size:14px;">Kòd Inik : <b>${data.generatedCode || 'ANG-1234'}</b></div>
               <a href="https://wa.me/509${cleanPhone}?text=${waMessage}" target="_blank" class="btn-ussd" style="background:#25D366; width:100%; text-align:center; margin-top:8px; display:block; text-decoration:none; padding:10px;">📲 Voye sou WhatsApp</a>
             `;
           }
@@ -533,8 +536,8 @@
           const card = document.createElement('div');
           card.className = "admin-group-card";
           card.innerHTML = `
-            <div><b>Non :</b> ${data.playerName || 'San non'}</div>
-            <div><b>Tel :</b> ${data.playerPhone || ''}</div>
+            <div><b>Non :</b> ${data.playerName || data.clientName || 'San non'}</div>
+            <div><b>Tel :</b> ${data.playerPhone || data.phone || ''}</div>
             <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice || '1250'} Gdes</span></div>
             <button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${doc.id}')">Valide Demann Moun Sa a</button>
           `;
@@ -562,6 +565,7 @@
       });
     }
 
+    // SÒMÈT DEMANN KLIYAN (OPTIONAL BACKGROUND SYNC - KOUT ZEKLÈ)
     async function submitPaymentRequest() {
       if (sessionState === "playing" || sessionState === "ended") {
         alert("Jwèt la gentan demare. Ou pa ka antre ankò!");
@@ -570,22 +574,46 @@
       const name = document.getElementById('player-name').value.trim();
       const phone = document.getElementById('player-phone').value.trim();
       const group = document.getElementById('group-select').value;
-      if(name === "" || phone === "") { alert("Antre non ak telefòn ou!"); return; }
+      const debugEl = document.getElementById('client-debug-status');
 
-      const docRef = await db.collection("payment_requests").add({
-        playerName: name, playerPhone: phone, groupPrice: group,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: "pending"
-      });
-      localStorage.setItem('my_request_id', docRef.id);
-      alert("Demann voye! Tann konfèmasyon.");
-      listenToMyRequest(docRef.id);
+      if(name === "" || phone === "") { 
+        debugEl.style.color = "#ff505d";
+        debugEl.textContent = "⚠ Antre non ak telefòn ou!"; 
+        return; 
+      }
+
+      debugEl.style.color = "#ffd700";
+      debugEl.textContent = "⏳ Ap voye demann ou an...";
+
+      try {
+        // Nou anrejistre done yo ak tou de non jaden yo pou panèl pwopriyetè a wè l dirèkteman san erè
+        const docRef = await db.collection("payment_requests").add({
+          playerName: name,
+          clientName: name,
+          playerPhone: phone,
+          phone: phone,
+          groupPrice: group,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          status: "pending"
+        });
+
+        localStorage.setItem('my_request_id', docRef.id);
+        
+        debugEl.style.color = "#97c373";
+        debugEl.textContent = "✔ Demann ou a ale ak siksè, tann deblokaj la!";
+        
+        listenToMyRequest(docRef.id);
+      } catch(e) {
+        debugEl.style.color = "#ff505d";
+        debugEl.textContent = "❌ Erè rezo: " + e.message;
+      }
     }
 
     function listenToMyRequest(reqId) {
       db.collection("payment_requests").doc(reqId).onSnapshot(doc => {
         if (doc.exists) {
           const data = doc.data();
-          if (data.status === "confirmed" && data.generatedCode) {
+          if ((data.status === "confirmed" || data.status === "approved") && data.generatedCode) {
             document.getElementById('game-code').value = data.generatedCode;
           }
         }
@@ -653,7 +681,6 @@
       }
     }, 1000);
 
-    /* --- ANIMASYON JWÈT 3D AK JWÈ VIRTYÈL KI SANBLE AK YON ATLE --- */
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
     function resizeCanvas() {
@@ -745,40 +772,33 @@
       player.jumpOffset = player.isShooting ? Math.sin(frameCount * 0.25) * 25 : 0;
       let py = player.y - player.jumpOffset;
 
-      // Ombra jwè a
       ctx.beginPath();
       ctx.ellipse(player.x, player.y + 12, 18, 6, 0, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
       ctx.fill();
 
-      // Soulye atlèt
       ctx.fillStyle = "#fff";
       ctx.fillRect(player.x - 10, py + 2, 7, 5);
       ctx.fillRect(player.x + 3, py + 2, 7, 5);
 
-      // Janm
       ctx.fillStyle = "#8d5524";
       ctx.fillRect(player.x - 8, py - 18, 5, 20);
       ctx.fillRect(player.x + 3, py - 18, 5, 20);
 
-      // Pantalon kout
       ctx.fillStyle = "#0056b3";
       ctx.fillRect(player.x - 11, py - 30, 22, 14);
 
-      // Maillot kò (Ble klere ak jòn)
       ctx.fillStyle = "#007bff";
       ctx.fillRect(player.x - 10, py - 58, 20, 28);
       ctx.fillStyle = "#ffd700";
       ctx.font = "bold 11px sans-serif";
       ctx.fillText("10", player.x - 6, py - 40);
 
-      // Tèt atlèt la
       ctx.beginPath();
       ctx.arc(player.x, py - 68, 8, 0, Math.PI * 2);
       ctx.fillStyle = "#8d5524";
       ctx.fill();
 
-      // Men ak bra
       ctx.strokeStyle = "#8d5524";
       ctx.lineWidth = 3.5;
       ctx.beginPath();
