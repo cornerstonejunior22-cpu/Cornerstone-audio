@@ -552,10 +552,9 @@
     async function saveDocViaRestApi(collectionName, docId, fieldsObj) {
       const cfg = window.firebaseConfig;
       if (!cfg || !cfg.projectId || !cfg.apiKey) {
-        throw new Error("Konfigirasyon Firebase pa disponib pou REST API.");
+        throw new Error("[REST] Pa gen projectId oswa apiKey");
       }
       const url = `https://firestore.googleapis.com/v1/projects/${cfg.projectId}/databases/(default)/documents/${collectionName}?documentId=${encodeURIComponent(docId)}&key=${encodeURIComponent(cfg.apiKey)}`;
-      const body = { fields: fieldsObj };
 
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 10000);
@@ -563,14 +562,14 @@
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
+          body: JSON.stringify({ fields: fieldsObj }),
           signal: controller.signal
         });
+        const rawText = await res.text();
         if (!res.ok) {
-          const errText = await res.text();
-          throw new Error(`REST HTTP ${res.status}: ${errText.slice(0, 140)}`);
+          throw new Error(`[REST:${collectionName} HTTP ${res.status}] ${rawText.slice(0, 160)}`);
         }
-        return await res.json();
+        return JSON.parse(rawText);
       } finally {
         clearTimeout(timer);
       }
@@ -597,33 +596,43 @@
         createdAt: { stringValue: String(userPayload.createdAt || "") }
       };
 
-      if (window.db && window.FirestoreMethods) {
-        const { doc, setDoc } = window.FirestoreMethods;
-        const sdkWrite = Promise.all([
-          setDoc(doc(window.db, "bible_audio_requests", reqId), biblePayload, { merge: true }),
-          setDoc(doc(window.db, "users", reqId), userPayload, { merge: true })
-        ]);
-
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => {
-            const err = new Error("SDK pran plis pase 15s sou rezo a");
-            err.code = "sdk-timeout";
-            reject(err);
-          }, 15000)
-        );
-
-        try {
-          await Promise.race([sdkWrite, timeoutPromise]);
-          return;
-        } catch (sdkErr) {
-          await saveDocViaRestApi("bible_audio_requests", reqId, bibleRestFields);
-          await saveDocViaRestApi("users", reqId, userRestFields);
-          return;
-        }
+      if (!window.db || !window.FirestoreMethods) {
+        return await saveDocViaRestApi("bible_audio_requests", reqId, bibleRestFields)
+          .then(() => saveDocViaRestApi("users", reqId, userRestFields));
       }
 
-      await saveDocViaRestApi("bible_audio_requests", reqId, bibleRestFields);
-      await saveDocViaRestApi("users", reqId, userRestFields);
+      const { doc, setDoc } = window.FirestoreMethods;
+      const sdkPromise = Promise.all([
+        setDoc(doc(window.db, "bible_audio_requests", reqId), biblePayload, { merge: true }),
+        setDoc(doc(window.db, "users", reqId), userPayload, { merge: true })
+      ]);
+
+      let timerId;
+      const timeoutPromise = new Promise((_, reject) => {
+        timerId = setTimeout(() => {
+          const err = new Error("Pa gen repons apre 12s");
+          err.code = "sdk-timeout-12s";
+          reject(err);
+        }, 12000);
+      });
+
+      try {
+        await Promise.race([sdkPromise, timeoutPromise]);
+        clearTimeout(timerId);
+        return "SDK_OK";
+      } catch (sdkErr) {
+        clearTimeout(timerId);
+        const sdkInfo = `[SDK:${sdkErr.code || sdkErr.name || "err"}] ${sdkErr.message}`;
+        try {
+          await saveDocViaRestApi("bible_audio_requests", reqId, bibleRestFields);
+          await saveDocViaRestApi("users", reqId, userRestFields);
+          return "REST_OK (apre " + sdkInfo + ")";
+        } catch (restErr) {
+          const combinedErr = new Error(sdkInfo + "  ||  " + restErr.message);
+          combinedErr.code = "DIAG";
+          throw combinedErr;
+        }
+      }
     }
 
     async function submitPaymentRequest() {
@@ -647,7 +656,7 @@
 
       submitBtn.disabled = true;
       debugEl.style.color = "#f5a94d";
-      debugEl.innerHTML = `<div class="spinner"></div><span>Ap konekte ak baz done a...</span>`;
+      debugEl.innerHTML = `<div class="spinner"></div><span>Ap tcheke SDK (max 12s)...</span>`;
 
       let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
@@ -674,14 +683,14 @@
       };
 
       try {
-        await writeRequestRecord(myNewCode, biblePayload, userPayload);
+        const mode = await writeRequestRecord(myNewCode, biblePayload, userPayload);
 
         localStorage.setItem('my_personal_ref_code', myNewCode);
         localStorage.setItem('bible_req_id', myNewCode);
         checkClientStatusRealtime();
 
         debugEl.style.color = "#97c373";
-        debugEl.textContent = "✔ Demann ou an voye! (" + myNewCode + ")";
+        debugEl.textContent = "✔ Voye via " + mode + "! (" + myNewCode + ")";
 
         setTimeout(() => {
           submitBtn.disabled = false;
@@ -690,11 +699,11 @@
           document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
           document.getElementById('pay-btn').style.display = "none";
           debugEl.textContent = "";
-        }, 1200);
+        }, 1500);
       } catch (e) {
         submitBtn.disabled = false;
         debugEl.style.color = "#ff505d";
-        debugEl.textContent = "❌ [" + (e.code || e.name || "erè") + "] " + e.message + " (online=" + navigator.onLine + ")";
+        debugEl.textContent = "❌ " + e.message + " | online=" + navigator.onLine;
       }
     }
 
