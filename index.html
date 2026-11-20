@@ -79,6 +79,7 @@
     input[type="text"], input[type="password"], select { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
     .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     .btn-outline { background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
+    .btn-wa { background-color: #25d366; border: none; color: #111; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     
     .spinner {
       border: 3px solid #18130e;
@@ -159,6 +160,13 @@
     
     <button class="btn" id="pay-btn" onclick="openMonCashModal()">Peye 1,000 Gdes (MonCash / Natcash)</button>
     <button class="btn-outline" id="share-btn-container" onclick="getReferralCode()" style="display:none;">Jwenn Kòd Parenn mwen pou m pataje</button>
+
+    <div id="whatsapp-backup-box" style="display: none; margin-top: 12px; padding: 10px; background: #18130e; border: 1px solid #25d366; border-radius: 6px;">
+      <div style="font-size: 12px; color: #97c373; font-weight: bold;">📲 Voye Demann nan Dirèkteman sou WhatsApp</div>
+      <div style="font-size: 11px; color: #f4d7cf; margin-top: 4px;">Klike anba a pou voye detay peman w lan bay pwopriyetè a sou WhatsApp pou l debloke w rapid:</div>
+      <button class="btn-wa" id="wa-send-btn" onclick="sendPendingRequestToWhatsApp()">💬 Voye sou WhatsApp (+509 3436 3143)</button>
+    </div>
+
     <div id="api-response" style="margin-top: 10px; font-size: 12px; color: #ff505d;"></div>
   </div>
 
@@ -245,6 +253,7 @@
     const audioSource = document.getElementById('audio-source');
     const titlingDisplay = document.getElementById('selected-title');
     const OWNER_REF_CODE = "CORNERSTONE-OWNER";
+    const OWNER_WHATSAPP_NUMBER = "50934363143";
 
     window.initializeAppUI = function() {
       renderBooks();
@@ -256,6 +265,10 @@
         document.getElementById('owner-panel').style.display = 'none';
         document.getElementById('admin-login-box').style.display = 'none';
         checkClientStatusRealtime();
+      }
+
+      if (localStorage.getItem('cornerstone_last_local_pending')) {
+        document.getElementById('whatsapp-backup-box').style.display = 'block';
       }
 
       const urlParams = new URLSearchParams(window.location.search);
@@ -270,6 +283,37 @@
       }
     };
 
+    function sendPendingRequestToWhatsApp() {
+      let raw = localStorage.getItem('cornerstone_last_local_pending');
+      let payload = null;
+      try {
+        payload = raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        payload = null;
+      }
+
+      const name = (payload && payload.clientName) || document.getElementById('client-name').value.trim() || "Kliyan";
+      const phone = (payload && payload.clientPhone) || document.getElementById('client-phone').value.trim() || "Pa gen nimewo";
+      const network = (payload && payload.network) || document.getElementById('payment-network').value || "moncash";
+      const offer = (payload && payload.selectedOffer) || document.getElementById('bible-client-offer').value || "12 Liv Istorik (Jozye - Estè)";
+      const code = (payload && payload.reqId) || localStorage.getItem('my_personal_ref_code') || "REF-LOCAL";
+      const parentRef = (payload && payload.parentRef) || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
+
+      const msg = [
+        "Bonjour Cornerstone Bible Audio,",
+        "Mwen soumèt demann debloke mwen (1,000 Gdes):",
+        "- Non: " + name,
+        "- Tel peman: " + phone,
+        "- Rezo: " + network,
+        "- Chwa: " + offer,
+        "- Kod mwen: " + code,
+        "- Parennaj: " + parentRef
+      ].join("\n");
+
+      const url = "https://wa.me/" + OWNER_WHATSAPP_NUMBER + "?text=" + encodeURIComponent(msg);
+      window.open(url, "_blank");
+    }
+
     function checkClientStatusRealtime() {
       let myCode = localStorage.getItem('my_personal_ref_code');
       if (!myCode) return;
@@ -283,6 +327,8 @@
           if (docSnap.exists()) {
             const data = docSnap.data();
             if (data.status === "approved" || data.status === "confirmed") {
+              localStorage.removeItem('cornerstone_last_local_pending');
+              document.getElementById('whatsapp-backup-box').style.display = 'none';
               activateClientUnlockedMode();
             }
           }
@@ -517,6 +563,7 @@
       document.getElementById('warning-msg').style.display = "none";
       document.getElementById('pay-btn').style.display = "none";
       document.getElementById('referral-input').style.display = "none";
+      document.getElementById('whatsapp-backup-box').style.display = "none";
       document.getElementById('share-btn-container').style.display = "block";
     }
 
@@ -596,42 +643,44 @@
         createdAt: { stringValue: String(userPayload.createdAt || "") }
       };
 
-      if (!window.db || !window.FirestoreMethods) {
-        return await saveDocViaRestApi("bible_audio_requests", reqId, bibleRestFields)
-          .then(() => saveDocViaRestApi("users", reqId, userRestFields));
+      if (window.db && window.FirestoreMethods) {
+        const { doc, setDoc } = window.FirestoreMethods;
+        const sdkPromise = Promise.all([
+          setDoc(doc(window.db, "bible_audio_requests", reqId), biblePayload, { merge: true }),
+          setDoc(doc(window.db, "users", reqId), userPayload, { merge: true })
+        ]);
+
+        let timerId;
+        const timeoutPromise = new Promise((_, reject) => {
+          timerId = setTimeout(() => {
+            const err = new Error("Pa gen repons apre 12s");
+            err.code = "sdk-timeout-12s";
+            reject(err);
+          }, 12000);
+        });
+
+        try {
+          await Promise.race([sdkPromise, timeoutPromise]);
+          clearTimeout(timerId);
+          return "SDK_OK";
+        } catch (sdkErr) {
+          clearTimeout(timerId);
+          try {
+            await saveDocViaRestApi("bible_audio_requests", reqId, bibleRestFields);
+            await saveDocViaRestApi("users", reqId, userRestFields);
+            return "REST_OK";
+          } catch (restErr) {
+            return "LOCAL_PENDING (REST 403 / SDK timeout)";
+          }
+        }
       }
 
-      const { doc, setDoc } = window.FirestoreMethods;
-      const sdkPromise = Promise.all([
-        setDoc(doc(window.db, "bible_audio_requests", reqId), biblePayload, { merge: true }),
-        setDoc(doc(window.db, "users", reqId), userPayload, { merge: true })
-      ]);
-
-      let timerId;
-      const timeoutPromise = new Promise((_, reject) => {
-        timerId = setTimeout(() => {
-          const err = new Error("Pa gen repons apre 12s");
-          err.code = "sdk-timeout-12s";
-          reject(err);
-        }, 12000);
-      });
-
       try {
-        await Promise.race([sdkPromise, timeoutPromise]);
-        clearTimeout(timerId);
-        return "SDK_OK";
-      } catch (sdkErr) {
-        clearTimeout(timerId);
-        const sdkInfo = `[SDK:${sdkErr.code || sdkErr.name || "err"}] ${sdkErr.message}`;
-        try {
-          await saveDocViaRestApi("bible_audio_requests", reqId, bibleRestFields);
-          await saveDocViaRestApi("users", reqId, userRestFields);
-          return "REST_OK (apre " + sdkInfo + ")";
-        } catch (restErr) {
-          const combinedErr = new Error(sdkInfo + "  ||  " + restErr.message);
-          combinedErr.code = "DIAG";
-          throw combinedErr;
-        }
+        await saveDocViaRestApi("bible_audio_requests", reqId, bibleRestFields);
+        await saveDocViaRestApi("users", reqId, userRestFields);
+        return "REST_OK";
+      } catch (restErr) {
+        return "LOCAL_PENDING (REST 403)";
       }
     }
 
@@ -687,6 +736,21 @@
 
         localStorage.setItem('my_personal_ref_code', myNewCode);
         localStorage.setItem('bible_req_id', myNewCode);
+
+        if (mode.indexOf("LOCAL_PENDING") !== -1) {
+          localStorage.setItem('cornerstone_last_local_pending', JSON.stringify({
+            reqId: myNewCode,
+            clientName: clientName,
+            clientPhone: phone,
+            network: network,
+            selectedOffer: selectedOffer,
+            parentRef: codeInput,
+            createdAt: nowIso
+          }));
+        } else {
+          localStorage.removeItem('cornerstone_last_local_pending');
+        }
+
         checkClientStatusRealtime();
 
         debugEl.style.color = "#97c373";
@@ -698,6 +762,9 @@
           document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
           document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
           document.getElementById('pay-btn').style.display = "none";
+          if (mode.indexOf("LOCAL_PENDING") !== -1) {
+            document.getElementById('whatsapp-backup-box').style.display = "block";
+          }
           debugEl.textContent = "";
         }, 1500);
       } catch (e) {
