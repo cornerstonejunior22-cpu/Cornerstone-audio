@@ -469,7 +469,7 @@
 
       submitBtn.disabled = true;
       debugEl.style.color = "#f5a94d";
-      debugEl.innerHTML = `<div class="spinner"></div><span>Ap anrejistre nan baz done a...</span>`;
+      debugEl.innerHTML = `<div class="spinner"></div><span>Ap konekte ak baz done a...</span>`;
 
       let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
@@ -477,11 +477,11 @@
       try {
         const db = window.db;
         if (!db || !window.FirestoreMethods) {
-          throw new Error("Baz done Firebase poko chaje.");
+          throw new Error("Baz done Firebase poko pare. Tcheke koneksyon entènèt ou.");
         }
         const { doc, setDoc } = window.FirestoreMethods;
 
-        await setDoc(doc(db, "users", myNewCode), {
+        const writePromise = setDoc(doc(db, "users", myNewCode), {
           balance: 0,
           parentRef: codeInput,
           clientName: clientName,
@@ -490,6 +490,12 @@
           status: "pending",
           createdAt: new Date().toISOString()
         }, { merge: true });
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Sèvè Firestore la pa reponn (tcheke entènèt/rezo aparèy la).")), 8000)
+        );
+
+        await Promise.race([writePromise, timeoutPromise]);
 
         localStorage.setItem('my_personal_ref_code', myNewCode);
         checkClientStatusRealtime();
@@ -505,10 +511,10 @@
           document.getElementById('pay-btn').style.display = "none";
           debugEl.textContent = "";
         }, 1200);
-      } catch(e) {
+      } catch (e) {
         submitBtn.disabled = false;
         debugEl.style.color = "#ff505d";
-        debugEl.textContent = "❌ Pa t ka voye nan baz done a: " + e.message;
+        debugEl.textContent = "❌ " + e.message;
       }
     }
 
