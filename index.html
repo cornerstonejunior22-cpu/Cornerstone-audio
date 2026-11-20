@@ -10,7 +10,7 @@
   <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { initializeFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAV07bab01c879c608f54086287953032",
@@ -22,7 +22,10 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const db = initializeFirestore(app, {
+      experimentalForceLongPolling: true,
+      useFetchStreams: false
+    });
     window.db = db;
     window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment };
     
@@ -177,7 +180,7 @@
       <input type="text" id="client-name" placeholder="Non ak siyati w..." style="margin-top: 8px;">
       <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 8px;">
       
-      <div id="client-debug-status" style="margin-top: 10px; font-size: 13px; font-weight: bold; min-height: 24px; display: flex; align-items: center; justify-content: center;"></div>
+      <div id="client-debug-status" style="margin-top: 10px; font-size: 12px; font-weight: bold; min-height: 24px; display: flex; align-items: center; justify-content: center; word-break: break-word;"></div>
 
       <button class="btn" onclick="triggerUSSDMenu()">Rele *202# pou Fè Peman an</button>
       <button class="btn" id="submit-btn" style="background-color: #1976d2; color: #fff; margin-top: 8px;" onclick="submitPaymentRequest()">Voye Demann Debloke</button>
@@ -358,10 +361,10 @@
           });
           listContainer.innerHTML = html || "Pa gen okenn demann nan istorik la pou kounye a.";
         }, (error) => {
-          listContainer.innerHTML = "Erè lekti Firestore: " + error.message;
+          listContainer.innerHTML = "Erè lekti Firestore [" + (error.code || "no-code") + "]: " + error.message;
         });
       } catch(e) {
-        listContainer.innerHTML = "Erè nan koneksyon an dirèk: " + e.message;
+        listContainer.innerHTML = "Erè nan koneksyon an dirèk [" + (e.code || "no-code") + "]: " + e.message;
       }
     }
 
@@ -477,7 +480,7 @@
       try {
         const db = window.db;
         if (!db || !window.FirestoreMethods) {
-          throw new Error("Baz done Firebase poko pare. Tcheke koneksyon entènèt ou.");
+          throw new Error("Baz done Firebase poko pare (window.db manke).");
         }
         const { doc, setDoc } = window.FirestoreMethods;
 
@@ -492,7 +495,11 @@
         }, { merge: true });
 
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Sèvè Firestore la pa reponn (tcheke entènèt/rezo aparèy la).")), 8000)
+          setTimeout(() => {
+            const err = new Error("Pa gen repons sèvè nan 8s (online=" + navigator.onLine + ")");
+            err.code = "timeout-8s";
+            reject(err);
+          }, 8000)
         );
 
         await Promise.race([writePromise, timeoutPromise]);
@@ -501,7 +508,7 @@
         checkClientStatusRealtime();
 
         debugEl.style.color = "#97c373";
-        debugEl.textContent = "✔ Demann lan anrejistre nan baz done a!";
+        debugEl.textContent = "✔ Demann lan anrejistre nan baz done a! (" + myNewCode + ")";
 
         setTimeout(() => {
           submitBtn.disabled = false;
@@ -514,7 +521,7 @@
       } catch (e) {
         submitBtn.disabled = false;
         debugEl.style.color = "#ff505d";
-        debugEl.textContent = "❌ " + e.message;
+        debugEl.textContent = "❌ [" + (e.code || e.name || "erè") + "] " + e.message;
       }
     }
 
