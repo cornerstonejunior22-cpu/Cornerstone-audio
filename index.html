@@ -334,7 +334,6 @@
       initAdminLiveListener();
     }
 
-    // KOUTE DEMANN AUDIO BIBLE YO AN TAN REYÈL NAN bible_audio_requests
     function listenBibleRequestsInAdmin() {
       const box = document.getElementById('admin-bible-requests');
       if (!box) return;
@@ -559,7 +558,7 @@
       const body = { fields: fieldsObj };
 
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 8000);
+      const timer = setTimeout(() => controller.abort(), 10000);
       try {
         const res = await fetch(url, {
           method: "POST",
@@ -607,10 +606,10 @@
 
         const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => {
-            const err = new Error("SDK timeout nan 5s");
+            const err = new Error("SDK pran plis pase 15s sou rezo a");
             err.code = "sdk-timeout";
             reject(err);
-          }, 5000)
+          }, 15000)
         );
 
         try {
