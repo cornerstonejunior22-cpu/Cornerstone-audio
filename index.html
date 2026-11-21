@@ -127,14 +127,25 @@
   <!-- Panèl Pwopriyetè Kache Totalman -->
   <div class="card-box" id="owner-panel" style="display: none; border-color: #f5a94d; background-color: #2a2015;">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d; display: flex; justify-content: space-between; align-items: center;">
-      <span>🔒 Panèl Pwopriyetè (Istorik Live)</span>
+      <span>🔒 Panèl Pwopriyetè (Kòd: CORNERSTONE-OWNER)</span>
       <button class="btn-outline" style="width: auto; padding: 4px 8px; font-size: 11px; margin-top: 0; border-color: #ff505d; color: #ff505d;" onclick="logoutOwner()">Soti</button>
     </div>
 
-    <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 12px; font-size: 13px;" onclick="switchToClientView()">👁️ Wè koòdone kliyan an</button>
+    <button class="btn" style="background-color: #1976d2; color: #fff; margin-top: 12px; font-size: 13px;" onclick="refreshAdminDataNow()">🔄 Rafrechi Istorik la (Firestore)</button>
+    <div id="admin-refresh-status" style="font-size: 11px; color: #97c373; margin-top: 4px;"></div>
+
+    <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 10px; font-size: 13px;" onclick="switchToClientView()">👁️ Wè koòdone kliyan an</button>
     
     <div style="font-size: 12px; color: #f4d7cf; margin-top: 10px;">Lyen Parrenaj ou a:</div>
     <input type="text" id="owner-referral-link" readonly onclick="this.select()">
+
+    <div style="background: #18130e; border: 1px solid #f5a94d; padding: 10px; border-radius: 8px; margin-top: 12px;">
+      <div style="font-size: 12px; color: #f9c077; font-weight: bold;">⚡ Debloke Rapid pa Kòd REF (si kliyan voye l sou WhatsApp):</div>
+      <input type="text" id="manual-unlock-ref" placeholder="Ex: REF-48291">
+      <input type="text" id="manual-unlock-parent" placeholder="Kòd parènaj kliyan an (opsyonèl)">
+      <button class="btn" style="background-color: #2e7d32; color: #fff; font-size: 12px; padding: 10px;" onclick="manualUnlockByCode()">✔ Debloke Kliyan sa a Kounye a</button>
+      <div id="manual-unlock-status" style="font-size: 11px; margin-top: 6px; color: #97c373;"></div>
+    </div>
     
     <div class="category-title" style="margin-top: 15px;">Demann Audio Bible Yo (bible_audio_requests):</div>
     <div id="admin-bible-requests" style="font-size: 13px; margin-top: 8px; max-height: 260px; overflow-y: auto;">
@@ -283,6 +294,156 @@
       }
     };
 
+    function renderBibleRequestsList(docsArray) {
+      const box = document.getElementById('admin-bible-requests');
+      if (!box) return;
+
+      if (!docsArray || docsArray.length === 0) {
+        box.innerHTML = "<p>Pa gen okenn demann Audio Bible pou kounye a.</p>";
+        return;
+      }
+
+      const items = [...docsArray];
+      items.sort((a, b) => String(b.data.createdAt || "").localeCompare(String(a.data.createdAt || "")));
+
+      box.innerHTML = "";
+      items.forEach(({ id, data: d }) => {
+        const isConfirmed = (d.status === "confirmed" || d.status === "approved");
+        const panelTag = d.ownerPanelCode || OWNER_REF_CODE;
+        const card = document.createElement("div");
+        card.style.border = `1px solid ${isConfirmed ? '#2e7d32' : '#ffd700'}`;
+        card.style.background = "#18130e";
+        card.style.padding = "10px";
+        card.style.marginBottom = "8px";
+        card.style.borderRadius = "8px";
+        card.innerHTML = `
+          <div><b>Non:</b> <span style="color:#f5a94d;">${d.clientName || "Kliyan San Non"}</span> | <b>Panel:</b> <span style="color:#97c373;">${panelTag}</span></div>
+          <div><b>Tel:</b> ${d.clientPhone || "Pa gen nimewo"} | <b>Rezo:</b> ${d.network || "moncash"}</div>
+          <div><b>Chwa:</b> ${d.selectedOffer || "12 Liv Istorik (Jozye - Estè)"}</div>
+          <div><b>Kòd:</b> ${id} | <b>Estati:</b> <b>${d.status || "pending"}</b></div>
+          <div style="display:flex; gap:6px; margin-top:8px;">
+            ${!isConfirmed ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:6px; margin-top:0; font-size:11px; flex:1;" onclick="confirmBibleRequest('${id}', '${d.parentRef || ''}')">Konfime Peman</button>` : `<div style="color:#97c373; font-size:11px; flex:1; align-self:center;">✔ Konfime</div>`}
+            <button class="btn-outline" style="border-color:#ff505d; color:#ff505d; padding:6px; margin-top:0; font-size:11px; width:auto;" onclick="deleteBibleRequest('${id}')">Siprime</button>
+          </div>
+        `;
+        box.appendChild(card);
+      });
+    }
+
+    function renderUsersList(docsArray) {
+      const listContainer = document.getElementById('pending-clients-list');
+      if (!listContainer) return;
+
+      let html = "";
+      docsArray.forEach(({ id, data }) => {
+        if (id !== OWNER_REF_CODE) {
+          const clientName = data.clientName || "Kliyan San Non";
+          const phoneNum = data.phone || "Pa gen nimewo";
+          const parentRef = data.parentRef || "Okenn";
+          const panelTag = data.ownerPanelCode || OWNER_REF_CODE;
+          const isApproved = (data.status === "approved");
+
+          html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid ${isApproved ? '#2e7d32' : '#ff505d'};">
+            <div>Non: <b style="color:#f5a94d;">${clientName}</b> | Panel: <b style="color:#97c373;">${panelTag}</b></div>
+            <div>Nimewo: <b>${phoneNum}</b> | Kòd: <b>${id}</b></div>
+            <div>Parènaj: <b style="color:#f5a94d;">${parentRef}</b></div>
+            <div>Estati: <b>${isApproved ? '✔ Deja Debloke (Apwouve)' : '⏳ Ap tann Peman'}</b></div>
+            
+            <div style="display: flex; gap: 6px; margin-top: 8px;">
+              ${!isApproved ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:6px; margin-top:0; font-size:11px; flex:1;" onclick="approveClient('${id}', '${data.parentRef || ''}')">✔ Apwouve & Debloke</button>` : `<div style="color:#97c373; font-size:11px; flex:1; align-self:center;">Aksè Louvri</div>`}
+              <button class="btn-outline" style="border-color:#ff505d; color:#ff505d; padding:6px; margin-top:0; font-size:11px; width: auto;" onclick="deleteClientRecord('${id}')">🗑️ Siprime</button>
+            </div>
+          </div>`;
+        }
+      });
+      listContainer.innerHTML = html || "Pa gen okenn demann nan istorik la pou kounye a.";
+    }
+
+    async function refreshAdminDataNow() {
+      const statusEl = document.getElementById('admin-refresh-status');
+      if (!window.db || !window.FirestoreMethods) {
+        if (statusEl) {
+          statusEl.style.color = "#ff505d";
+          statusEl.textContent = "Firestore poko pare sou paj sa a.";
+        }
+        return;
+      }
+
+      try {
+        if (statusEl) {
+          statusEl.style.color = "#f5a94d";
+          statusEl.textContent = "Ap rale dènye done yo nan Firestore...";
+        }
+        const { collection, getDocs } = window.FirestoreMethods;
+        const [reqSnap, usersSnap] = await Promise.all([
+          getDocs(collection(window.db, "bible_audio_requests")),
+          getDocs(collection(window.db, "users"))
+        ]);
+
+        const reqList = [];
+        reqSnap.forEach((docSnap) => reqList.push({ id: docSnap.id, data: docSnap.data() }));
+        renderBibleRequestsList(reqList);
+
+        const usersList = [];
+        usersSnap.forEach((docSnap) => usersList.push({ id: docSnap.id, data: docSnap.data() }));
+        renderUsersList(usersList);
+
+        if (statusEl) {
+          statusEl.style.color = "#97c373";
+          statusEl.textContent = "✔ Rafrechi: " + reqList.length + " demann, " + usersList.length + " dokiman users.";
+        }
+      } catch (e) {
+        if (statusEl) {
+          statusEl.style.color = "#ff505d";
+          statusEl.textContent = "❌ Erè rafrechi: " + e.message;
+        }
+      }
+    }
+
+    async function manualUnlockByCode() {
+      const codeInput = document.getElementById('manual-unlock-ref').value.trim().toUpperCase();
+      const parentInput = document.getElementById('manual-unlock-parent').value.trim().toUpperCase();
+      const statusEl = document.getElementById('manual-unlock-status');
+
+      if (!codeInput) {
+        statusEl.style.color = "#ff505d";
+        statusEl.textContent = "⚠ Antre kòd REF kliyan an (ex: REF-12345).";
+        return;
+      }
+
+      try {
+        const db = window.db;
+        const { doc, setDoc, increment } = window.FirestoreMethods;
+
+        await setDoc(doc(db, "users", codeInput), {
+          status: "approved",
+          ownerPanelCode: OWNER_REF_CODE,
+          parentRef: parentInput || OWNER_REF_CODE,
+          unlockedAt: new Date().toISOString()
+        }, { merge: true });
+
+        await setDoc(doc(db, "bible_audio_requests", codeInput), {
+          status: "confirmed",
+          ownerPanelCode: OWNER_REF_CODE,
+          parentRef: parentInput || OWNER_REF_CODE,
+          confirmedAt: new Date().toISOString()
+        }, { merge: true });
+
+        if (parentInput && parentInput !== OWNER_REF_CODE && parentInput !== "") {
+          await setDoc(doc(db, "users", parentInput), { balance: increment(250) }, { merge: true });
+        }
+
+        statusEl.style.color = "#97c373";
+        statusEl.textContent = "✔ Kòd " + codeInput + " debloke avèk siksè!";
+        document.getElementById('manual-unlock-ref').value = "";
+        document.getElementById('manual-unlock-parent').value = "";
+        refreshAdminDataNow();
+      } catch (e) {
+        statusEl.style.color = "#ff505d";
+        statusEl.textContent = "❌ Erè: " + e.message;
+      }
+    }
+
     function sendPendingRequestToWhatsApp() {
       let raw = localStorage.getItem('cornerstone_last_local_pending');
       let payload = null;
@@ -298,10 +459,11 @@
       const offer = (payload && payload.selectedOffer) || document.getElementById('bible-client-offer').value || "12 Liv Istorik (Jozye - Estè)";
       const code = (payload && payload.reqId) || localStorage.getItem('my_personal_ref_code') || "REF-LOCAL";
       const parentRef = (payload && payload.parentRef) || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
+      const panelCode = (payload && payload.ownerPanelCode) || OWNER_REF_CODE;
 
       const msg = [
         "Bonjour Cornerstone Bible Audio,",
-        "Mwen soumèt demann debloke mwen (1,000 Gdes):",
+        "Mwen soumèt demann debloke mwen (1,000 Gdes) lye ak panel (" + panelCode + "):",
         "- Non: " + name,
         "- Tel peman: " + phone,
         "- Rezo: " + network,
@@ -378,6 +540,7 @@
       document.getElementById('owner-referral-link').value = window.location.origin + window.location.pathname + "?ref=" + OWNER_REF_CODE;
       listenBibleRequestsInAdmin();
       initAdminLiveListener();
+      refreshAdminDataNow();
     }
 
     function listenBibleRequestsInAdmin() {
@@ -395,39 +558,11 @@
         const { collection, onSnapshot } = window.FirestoreMethods;
 
         onSnapshot(collection(db, "bible_audio_requests"), (snapshot) => {
-          if (snapshot.empty) {
-            box.innerHTML = "<p>Pa gen okenn demann Audio Bible pou kounye a.</p>";
-            return;
-          }
-
           const items = [];
           snapshot.forEach((docSnap) => {
             items.push({ id: docSnap.id, data: docSnap.data() });
           });
-
-          items.sort((a, b) => String(b.data.createdAt || "").localeCompare(String(a.data.createdAt || "")));
-
-          box.innerHTML = "";
-          items.forEach(({ id, data: d }) => {
-            const isConfirmed = (d.status === "confirmed" || d.status === "approved");
-            const card = document.createElement("div");
-            card.style.border = `1px solid ${isConfirmed ? '#2e7d32' : '#ffd700'}`;
-            card.style.background = "#18130e";
-            card.style.padding = "10px";
-            card.style.marginBottom = "8px";
-            card.style.borderRadius = "8px";
-            card.innerHTML = `
-              <div><b>Non:</b> <span style="color:#f5a94d;">${d.clientName || "Kliyan San Non"}</span></div>
-              <div><b>Tel:</b> ${d.clientPhone || "Pa gen nimewo"} | <b>Rezo:</b> ${d.network || "moncash"}</div>
-              <div><b>Chwa:</b> ${d.selectedOffer || "12 Liv Istorik (Jozye - Estè)"}</div>
-              <div><b>Kòd:</b> ${id} | <b>Estati:</b> <b>${d.status || "pending"}</b></div>
-              <div style="display:flex; gap:6px; margin-top:8px;">
-                ${!isConfirmed ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:6px; margin-top:0; font-size:11px; flex:1;" onclick="confirmBibleRequest('${id}', '${d.parentRef || ''}')">Konfime Peman</button>` : `<div style="color:#97c373; font-size:11px; flex:1; align-self:center;">✔ Konfime</div>`}
-                <button class="btn-outline" style="border-color:#ff505d; color:#ff505d; padding:6px; margin-top:0; font-size:11px; width:auto;" onclick="deleteBibleRequest('${id}')">Siprime</button>
-              </div>
-            `;
-            box.appendChild(card);
-          });
+          renderBibleRequestsList(items);
         }, (error) => {
           box.innerHTML = "Erè lekti bible_audio_requests [" + (error.code || "no-code") + "]: " + error.message;
         });
@@ -448,6 +583,7 @@
         }
 
         alert("Demann Audio Bible la konfime!");
+        refreshAdminDataNow();
       } catch (e) {
         alert("Echèk nan konfimasyon an: " + e.message);
       }
@@ -459,6 +595,7 @@
           const db = window.db;
           const { doc, deleteDoc } = window.FirestoreMethods;
           await deleteDoc(doc(db, "bible_audio_requests", reqId));
+          refreshAdminDataNow();
         } catch (e) {
           alert("Echèk nan sippresyon an: " + e.message);
         }
@@ -480,29 +617,11 @@
         const { collection, onSnapshot } = window.FirestoreMethods;
 
         onSnapshot(collection(db, "users"), (querySnapshot) => {
-          let html = "";
+          const items = [];
           querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            if (docSnap.id !== OWNER_REF_CODE) {
-              const clientName = data.clientName || "Kliyan San Non";
-              const phoneNum = data.phone || "Pa gen nimewo";
-              const parentRef = data.parentRef || "Okenn";
-              const isApproved = (data.status === "approved");
-
-              html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid ${isApproved ? '#2e7d32' : '#ff505d'};">
-                <div>Non: <b style="color:#f5a94d;">${clientName}</b></div>
-                <div>Nimewo: <b>${phoneNum}</b> | Kòd: <b>${docSnap.id}</b></div>
-                <div>Parènaj: <b style="color:#f5a94d;">${parentRef}</b></div>
-                <div>Estati: <b>${isApproved ? '✔ Deja Debloke (Apwouve)' : '⏳ Ap tann Peman'}</b></div>
-                
-                <div style="display: flex; gap: 6px; margin-top: 8px;">
-                  ${!isApproved ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:6px; margin-top:0; font-size:11px; flex:1;" onclick="approveClient('${docSnap.id}', '${data.parentRef || ''}')">✔ Apwouve & Debloke</button>` : `<div style="color:#97c373; font-size:11px; flex:1; align-self:center;">Aksè Louvri</div>`}
-                  <button class="btn-outline" style="border-color:#ff505d; color:#ff505d; padding:6px; margin-top:0; font-size:11px; width: auto;" onclick="deleteClientRecord('${docSnap.id}')">🗑️ Siprime</button>
-                </div>
-              </div>`;
-            }
+            items.push({ id: docSnap.id, data: docSnap.data() });
           });
-          listContainer.innerHTML = html || "Pa gen okenn demann nan istorik la pou kounye a.";
+          renderUsersList(items);
         }, (error) => {
           listContainer.innerHTML = "Erè lekti Firestore [" + (error.code || "no-code") + "]: " + error.message;
         });
@@ -517,6 +636,7 @@
           const db = window.db;
           const { doc, deleteDoc } = window.FirestoreMethods;
           await deleteDoc(doc(db, "users", clientCode));
+          refreshAdminDataNow();
         } catch(e) {
           alert("Echèk nan sippresyon an: " + e.message);
         }
@@ -552,6 +672,7 @@
         }
 
         alert("✔ Demann nan apwouve ak siksè! Kliyan an ap debloke sou telefòn li otomatikman.");
+        refreshAdminDataNow();
       } catch(e) {
         alert("Echèk nan apwobasyon an: " + e.message);
       }
@@ -629,6 +750,7 @@
         selectedOffer: { stringValue: String(biblePayload.selectedOffer) },
         network: { stringValue: String(biblePayload.network) },
         parentRef: { stringValue: String(biblePayload.parentRef) },
+        ownerPanelCode: { stringValue: String(biblePayload.ownerPanelCode) },
         status: { stringValue: String(biblePayload.status) },
         createdAt: { stringValue: String(biblePayload.createdAt) }
       };
@@ -636,6 +758,7 @@
       const userRestFields = {
         balance: { integerValue: String(userPayload.balance || 0) },
         parentRef: { stringValue: String(userPayload.parentRef || "") },
+        ownerPanelCode: { stringValue: String(userPayload.ownerPanelCode) },
         clientName: { stringValue: String(userPayload.clientName || "") },
         phone: { stringValue: String(userPayload.phone || "") },
         network: { stringValue: String(userPayload.network || "") },
@@ -705,7 +828,7 @@
 
       submitBtn.disabled = true;
       debugEl.style.color = "#f5a94d";
-      debugEl.innerHTML = `<div class="spinner"></div><span>Ap tcheke SDK (max 12s)...</span>`;
+      debugEl.innerHTML = `<div class="spinner"></div><span>Ap lye demann lan ak panel ${OWNER_REF_CODE}...</span>`;
 
       let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
@@ -717,6 +840,7 @@
         selectedOffer: selectedOffer,
         network: network,
         parentRef: codeInput,
+        ownerPanelCode: OWNER_REF_CODE,
         status: "pending",
         createdAt: nowIso
       };
@@ -724,6 +848,7 @@
       const userPayload = {
         balance: 0,
         parentRef: codeInput,
+        ownerPanelCode: OWNER_REF_CODE,
         clientName: clientName,
         phone: phone,
         network: network,
@@ -745,6 +870,7 @@
             network: network,
             selectedOffer: selectedOffer,
             parentRef: codeInput,
+            ownerPanelCode: OWNER_REF_CODE,
             createdAt: nowIso
           }));
         } else {
