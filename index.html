@@ -731,10 +731,10 @@
       let timerId;
       const timeoutPromise = new Promise((_, reject) => {
         timerId = setTimeout(() => {
-          const err = new Error("Rezo a pran plis pase 12 segonn pou reponn");
-          err.code = "sdk-timeout-12s";
+          const err = new Error("Rezo a pran plis pase 25 segonn pou reponn");
+          err.code = "sdk-timeout-25s";
           reject(err);
-        }, 12000);
+        }, 25000);
       });
 
       try {
