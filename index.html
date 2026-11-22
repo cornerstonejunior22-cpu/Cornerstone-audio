@@ -722,13 +722,13 @@
       if (!cfg || !cfg.projectId || !cfg.apiKey) {
         throw new Error("[REST] Pa gen projectId oswa apiKey");
       }
-      const url = `https://firestore.googleapis.com/v1/projects/${cfg.projectId}/databases/(default)/documents/${collectionName}?documentId=${encodeURIComponent(docId)}&key=${encodeURIComponent(cfg.apiKey)}`;
+      const baseDocUrl = `https://firestore.googleapis.com/v1/projects/${cfg.projectId}/databases/(default)/documents/${collectionName}/${encodeURIComponent(docId)}?key=${encodeURIComponent(cfg.apiKey)}`;
 
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 10000);
       try {
-        const res = await fetch(url, {
-          method: "POST",
+        const res = await fetch(baseDocUrl, {
+          method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ fields: fieldsObj }),
           signal: controller.signal
@@ -788,23 +788,15 @@
           return "SDK_OK";
         } catch (sdkErr) {
           clearTimeout(timerId);
-          try {
-            await saveDocViaRestApi("bible_audio_requests", reqId, bibleRestFields);
-            await saveDocViaRestApi("users", reqId, userRestFields);
-            return "REST_OK";
-          } catch (restErr) {
-            return "LOCAL_PENDING (REST 403 / SDK timeout)";
-          }
+          await saveDocViaRestApi("bible_audio_requests", reqId, bibleRestFields);
+          await saveDocViaRestApi("users", reqId, userRestFields);
+          return "REST_OK";
         }
       }
 
-      try {
-        await saveDocViaRestApi("bible_audio_requests", reqId, bibleRestFields);
-        await saveDocViaRestApi("users", reqId, userRestFields);
-        return "REST_OK";
-      } catch (restErr) {
-        return "LOCAL_PENDING (REST 403)";
-      }
+      await saveDocViaRestApi("bible_audio_requests", reqId, bibleRestFields);
+      await saveDocViaRestApi("users", reqId, userRestFields);
+      return "REST_OK";
     }
 
     async function submitPaymentRequest() {
@@ -828,7 +820,7 @@
 
       submitBtn.disabled = true;
       debugEl.style.color = "#f5a94d";
-      debugEl.innerHTML = `<div class="spinner"></div><span>Ap lye demann lan ak panel ${OWNER_REF_CODE}...</span>`;
+      debugEl.innerHTML = `<div class="spinner"></div><span>Ap voye demann lan nan Firestore...</span>`;
 
       let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
       let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
@@ -856,31 +848,28 @@
         createdAt: nowIso
       };
 
+      const backupPayload = {
+        reqId: myNewCode,
+        clientName: clientName,
+        clientPhone: phone,
+        network: network,
+        selectedOffer: selectedOffer,
+        parentRef: codeInput,
+        ownerPanelCode: OWNER_REF_CODE,
+        createdAt: nowIso
+      };
+
       try {
         const mode = await writeRequestRecord(myNewCode, biblePayload, userPayload);
 
         localStorage.setItem('my_personal_ref_code', myNewCode);
         localStorage.setItem('bible_req_id', myNewCode);
-
-        if (mode.indexOf("LOCAL_PENDING") !== -1) {
-          localStorage.setItem('cornerstone_last_local_pending', JSON.stringify({
-            reqId: myNewCode,
-            clientName: clientName,
-            clientPhone: phone,
-            network: network,
-            selectedOffer: selectedOffer,
-            parentRef: codeInput,
-            ownerPanelCode: OWNER_REF_CODE,
-            createdAt: nowIso
-          }));
-        } else {
-          localStorage.removeItem('cornerstone_last_local_pending');
-        }
+        localStorage.setItem('cornerstone_last_local_pending', JSON.stringify(backupPayload));
 
         checkClientStatusRealtime();
 
         debugEl.style.color = "#97c373";
-        debugEl.textContent = "✔ Voye via " + mode + "! (" + myNewCode + ")";
+        debugEl.textContent = "✔ Anrejistre nan Firestore (" + mode + ")! (" + myNewCode + ")";
 
         setTimeout(() => {
           submitBtn.disabled = false;
@@ -888,15 +877,17 @@
           document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
           document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
           document.getElementById('pay-btn').style.display = "none";
-          if (mode.indexOf("LOCAL_PENDING") !== -1) {
-            document.getElementById('whatsapp-backup-box').style.display = "block";
-          }
+          document.getElementById('whatsapp-backup-box').style.display = "block";
           debugEl.textContent = "";
         }, 1500);
       } catch (e) {
         submitBtn.disabled = false;
+        localStorage.setItem('my_personal_ref_code', myNewCode);
+        localStorage.setItem('bible_req_id', myNewCode);
+        localStorage.setItem('cornerstone_last_local_pending', JSON.stringify(backupPayload));
+        document.getElementById('whatsapp-backup-box').style.display = "block";
         debugEl.style.color = "#ff505d";
-        debugEl.textContent = "❌ " + e.message + " | online=" + navigator.onLine;
+        debugEl.textContent = "❌ Pa rive ekri nan Firestore: " + e.message + " | Voye via WhatsApp oswa re-eseye.";
       }
     }
 
