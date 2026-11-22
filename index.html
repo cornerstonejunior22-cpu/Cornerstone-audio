@@ -10,7 +10,7 @@
   <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { initializeFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAV07bab01c879c608f54086287953032",
@@ -22,10 +22,8 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = initializeFirestore(app, {
-      experimentalForceLongPolling: true,
-      useFetchStreams: false
-    });
+    const db = getFirestore(app);
+
     window.firebaseConfig = firebaseConfig;
     window.db = db;
     window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment };
@@ -287,8 +285,8 @@
       const inputField = document.getElementById('referral-input');
       
       if (refCode && refCode.trim() !== "") {
-        inputField.value = refCode;
-        localStorage.setItem('my_parent_ref', refCode);
+        inputField.value = refCode.trim();
+        localStorage.setItem('my_parent_ref', refCode.trim());
       } else {
         inputField.value = OWNER_REF_CODE;
       }
@@ -395,7 +393,7 @@
       } catch (e) {
         if (statusEl) {
           statusEl.style.color = "#ff505d";
-          statusEl.textContent = "❌ Erè rafrechi: " + e.message;
+          statusEl.textContent = "❌ Erè rafrechi [" + (e.code || "no-code") + "]: " + e.message;
         }
       }
     }
@@ -440,7 +438,7 @@
         refreshAdminDataNow();
       } catch (e) {
         statusEl.style.color = "#ff505d";
-        statusEl.textContent = "❌ Erè: " + e.message;
+        statusEl.textContent = "❌ Erè [" + (e.code || "no-code") + "]: " + e.message;
       }
     }
 
@@ -585,7 +583,7 @@
         alert("Demann Audio Bible la konfime!");
         refreshAdminDataNow();
       } catch (e) {
-        alert("Echèk nan konfimasyon an: " + e.message);
+        alert("Echèk nan konfimasyon an [" + (e.code || "no-code") + "]: " + e.message);
       }
     }
 
@@ -597,7 +595,7 @@
           await deleteDoc(doc(db, "bible_audio_requests", reqId));
           refreshAdminDataNow();
         } catch (e) {
-          alert("Echèk nan sippresyon an: " + e.message);
+          alert("Echèk nan sippresyon an [" + (e.code || "no-code") + "]: " + e.message);
         }
       }
     }
@@ -638,7 +636,7 @@
           await deleteDoc(doc(db, "users", clientCode));
           refreshAdminDataNow();
         } catch(e) {
-          alert("Echèk nan sippresyon an: " + e.message);
+          alert("Echèk nan sippresyon an [" + (e.code || "no-code") + "]: " + e.message);
         }
       }
     }
@@ -674,7 +672,7 @@
         alert("✔ Demann nan apwouve ak siksè! Kliyan an ap debloke sou telefòn li otomatikman.");
         refreshAdminDataNow();
       } catch(e) {
-        alert("Echèk nan apwobasyon an: " + e.message);
+        alert("Echèk nan apwobasyon an [" + (e.code || "no-code") + "]: " + e.message);
       }
     }
 
@@ -717,86 +715,36 @@
     function closeMonCashModal() { document.getElementById('moncash-modal').style.display = 'none'; }
     function triggerUSSDMenu() { window.location.href = `tel:*202%23`; }
 
-    async function saveDocViaRestApi(collectionName, docId, fieldsObj) {
-      const cfg = window.firebaseConfig;
-      if (!cfg || !cfg.projectId || !cfg.apiKey) {
-        throw new Error("[REST] Pa gen projectId oswa apiKey");
-      }
-      const baseDocUrl = `https://firestore.googleapis.com/v1/projects/${cfg.projectId}/databases/(default)/documents/${collectionName}/${encodeURIComponent(docId)}?key=${encodeURIComponent(cfg.apiKey)}`;
-
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 10000);
-      try {
-        const res = await fetch(baseDocUrl, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fields: fieldsObj }),
-          signal: controller.signal
-        });
-        const rawText = await res.text();
-        if (!res.ok) {
-          throw new Error(`[REST:${collectionName} HTTP ${res.status}] ${rawText.slice(0, 160)}`);
-        }
-        return JSON.parse(rawText);
-      } finally {
-        clearTimeout(timer);
-      }
-    }
-
     async function writeRequestRecord(reqId, biblePayload, userPayload) {
-      const bibleRestFields = {
-        clientName: { stringValue: String(biblePayload.clientName) },
-        clientPhone: { stringValue: String(biblePayload.clientPhone) },
-        selectedOffer: { stringValue: String(biblePayload.selectedOffer) },
-        network: { stringValue: String(biblePayload.network) },
-        parentRef: { stringValue: String(biblePayload.parentRef) },
-        ownerPanelCode: { stringValue: String(biblePayload.ownerPanelCode) },
-        status: { stringValue: String(biblePayload.status) },
-        createdAt: { stringValue: String(biblePayload.createdAt) }
-      };
-
-      const userRestFields = {
-        balance: { integerValue: String(userPayload.balance || 0) },
-        parentRef: { stringValue: String(userPayload.parentRef || "") },
-        ownerPanelCode: { stringValue: String(userPayload.ownerPanelCode) },
-        clientName: { stringValue: String(userPayload.clientName || "") },
-        phone: { stringValue: String(userPayload.phone || "") },
-        network: { stringValue: String(userPayload.network || "") },
-        status: { stringValue: String(userPayload.status || "pending") },
-        createdAt: { stringValue: String(userPayload.createdAt || "") }
-      };
-
-      if (window.db && window.FirestoreMethods) {
-        const { doc, setDoc } = window.FirestoreMethods;
-        const sdkPromise = Promise.all([
-          setDoc(doc(window.db, "bible_audio_requests", reqId), biblePayload, { merge: true }),
-          setDoc(doc(window.db, "users", reqId), userPayload, { merge: true })
-        ]);
-
-        let timerId;
-        const timeoutPromise = new Promise((_, reject) => {
-          timerId = setTimeout(() => {
-            const err = new Error("Pa gen repons apre 12s");
-            err.code = "sdk-timeout-12s";
-            reject(err);
-          }, 12000);
-        });
-
-        try {
-          await Promise.race([sdkPromise, timeoutPromise]);
-          clearTimeout(timerId);
-          return "SDK_OK";
-        } catch (sdkErr) {
-          clearTimeout(timerId);
-          await saveDocViaRestApi("bible_audio_requests", reqId, bibleRestFields);
-          await saveDocViaRestApi("users", reqId, userRestFields);
-          return "REST_OK";
-        }
+      if (!window.db || !window.FirestoreMethods) {
+        const err = new Error("SDK Firestore poko inisyalize");
+        err.code = "firestore-not-ready";
+        throw err;
       }
 
-      await saveDocViaRestApi("bible_audio_requests", reqId, bibleRestFields);
-      await saveDocViaRestApi("users", reqId, userRestFields);
-      return "REST_OK";
+      const { doc, setDoc } = window.FirestoreMethods;
+      const sdkPromise = Promise.all([
+        setDoc(doc(window.db, "bible_audio_requests", reqId), biblePayload, { merge: true }),
+        setDoc(doc(window.db, "users", reqId), userPayload, { merge: true })
+      ]);
+
+      let timerId;
+      const timeoutPromise = new Promise((_, reject) => {
+        timerId = setTimeout(() => {
+          const err = new Error("Rezo a pran plis pase 12 segonn pou reponn");
+          err.code = "sdk-timeout-12s";
+          reject(err);
+        }, 12000);
+      });
+
+      try {
+        await Promise.race([sdkPromise, timeoutPromise]);
+        clearTimeout(timerId);
+        return "SDK_OK";
+      } catch (sdkErr) {
+        clearTimeout(timerId);
+        throw sdkErr;
+      }
     }
 
     async function submitPaymentRequest() {
@@ -887,7 +835,7 @@
         localStorage.setItem('cornerstone_last_local_pending', JSON.stringify(backupPayload));
         document.getElementById('whatsapp-backup-box').style.display = "block";
         debugEl.style.color = "#ff505d";
-        debugEl.textContent = "❌ Pa rive ekri nan Firestore: " + e.message + " | Voye via WhatsApp oswa re-eseye.";
+        debugEl.textContent = "❌ Erè [" + (e.code || "no-code") + "]: " + e.message + " | Voye via WhatsApp oswa re-eseye.";
       }
     }
 
