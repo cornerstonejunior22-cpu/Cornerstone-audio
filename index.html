@@ -6,32 +6,9 @@
   <title>Cornerstone - Bible Audio</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="512x512" href="512.png">
-  
-  <!-- Firebase SDKs -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAV07bab01c879c608f54086287953032",
-      authDomain: "bible-audio-205e4.firebaseapp.com",
-      projectId: "bible-audio-205e4",
-      storageBucket: "bible-audio-205e4.appspot.com",
-      messagingSenderId: "879530329111",
-      appId: "1:879530329111:web:07bab01c879c608f540862"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    window.firebaseConfig = firebaseConfig;
-    window.db = db;
-    window.FirestoreMethods = { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, increment };
-    
-    if (window.initializeAppUI) {
-      window.initializeAppUI();
-    }
-  </script>
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body {
@@ -78,7 +55,7 @@
     .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     .btn-outline { background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
     .btn-wa { background-color: #25d366; border: none; color: #111; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-    
+
     .spinner {
       border: 3px solid #18130e;
       border-top: 3px solid #f5a94d;
@@ -129,11 +106,11 @@
       <button class="btn-outline" style="width: auto; padding: 4px 8px; font-size: 11px; margin-top: 0; border-color: #ff505d; color: #ff505d;" onclick="logoutOwner()">Soti</button>
     </div>
 
-    <button class="btn" style="background-color: #1976d2; color: #fff; margin-top: 12px; font-size: 13px;" onclick="refreshAdminDataNow()">🔄 Rafrechi Istorik la (Firestore)</button>
+    <button class="btn" style="background-color: #1976d2; color: #fff; margin-top: 12px; font-size: 13px;" onclick="refreshAdminDataNow()">🔄 Rafrechi Istorik la (Supabase)</button>
     <div id="admin-refresh-status" style="font-size: 11px; color: #97c373; margin-top: 4px;"></div>
 
     <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 10px; font-size: 13px;" onclick="switchToClientView()">👁️ Wè koòdone kliyan an</button>
-    
+
     <div style="font-size: 12px; color: #f4d7cf; margin-top: 10px;">Lyen Parrenaj ou a:</div>
     <input type="text" id="owner-referral-link" readonly onclick="this.select()">
 
@@ -144,13 +121,13 @@
       <button class="btn" style="background-color: #2e7d32; color: #fff; font-size: 12px; padding: 10px;" onclick="manualUnlockByCode()">✔ Debloke Kliyan sa a Kounye a</button>
       <div id="manual-unlock-status" style="font-size: 11px; margin-top: 6px; color: #97c373;"></div>
     </div>
-    
-    <div class="category-title" style="margin-top: 15px;">Demann Audio Bible Yo (bible_audio_requests):</div>
+
+    <div class="category-title" style="margin-top: 15px;">Demann Peman Yo (public.requests):</div>
     <div id="admin-bible-requests" style="font-size: 13px; margin-top: 8px; max-height: 260px; overflow-y: auto;">
       Ap tann demann...
     </div>
 
-    <div class="category-title" style="margin-top: 15px;">Istorik Kont & Parènaj (users):</div>
+    <div class="category-title" style="margin-top: 15px;">Istorik Kont & Parènaj (public.requests):</div>
     <div id="pending-clients-list" style="font-size: 13px; margin-top: 8px; max-height: 260px; overflow-y: auto;">
       Ap tann demann...
     </div>
@@ -164,9 +141,9 @@
   <div class="card-box" id="payment-section">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Debloke 12 Liv Istorik Yo (1,000 Gdes)</div>
     <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Ou dwe fè peman an epi voye demann lan bay pwopriyetè a pou valider l.</div>
-    
+
     <input type="text" id="referral-input" placeholder="Kòd parrenaj..." style="display:none;">
-    
+
     <button class="btn" id="pay-btn" onclick="openMonCashModal()">Peye 1,000 Gdes (MonCash / Natcash)</button>
     <button class="btn-outline" id="share-btn-container" onclick="getReferralCode()" style="display:none;">Jwenn Kòd Parenn mwen pou m pataje</button>
 
@@ -183,7 +160,7 @@
   <div class="modal-overlay" id="moncash-modal">
     <div class="modal-content">
       <div style="color: #f5a94d; font-weight: bold; font-size: 16px; margin-bottom: 10px;">📱 Enfòmasyon Peman</div>
-      
+
       <div style="background: #18130e; border: 1px solid #f5a94d; padding: 12px; border-radius: 6px; margin-bottom: 12px; text-align: left;">
         <div style="font-size: 12px; color: #f9c077; font-weight: bold;">Rezo w chwazi a:</div>
         <div id="display-network-name" style="font-size: 14px; color: #f4d7cf; margin-bottom: 6px;">Digicel MonCash</div>
@@ -207,7 +184,7 @@
 
       <input type="text" id="client-name" placeholder="Non ak siyati w..." style="margin-top: 8px;">
       <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 8px;">
-      
+
       <div id="client-debug-status" style="margin-top: 10px; font-size: 12px; font-weight: bold; min-height: 24px; display: flex; align-items: center; justify-content: center; word-break: break-word;"></div>
 
       <button class="btn" onclick="triggerUSSDMenu()">Rele *202# pou Fè Peman an</button>
@@ -233,7 +210,7 @@
   <div class="player-box">
     <div style="font-size: 11px; color: #c59b77; text-transform: uppercase;">M ap koute kounye a:</div>
     <div id="selected-title" style="font-weight: bold; font-size: 14px; color: #f5a94d; margin: 2px 0;">Chwazi yon liv</div>
-    
+
     <audio id="audio-player" controls preload="auto">
       <source id="audio-source" src="" type="audio/mpeg">
       Navigatè w la pa sipòte baliz odyo a.
@@ -241,6 +218,10 @@
   </div>
 
   <script>
+    const SUPABASE_URL = "https://qmeddeggtnwztrifrvhn.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "Sb_publishable_echege58gdm_HH9C3nBtFQ_niU77aW-";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
     const books = [
       { id: 'jozye', title: 'JOZYÉ', file: 'https://archive.org/download/e-ste-1-12-1/06_JOZYE.mp3' },
       { id: 'jij', title: 'JIJ', file: 'https://archive.org/download/e-ste-1-12-1/07_JIJ.mp3' },
@@ -257,6 +238,9 @@
     ];
 
     let isUnlocked = false;
+    let clientStatusPollInterval = null;
+    let adminRealtimeChannel = null;
+
     const grid = document.getElementById('books-grid');
     const player = document.getElementById('audio-player');
     const audioSource = document.getElementById('audio-source');
@@ -264,7 +248,22 @@
     const OWNER_REF_CODE = "CORNERSTONE-OWNER";
     const OWNER_WHATSAPP_NUMBER = "50934363143";
 
-    window.initializeAppUI = function() {
+    function normalizeRequestRow(row) {
+      return {
+        id: row.id,
+        clientName: row.client_name || row.clientName || "Kliyan San Non",
+        clientPhone: row.client_phone || row.clientPhone || row.phone || "Pa gen nimewo",
+        network: row.network || "moncash",
+        selectedOffer: row.selected_offer || row.selectedOffer || "12 Liv Istorik (Jozye - Estè)",
+        parentRef: row.parent_ref || row.parentRef || "Okenn",
+        ownerPanelCode: row.owner_panel_code || row.ownerPanelCode || OWNER_REF_CODE,
+        status: row.status || "pending",
+        balance: Number(row.balance || 0),
+        createdAt: row.created_at || row.createdAt || ""
+      };
+    }
+
+    function initializeAppUI() {
       renderBooks();
       updateModalInfo();
 
@@ -283,31 +282,30 @@
       const urlParams = new URLSearchParams(window.location.search);
       const refCode = urlParams.get('ref');
       const inputField = document.getElementById('referral-input');
-      
+
       if (refCode && refCode.trim() !== "") {
         inputField.value = refCode.trim();
         localStorage.setItem('my_parent_ref', refCode.trim());
       } else {
         inputField.value = OWNER_REF_CODE;
       }
-    };
+    }
 
-    function renderBibleRequestsList(docsArray) {
+    function renderBibleRequestsList(rows) {
       const box = document.getElementById('admin-bible-requests');
       if (!box) return;
 
-      if (!docsArray || docsArray.length === 0) {
-        box.innerHTML = "<p>Pa gen okenn demann Audio Bible pou kounye a.</p>";
+      if (!rows || rows.length === 0) {
+        box.innerHTML = "<p>Pa gen okenn demann pou kounye a.</p>";
         return;
       }
 
-      const items = [...docsArray];
-      items.sort((a, b) => String(b.data.createdAt || "").localeCompare(String(a.data.createdAt || "")));
+      const items = rows.map(normalizeRequestRow);
+      items.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
 
       box.innerHTML = "";
-      items.forEach(({ id, data: d }) => {
+      items.forEach((d) => {
         const isConfirmed = (d.status === "confirmed" || d.status === "approved");
-        const panelTag = d.ownerPanelCode || OWNER_REF_CODE;
         const card = document.createElement("div");
         card.style.border = `1px solid ${isConfirmed ? '#2e7d32' : '#ffd700'}`;
         card.style.background = "#18130e";
@@ -315,41 +313,37 @@
         card.style.marginBottom = "8px";
         card.style.borderRadius = "8px";
         card.innerHTML = `
-          <div><b>Non:</b> <span style="color:#f5a94d;">${d.clientName || "Kliyan San Non"}</span> | <b>Panel:</b> <span style="color:#97c373;">${panelTag}</span></div>
-          <div><b>Tel:</b> ${d.clientPhone || "Pa gen nimewo"} | <b>Rezo:</b> ${d.network || "moncash"}</div>
-          <div><b>Chwa:</b> ${d.selectedOffer || "12 Liv Istorik (Jozye - Estè)"}</div>
-          <div><b>Kòd:</b> ${id} | <b>Estati:</b> <b>${d.status || "pending"}</b></div>
+          <div><b>Non:</b> <span style="color:#f5a94d;">${d.clientName}</span> | <b>Panel:</b> <span style="color:#97c373;">${d.ownerPanelCode}</span></div>
+          <div><b>Tel:</b> ${d.clientPhone} | <b>Rezo:</b> ${d.network}</div>
+          <div><b>Chwa:</b> ${d.selectedOffer}</div>
+          <div><b>Kòd:</b> ${d.id} | <b>Estati:</b> <b>${d.status}</b></div>
           <div style="display:flex; gap:6px; margin-top:8px;">
-            ${!isConfirmed ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:6px; margin-top:0; font-size:11px; flex:1;" onclick="confirmBibleRequest('${id}', '${d.parentRef || ''}')">Konfime Peman</button>` : `<div style="color:#97c373; font-size:11px; flex:1; align-self:center;">✔ Konfime</div>`}
-            <button class="btn-outline" style="border-color:#ff505d; color:#ff505d; padding:6px; margin-top:0; font-size:11px; width:auto;" onclick="deleteBibleRequest('${id}')">Siprime</button>
+            ${!isConfirmed ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:6px; margin-top:0; font-size:11px; flex:1;" onclick="confirmBibleRequest('${d.id}', '${d.parentRef}')">Konfime Peman</button>` : `<div style="color:#97c373; font-size:11px; flex:1; align-self:center;">✔ Konfime</div>`}
+            <button class="btn-outline" style="border-color:#ff505d; color:#ff505d; padding:6px; margin-top:0; font-size:11px; width:auto;" onclick="deleteBibleRequest('${d.id}')">Siprime</button>
           </div>
         `;
         box.appendChild(card);
       });
     }
 
-    function renderUsersList(docsArray) {
+    function renderUsersList(rows) {
       const listContainer = document.getElementById('pending-clients-list');
       if (!listContainer) return;
 
       let html = "";
-      docsArray.forEach(({ id, data }) => {
-        if (id !== OWNER_REF_CODE) {
-          const clientName = data.clientName || "Kliyan San Non";
-          const phoneNum = data.phone || "Pa gen nimewo";
-          const parentRef = data.parentRef || "Okenn";
-          const panelTag = data.ownerPanelCode || OWNER_REF_CODE;
-          const isApproved = (data.status === "approved");
+      (rows || []).map(normalizeRequestRow).forEach((data) => {
+        if (data.id !== OWNER_REF_CODE) {
+          const isApproved = (data.status === "approved" || data.status === "confirmed");
 
           html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid ${isApproved ? '#2e7d32' : '#ff505d'};">
-            <div>Non: <b style="color:#f5a94d;">${clientName}</b> | Panel: <b style="color:#97c373;">${panelTag}</b></div>
-            <div>Nimewo: <b>${phoneNum}</b> | Kòd: <b>${id}</b></div>
-            <div>Parènaj: <b style="color:#f5a94d;">${parentRef}</b></div>
+            <div>Non: <b style="color:#f5a94d;">${data.clientName}</b> | Panel: <b style="color:#97c373;">${data.ownerPanelCode}</b></div>
+            <div>Nimewo: <b>${data.clientPhone}</b> | Kòd: <b>${data.id}</b></div>
+            <div>Parènaj: <b style="color:#f5a94d;">${data.parentRef}</b></div>
             <div>Estati: <b>${isApproved ? '✔ Deja Debloke (Apwouve)' : '⏳ Ap tann Peman'}</b></div>
-            
+
             <div style="display: flex; gap: 6px; margin-top: 8px;">
-              ${!isApproved ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:6px; margin-top:0; font-size:11px; flex:1;" onclick="approveClient('${id}', '${data.parentRef || ''}')">✔ Apwouve & Debloke</button>` : `<div style="color:#97c373; font-size:11px; flex:1; align-self:center;">Aksè Louvri</div>`}
-              <button class="btn-outline" style="border-color:#ff505d; color:#ff505d; padding:6px; margin-top:0; font-size:11px; width: auto;" onclick="deleteClientRecord('${id}')">🗑️ Siprime</button>
+              ${!isApproved ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:6px; margin-top:0; font-size:11px; flex:1;" onclick="approveClient('${data.id}', '${data.parentRef}')">✔ Apwouve & Debloke</button>` : `<div style="color:#97c373; font-size:11px; flex:1; align-self:center;">Aksè Louvri</div>`}
+              <button class="btn-outline" style="border-color:#ff505d; color:#ff505d; padding:6px; margin-top:0; font-size:11px; width: auto;" onclick="deleteClientRecord('${data.id}')">🗑️ Siprime</button>
             </div>
           </div>`;
         }
@@ -359,43 +353,53 @@
 
     async function refreshAdminDataNow() {
       const statusEl = document.getElementById('admin-refresh-status');
-      if (!window.db || !window.FirestoreMethods) {
-        if (statusEl) {
-          statusEl.style.color = "#ff505d";
-          statusEl.textContent = "Firestore poko pare sou paj sa a.";
-        }
-        return;
-      }
-
       try {
         if (statusEl) {
           statusEl.style.color = "#f5a94d";
-          statusEl.textContent = "Ap rale dènye done yo nan Firestore...";
+          statusEl.textContent = "Ap rale dènye done yo nan Supabase...";
         }
-        const { collection, getDocs } = window.FirestoreMethods;
-        const [reqSnap, usersSnap] = await Promise.all([
-          getDocs(collection(window.db, "bible_audio_requests")),
-          getDocs(collection(window.db, "users"))
-        ]);
 
-        const reqList = [];
-        reqSnap.forEach((docSnap) => reqList.push({ id: docSnap.id, data: docSnap.data() }));
-        renderBibleRequestsList(reqList);
+        const { data, error } = await supabaseClient
+          .from("requests")
+          .select("*")
+          .order("created_at", { ascending: false });
 
-        const usersList = [];
-        usersSnap.forEach((docSnap) => usersList.push({ id: docSnap.id, data: docSnap.data() }));
-        renderUsersList(usersList);
+        if (error) throw error;
+
+        const rows = data || [];
+        renderBibleRequestsList(rows);
+        renderUsersList(rows);
 
         if (statusEl) {
           statusEl.style.color = "#97c373";
-          statusEl.textContent = "✔ Rafrechi: " + reqList.length + " demann, " + usersList.length + " dokiman users.";
+          statusEl.textContent = "✔ Rafrechi: " + rows.length + " dosye nan tab requests.";
         }
       } catch (e) {
         if (statusEl) {
           statusEl.style.color = "#ff505d";
-          statusEl.textContent = "❌ Erè rafrechi [" + (e.code || "no-code") + "]: " + e.message;
+          statusEl.textContent = "❌ Erè rafrechi: " + e.message;
         }
       }
+    }
+
+    async function creditParentBalance(parentRefCode, bonusAmount = 250) {
+      if (!parentRefCode || parentRefCode === OWNER_REF_CODE || parentRefCode === "Okenn" || parentRefCode.trim() === "") {
+        return;
+      }
+      const cleanParent = parentRefCode.trim();
+      const { data: existingParent } = await supabaseClient
+        .from("requests")
+        .select("id, balance")
+        .eq("id", cleanParent)
+        .maybeSingle();
+
+      const currentBalance = existingParent ? Number(existingParent.balance || 0) : 0;
+      await supabaseClient
+        .from("requests")
+        .upsert({
+          id: cleanParent,
+          balance: currentBalance + bonusAmount
+        }, { onConflict: "id" });
     }
 
     async function manualUnlockByCode() {
@@ -410,25 +414,20 @@
       }
 
       try {
-        const db = window.db;
-        const { doc, setDoc, increment } = window.FirestoreMethods;
+        const { error } = await supabaseClient
+          .from("requests")
+          .upsert({
+            id: codeInput,
+            status: "approved",
+            owner_panel_code: OWNER_REF_CODE,
+            parent_ref: parentInput || OWNER_REF_CODE,
+            created_at: new Date().toISOString()
+          }, { onConflict: "id" });
 
-        await setDoc(doc(db, "users", codeInput), {
-          status: "approved",
-          ownerPanelCode: OWNER_REF_CODE,
-          parentRef: parentInput || OWNER_REF_CODE,
-          unlockedAt: new Date().toISOString()
-        }, { merge: true });
+        if (error) throw error;
 
-        await setDoc(doc(db, "bible_audio_requests", codeInput), {
-          status: "confirmed",
-          ownerPanelCode: OWNER_REF_CODE,
-          parentRef: parentInput || OWNER_REF_CODE,
-          confirmedAt: new Date().toISOString()
-        }, { merge: true });
-
-        if (parentInput && parentInput !== OWNER_REF_CODE && parentInput !== "") {
-          await setDoc(doc(db, "users", parentInput), { balance: increment(250) }, { merge: true });
+        if (parentInput && parentInput !== OWNER_REF_CODE) {
+          await creditParentBalance(parentInput, 250);
         }
 
         statusEl.style.color = "#97c373";
@@ -438,7 +437,7 @@
         refreshAdminDataNow();
       } catch (e) {
         statusEl.style.color = "#ff505d";
-        statusEl.textContent = "❌ Erè [" + (e.code || "no-code") + "]: " + e.message;
+        statusEl.textContent = "❌ Erè: " + e.message;
       }
     }
 
@@ -475,27 +474,36 @@
     }
 
     function checkClientStatusRealtime() {
-      let myCode = localStorage.getItem('my_personal_ref_code');
+      const myCode = localStorage.getItem('my_personal_ref_code');
       if (!myCode) return;
 
-      try {
-        const db = window.db;
-        if (!db) return;
-        const { doc, onSnapshot } = window.FirestoreMethods;
+      if (clientStatusPollInterval) {
+        clearInterval(clientStatusPollInterval);
+      }
 
-        onSnapshot(doc(db, "users", myCode), (docSnap) => {
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            if (data.status === "approved" || data.status === "confirmed") {
-              localStorage.removeItem('cornerstone_last_local_pending');
-              document.getElementById('whatsapp-backup-box').style.display = 'none';
-              activateClientUnlockedMode();
+      async function checkOnce() {
+        try {
+          const { data, error } = await supabaseClient
+            .from("requests")
+            .select("status")
+            .eq("id", myCode)
+            .maybeSingle();
+
+          if (!error && data && (data.status === "approved" || data.status === "confirmed")) {
+            localStorage.removeItem('cornerstone_last_local_pending');
+            document.getElementById('whatsapp-backup-box').style.display = 'none';
+            activateClientUnlockedMode();
+            if (clientStatusPollInterval) {
+              clearInterval(clientStatusPollInterval);
             }
           }
-        });
-      } catch(e) {
-        console.log("Erè estati:", e);
+        } catch (e) {
+          console.log("Erè tcheke estati:", e);
+        }
       }
+
+      checkOnce();
+      clientStatusPollInterval = setInterval(checkOnce, 4000);
     }
 
     function updateModalInfo() {
@@ -528,117 +536,72 @@
       }
     }
 
+    function subscribeAdminRealtime() {
+      if (adminRealtimeChannel) {
+        supabaseClient.removeChannel(adminRealtimeChannel);
+      }
+      adminRealtimeChannel = supabaseClient
+        .channel("requests-realtime-admin")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "requests" },
+          () => {
+            refreshAdminDataNow();
+          }
+        )
+        .subscribe();
+    }
+
     async function activateOwnerMode() {
       isUnlocked = true;
       localStorage.setItem('cornerstone_owner', 'true');
       document.getElementById('admin-login-box').style.display = "none";
       document.getElementById('payment-section').style.display = "block";
       document.getElementById('owner-panel').style.display = "block";
-      
+
       document.getElementById('owner-referral-link').value = window.location.origin + window.location.pathname + "?ref=" + OWNER_REF_CODE;
-      listenBibleRequestsInAdmin();
-      initAdminLiveListener();
-      refreshAdminDataNow();
-    }
-
-    function listenBibleRequestsInAdmin() {
-      const box = document.getElementById('admin-bible-requests');
-      if (!box) return;
-
-      if (!window.db || !window.FirestoreMethods) {
-        box.innerHTML = "Ap konekte ak baz done a...";
-        setTimeout(listenBibleRequestsInAdmin, 500);
-        return;
-      }
-
-      try {
-        const db = window.db;
-        const { collection, onSnapshot } = window.FirestoreMethods;
-
-        onSnapshot(collection(db, "bible_audio_requests"), (snapshot) => {
-          const items = [];
-          snapshot.forEach((docSnap) => {
-            items.push({ id: docSnap.id, data: docSnap.data() });
-          });
-          renderBibleRequestsList(items);
-        }, (error) => {
-          box.innerHTML = "Erè lekti bible_audio_requests [" + (error.code || "no-code") + "]: " + error.message;
-        });
-      } catch (e) {
-        box.innerHTML = "Erè nan koute demann yo: " + e.message;
-      }
+      subscribeAdminRealtime();
+      await refreshAdminDataNow();
     }
 
     async function confirmBibleRequest(reqId, parentRefCode) {
       try {
-        const db = window.db;
-        const { doc, updateDoc, setDoc, increment } = window.FirestoreMethods;
-        await updateDoc(doc(db, "bible_audio_requests", reqId), { status: "confirmed" });
-        await setDoc(doc(db, "users", reqId), { status: "approved" }, { merge: true });
+        const { error } = await supabaseClient
+          .from("requests")
+          .update({ status: "confirmed" })
+          .eq("id", reqId);
 
-        if (parentRefCode && parentRefCode !== OWNER_REF_CODE && parentRefCode !== "") {
-          await setDoc(doc(db, "users", parentRefCode), { balance: increment(250) }, { merge: true });
+        if (error) throw error;
+
+        if (parentRefCode && parentRefCode !== OWNER_REF_CODE && parentRefCode !== "Okenn") {
+          await creditParentBalance(parentRefCode, 250);
         }
 
-        alert("Demann Audio Bible la konfime!");
+        alert("Demann nan konfime ak siksè!");
         refreshAdminDataNow();
       } catch (e) {
-        alert("Echèk nan konfimasyon an [" + (e.code || "no-code") + "]: " + e.message);
+        alert("Echèk nan konfimasyon an: " + e.message);
       }
     }
 
     async function deleteBibleRequest(reqId) {
       if (confirm("Èske w sèten ou vle siprime demann sa a?")) {
         try {
-          const db = window.db;
-          const { doc, deleteDoc } = window.FirestoreMethods;
-          await deleteDoc(doc(db, "bible_audio_requests", reqId));
+          const { error } = await supabaseClient
+            .from("requests")
+            .delete()
+            .eq("id", reqId);
+
+          if (error) throw error;
           refreshAdminDataNow();
         } catch (e) {
-          alert("Echèk nan sippresyon an [" + (e.code || "no-code") + "]: " + e.message);
+          alert("Echèk nan sippresyon an: " + e.message);
         }
-      }
-    }
-
-    function initAdminLiveListener() {
-      const listContainer = document.getElementById('pending-clients-list');
-      if (!listContainer) return;
-
-      if (!window.db || !window.FirestoreMethods) {
-        listContainer.innerHTML = "Ap konekte ak baz done a...";
-        setTimeout(initAdminLiveListener, 500);
-        return;
-      }
-
-      try {
-        const db = window.db;
-        const { collection, onSnapshot } = window.FirestoreMethods;
-
-        onSnapshot(collection(db, "users"), (querySnapshot) => {
-          const items = [];
-          querySnapshot.forEach((docSnap) => {
-            items.push({ id: docSnap.id, data: docSnap.data() });
-          });
-          renderUsersList(items);
-        }, (error) => {
-          listContainer.innerHTML = "Erè lekti Firestore [" + (error.code || "no-code") + "]: " + error.message;
-        });
-      } catch(e) {
-        listContainer.innerHTML = "Erè nan koneksyon an dirèk [" + (e.code || "no-code") + "]: " + e.message;
       }
     }
 
     async function deleteClientRecord(clientCode) {
-      if (confirm("Èske w sèten ou vle siprime kliyan sa a nan istorik la?")) {
-        try {
-          const db = window.db;
-          const { doc, deleteDoc } = window.FirestoreMethods;
-          await deleteDoc(doc(db, "users", clientCode));
-          refreshAdminDataNow();
-        } catch(e) {
-          alert("Echèk nan sippresyon an [" + (e.code || "no-code") + "]: " + e.message);
-        }
-      }
+      await deleteBibleRequest(clientCode);
     }
 
     function switchToClientView() {
@@ -660,19 +623,21 @@
 
     async function approveClient(clientCode, parentRefCode) {
       try {
-        const db = window.db;
-        const { doc, updateDoc, setDoc, increment } = window.FirestoreMethods;
-        
-        await updateDoc(doc(db, "users", clientCode), { status: "approved" });
+        const { error } = await supabaseClient
+          .from("requests")
+          .update({ status: "approved" })
+          .eq("id", clientCode);
 
-        if (parentRefCode && parentRefCode !== OWNER_REF_CODE && parentRefCode !== "") {
-          await setDoc(doc(db, "users", parentRefCode), { balance: increment(250) }, { merge: true });
+        if (error) throw error;
+
+        if (parentRefCode && parentRefCode !== OWNER_REF_CODE && parentRefCode !== "Okenn") {
+          await creditParentBalance(parentRefCode, 250);
         }
 
-        alert("✔ Demann nan apwouve ak siksè! Kliyan an ap debloke sou telefòn li otomatikman.");
+        alert("✔ Demann nan apwouve ak siksè! Kliyan an ap debloke lè l rafrechi oswa tcheke estati a.");
         refreshAdminDataNow();
-      } catch(e) {
-        alert("Echèk nan apwobasyon an [" + (e.code || "no-code") + "]: " + e.message);
+      } catch (e) {
+        alert("Echèk nan apwobasyon an: " + e.message);
       }
     }
 
@@ -692,7 +657,7 @@
         const card = document.createElement('div');
         card.className = 'book-card' + (index === 0 ? ' active' : '');
         card.innerHTML = `<span class="book-title">${book.title}</span> <span style="color: #f5a94d;">🔊</span>`;
-        
+
         card.onclick = () => {
           if (!isUnlocked) {
             alert("Aksè a fèmen! Ou dwe tann pwopriyetè a konfime peman an.");
@@ -715,38 +680,6 @@
     function closeMonCashModal() { document.getElementById('moncash-modal').style.display = 'none'; }
     function triggerUSSDMenu() { window.location.href = `tel:*202%23`; }
 
-    async function writeRequestRecord(reqId, biblePayload, userPayload) {
-      if (!window.db || !window.FirestoreMethods) {
-        const err = new Error("SDK Firestore poko inisyalize");
-        err.code = "firestore-not-ready";
-        throw err;
-      }
-
-      const { doc, setDoc } = window.FirestoreMethods;
-      const sdkPromise = Promise.all([
-        setDoc(doc(window.db, "bible_audio_requests", reqId), biblePayload, { merge: true }),
-        setDoc(doc(window.db, "users", reqId), userPayload, { merge: true })
-      ]);
-
-      let timerId;
-      const timeoutPromise = new Promise((_, reject) => {
-        timerId = setTimeout(() => {
-          const err = new Error("Rezo a pran plis pase 25 segonn pou reponn");
-          err.code = "sdk-timeout-25s";
-          reject(err);
-        }, 25000);
-      });
-
-      try {
-        await Promise.race([sdkPromise, timeoutPromise]);
-        clearTimeout(timerId);
-        return "SDK_OK";
-      } catch (sdkErr) {
-        clearTimeout(timerId);
-        throw sdkErr;
-      }
-    }
-
     async function submitPaymentRequest() {
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
@@ -768,32 +701,23 @@
 
       submitBtn.disabled = true;
       debugEl.style.color = "#f5a94d";
-      debugEl.innerHTML = `<div class="spinner"></div><span>Ap voye demann lan nan Firestore...</span>`;
+      debugEl.innerHTML = `<div class="spinner"></div><span>Ap voye demann lan nan Supabase...</span>`;
 
-      let codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
-      let myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
+      const codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
+      const myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
       const nowIso = new Date().toISOString();
 
-      const biblePayload = {
-        clientName: clientName,
-        clientPhone: phone,
-        selectedOffer: selectedOffer,
+      const dbRow = {
+        id: myNewCode,
+        client_name: clientName,
+        client_phone: phone,
         network: network,
-        parentRef: codeInput,
-        ownerPanelCode: OWNER_REF_CODE,
+        selected_offer: selectedOffer,
+        parent_ref: codeInput,
+        owner_panel_code: OWNER_REF_CODE,
         status: "pending",
-        createdAt: nowIso
-      };
-
-      const userPayload = {
         balance: 0,
-        parentRef: codeInput,
-        ownerPanelCode: OWNER_REF_CODE,
-        clientName: clientName,
-        phone: phone,
-        network: network,
-        status: "pending",
-        createdAt: nowIso
+        created_at: nowIso
       };
 
       const backupPayload = {
@@ -808,7 +732,11 @@
       };
 
       try {
-        const mode = await writeRequestRecord(myNewCode, biblePayload, userPayload);
+        const { error } = await supabaseClient
+          .from("requests")
+          .upsert(dbRow, { onConflict: "id" });
+
+        if (error) throw error;
 
         localStorage.setItem('my_personal_ref_code', myNewCode);
         localStorage.setItem('bible_req_id', myNewCode);
@@ -817,7 +745,7 @@
         checkClientStatusRealtime();
 
         debugEl.style.color = "#97c373";
-        debugEl.textContent = "✔ Anrejistre nan Firestore (" + mode + ")! (" + myNewCode + ")";
+        debugEl.textContent = "✔ Anrejistre nan Supabase! (" + myNewCode + ")";
 
         setTimeout(() => {
           submitBtn.disabled = false;
@@ -827,7 +755,7 @@
           document.getElementById('pay-btn').style.display = "none";
           document.getElementById('whatsapp-backup-box').style.display = "block";
           debugEl.textContent = "";
-        }, 1500);
+        }, 1200);
       } catch (e) {
         submitBtn.disabled = false;
         localStorage.setItem('my_personal_ref_code', myNewCode);
@@ -835,7 +763,7 @@
         localStorage.setItem('cornerstone_last_local_pending', JSON.stringify(backupPayload));
         document.getElementById('whatsapp-backup-box').style.display = "block";
         debugEl.style.color = "#ff505d";
-        debugEl.textContent = "❌ Erè [" + (e.code || "no-code") + "]: " + e.message + " | Voye via WhatsApp oswa re-eseye.";
+        debugEl.textContent = "❌ Erè Supabase: " + e.message + " | Voye via WhatsApp oswa re-eseye.";
       }
     }
 
@@ -845,9 +773,11 @@
         myCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
         localStorage.setItem('my_personal_ref_code', myCode);
       }
-      let myShareLink = window.location.origin + window.location.pathname + "?ref=" + myCode;
+      const myShareLink = window.location.origin + window.location.pathname + "?ref=" + myCode;
       document.getElementById('api-response').innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a ak lòt moun:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
     }
+
+    window.addEventListener("DOMContentLoaded", initializeAppUI);
   </script>
 </body>
 </html>
