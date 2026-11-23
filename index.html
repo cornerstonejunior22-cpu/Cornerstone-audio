@@ -87,6 +87,15 @@
       justify-content: center;
     }
 
+    .client-wallet-box {
+      background: #18130e;
+      border: 1px solid #f5a94d;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 10px;
+      display: none;
+    }
+
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -125,7 +134,7 @@
     <div id="admin-refresh-status" style="font-size: 11px; color: #97c373; margin-top: 4px;"></div>
     <div id="ref-copy-feedback" style="font-size: 11px; color: #97c373; margin-top: 4px; display: none;"></div>
 
-    <!-- Rezime Finansye Pwopriyetè -->
+    <!-- Rezime Finansye Pwopriyetè Sèlman -->
     <div class="stats-grid">
       <div class="stat-card" style="border-color: #f5a94d;">
         <div class="stat-label">Kòb Antre Dirèk (Pwopriyetè)</div>
@@ -180,6 +189,13 @@
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Debloke 12 Liv Istorik Yo (1,000 Gdes)</div>
     <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Ou dwe fè peman an epi voye demann lan bay pwopriyetè a pou valider l.</div>
     <div id="active-ref-badge" style="font-size: 11px; color: #97c373; margin-top: 6px; display: none;"></div>
+
+    <!-- Bwat Balans Prive Parenn nan Sèlman (Pa montre kòb pwopriyetè a) -->
+    <div class="client-wallet-box" id="client-wallet-box">
+      <div style="font-size: 11px; color: #c59b77;">💰 Balans Komisyon Parrenaj ou (250 Gdes pa fiyèl debloke):</div>
+      <div style="font-size: 18px; font-weight: bold; color: #97c373; margin-top: 2px;" id="client-live-balance">0 Gdes</div>
+      <div style="font-size: 11px; color: #f9c077; margin-top: 2px;">Chak fwa yon moun debloke sou lyen w, balans ou ap monte. Lè pwopriyetè a voye kòb la epi konfime, l ap retounen 0 Gdes.</div>
+    </div>
 
     <input type="text" id="referral-input" placeholder="Kòd parrenaj..." style="display:none;">
 
@@ -307,6 +323,7 @@
       document.getElementById('warning-msg').textContent = "Ou dwe fè peman an epi voye demann lan bay pwopriyetè a pou valider l.";
       document.getElementById('pay-btn').style.display = "block";
       document.getElementById('share-btn-container').style.display = "none";
+      document.getElementById('client-wallet-box').style.display = "none";
 
       const badgeEl = document.getElementById('active-ref-badge');
       if (parentRefValue && parentRefValue !== OWNER_REF_CODE) {
@@ -331,6 +348,7 @@
         inputField.value = effectiveParentRef;
         localStorage.setItem('my_parent_ref', effectiveParentRef);
         localStorage.removeItem('my_personal_ref_code');
+        localStorage.removeItem('is_referral_wallet_owner');
       } else {
         inputField.value = localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
       }
@@ -410,7 +428,6 @@
             networkLabel: row.networkLabel,
             clientsCount: 0,
             approvedCount: 0,
-            computedBonus: 0,
             storedBalance: Number(row.balance || 0),
             clients: []
           });
@@ -428,7 +445,6 @@
               networkLabel: "Digicel MonCash",
               clientsCount: 0,
               approvedCount: 0,
-              computedBonus: 0,
               storedBalance: 0,
               clients: []
             });
@@ -441,7 +457,6 @@
           const isApp = (client.status === "approved" || client.status === "confirmed");
           if (isApp) {
             entry.approvedCount += 1;
-            entry.computedBonus += REFERRAL_BONUS;
           }
           entry.clients.push({
             name: client.clientName,
@@ -457,8 +472,7 @@
 
       let totalReferralsBonus = 0;
       referrersList.forEach((r) => {
-        const effectiveBalance = Math.max(r.storedBalance, r.computedBonus);
-        totalReferralsBonus += effectiveBalance;
+        totalReferralsBonus += Number(r.storedBalance || 0);
       });
 
       const totalGrossMoney = approvedClients.length * OFFER_PRICE;
@@ -480,7 +494,7 @@
 
       let refHtml = "";
       referrersList.forEach((r) => {
-        const displayBal = Math.max(r.storedBalance, r.computedBonus);
+        const displayBal = Number(r.storedBalance || 0);
         const fiyelNames = r.clients
           .map((c) => `${c.name} (${c.approved ? "✔ Debloke" : "⏳ Ap tann"})`)
           .join(", ");
@@ -648,14 +662,13 @@
         try {
           const { data, error } = await supabaseClient
             .from("requests")
-            .select("status")
+            .select("status, balance")
             .eq("id", myCode)
             .maybeSingle();
 
-          if (!error && data && (data.status === "approved" || data.status === "confirmed")) {
-            activateClientUnlockedMode();
-            if (clientStatusPollInterval) {
-              clearInterval(clientStatusPollInterval);
+          if (!error && data) {
+            if (data.status === "approved" || data.status === "confirmed") {
+              activateClientUnlockedMode(Number(data.balance || 0));
             }
           }
         } catch (e) {
@@ -718,6 +731,7 @@
       document.getElementById('admin-login-box').style.display = "none";
       document.getElementById('payment-section').style.display = "block";
       document.getElementById('owner-panel').style.display = "block";
+      document.getElementById('client-wallet-box').style.display = "none";
 
       document.getElementById('owner-referral-link').value = window.location.origin + window.location.pathname + "?ref=" + OWNER_REF_CODE;
       subscribeAdminLive();
@@ -777,13 +791,25 @@
       }
     }
 
-    function activateClientUnlockedMode() {
+    function activateClientUnlockedMode(balanceAmount = 0) {
       isUnlocked = true;
       document.getElementById('access-status').textContent = "🔓 Kont ou a Debloke nèt!";
       document.getElementById('warning-msg').style.display = "none";
       document.getElementById('pay-btn').style.display = "none";
       document.getElementById('referral-input').style.display = "none";
       document.getElementById('share-btn-container').style.display = "block";
+
+      // Pa janm montre bwat komisyon parenn nan lè pwopriyetè a ap gade vi kliyan
+      const isOwnerSession = localStorage.getItem('cornerstone_owner') === 'true';
+      const isReferralWalletOwner = localStorage.getItem('is_referral_wallet_owner') === 'true';
+      const walletBox = document.getElementById('client-wallet-box');
+
+      if (!isOwnerSession && isReferralWalletOwner) {
+        walletBox.style.display = "block";
+        document.getElementById('client-live-balance').textContent = Number(balanceAmount || 0).toLocaleString() + " Gdes";
+      } else {
+        walletBox.style.display = "none";
+      }
     }
 
     function renderBooks() {
@@ -838,6 +864,7 @@
       const codeInput = (document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE).toUpperCase();
       const myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
       localStorage.setItem('my_personal_ref_code', myNewCode);
+      localStorage.setItem('is_referral_wallet_owner', 'true');
 
       try {
         const { error } = await supabaseClient
@@ -878,6 +905,7 @@
         myCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
         localStorage.setItem('my_personal_ref_code', myCode);
       }
+      localStorage.setItem('is_referral_wallet_owner', 'true');
       const myShareLink = window.location.origin + window.location.pathname + "?ref=" + myCode;
       document.getElementById('api-response').innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a ak lòt moun:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
     }
