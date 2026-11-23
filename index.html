@@ -54,23 +54,6 @@
     input[type="text"], input[type="password"], select { width: 100%; padding: 10px; background: #18130e; border: 1px solid #332025; color: #f4d7cf; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
     .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     .btn-outline { background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
-    .btn-wa { background-color: #25d366; border: none; color: #111; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-
-    .spinner {
-      border: 3px solid #18130e;
-      border-top: 3px solid #f5a94d;
-      border-radius: 50%;
-      width: 18px;
-      height: 18px;
-      animation: spin 1s linear infinite;
-      display: inline-block;
-      vertical-align: middle;
-      margin-right: 8px;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
 
     .modal-overlay {
       position: fixed;
@@ -99,14 +82,14 @@
   <div class="header-sub">Cornerstone Audio Player</div>
   <h1 id="balance-text">Sistèm Peman K ap Fonksyone</h1>
 
-  <!-- Panèl Pwopriyetè Kache Totalman -->
+  <!-- Pwopriyetè / Admin Panèl -->
   <div class="card-box" id="owner-panel" style="display: none; border-color: #f5a94d; background-color: #2a2015;">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d; display: flex; justify-content: space-between; align-items: center;">
-      <span>🔒 Panèl Pwopriyetè (Kòd: CORNERSTONE-OWNER)</span>
+      <span>🔒 Panèl Pwopriyetè (Istorik Live)</span>
       <button class="btn-outline" style="width: auto; padding: 4px 8px; font-size: 11px; margin-top: 0; border-color: #ff505d; color: #ff505d;" onclick="logoutOwner()">Soti</button>
     </div>
 
-    <button class="btn" style="background-color: #1976d2; color: #fff; margin-top: 12px; font-size: 13px;" onclick="refreshAdminDataNow()">🔄 Rafrechi Istorik la (Supabase)</button>
+    <button class="btn" style="background-color: #1976d2; color: #fff; margin-top: 12px; font-size: 13px;" onclick="refreshAdminDataNow()">🔄 Rafrechi Demann Yo</button>
     <div id="admin-refresh-status" style="font-size: 11px; color: #97c373; margin-top: 4px;"></div>
 
     <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 10px; font-size: 13px;" onclick="switchToClientView()">👁️ Wè koòdone kliyan an</button>
@@ -114,21 +97,17 @@
     <div style="font-size: 12px; color: #f4d7cf; margin-top: 10px;">Lyen Parrenaj ou a:</div>
     <input type="text" id="owner-referral-link" readonly onclick="this.select()">
 
+    <!-- Debloke Rapid pa Kòd REF -->
     <div style="background: #18130e; border: 1px solid #f5a94d; padding: 10px; border-radius: 8px; margin-top: 12px;">
-      <div style="font-size: 12px; color: #f9c077; font-weight: bold;">⚡ Debloke Rapid pa Kòd REF (si kliyan voye l sou WhatsApp):</div>
-      <input type="text" id="manual-unlock-ref" placeholder="Ex: REF-48291">
-      <input type="text" id="manual-unlock-parent" placeholder="Kòd parènaj kliyan an (opsyonèl)">
-      <button class="btn" style="background-color: #2e7d32; color: #fff; font-size: 12px; padding: 10px;" onclick="manualUnlockByCode()">✔ Debloke Kliyan sa a Kounye a</button>
-      <div id="manual-unlock-status" style="font-size: 11px; margin-top: 6px; color: #97c373;"></div>
+      <div style="font-size: 12px; color: #f9c077; font-weight: bold;">⚡ Debloke Rapid pa Kòd REF:</div>
+      <input type="text" id="quick-unlock-ref" placeholder="Ex: REF-48291">
+      <input type="text" id="quick-unlock-parent" placeholder="Kòd parènaj kliyan an (opsyonèl)">
+      <button class="btn" style="background-color: #2e7d32; color: #fff; font-size: 12px; padding: 10px;" onclick="quickUnlockClient()">✔ Debloke Kliyan Kounye a</button>
+      <div id="quick-unlock-status" style="font-size: 11px; margin-top: 6px; color: #97c373;"></div>
     </div>
 
-    <div class="category-title" style="margin-top: 15px;">Demann Peman Yo (public.requests):</div>
-    <div id="admin-bible-requests" style="font-size: 13px; margin-top: 8px; max-height: 260px; overflow-y: auto;">
-      Ap tann demann...
-    </div>
-
-    <div class="category-title" style="margin-top: 15px;">Istorik Kont & Parènaj (public.requests):</div>
-    <div id="pending-clients-list" style="font-size: 13px; margin-top: 8px; max-height: 260px; overflow-y: auto;">
+    <div class="category-title" style="margin-top: 15px;">Istorik Tout Demann Kliyan yo:</div>
+    <div id="pending-clients-list" style="font-size: 13px; margin-top: 8px; max-height: 300px; overflow-y: auto;">
       Ap tann demann...
     </div>
   </div>
@@ -146,13 +125,6 @@
 
     <button class="btn" id="pay-btn" onclick="openMonCashModal()">Peye 1,000 Gdes (MonCash / Natcash)</button>
     <button class="btn-outline" id="share-btn-container" onclick="getReferralCode()" style="display:none;">Jwenn Kòd Parenn mwen pou m pataje</button>
-
-    <div id="whatsapp-backup-box" style="display: none; margin-top: 12px; padding: 10px; background: #18130e; border: 1px solid #25d366; border-radius: 6px;">
-      <div style="font-size: 12px; color: #97c373; font-weight: bold;">📲 Voye Demann nan Dirèkteman sou WhatsApp</div>
-      <div style="font-size: 11px; color: #f4d7cf; margin-top: 4px;">Klike anba a pou voye detay peman w lan bay pwopriyetè a sou WhatsApp pou l debloke w rapid:</div>
-      <button class="btn-wa" id="wa-send-btn" onclick="sendPendingRequestToWhatsApp()">💬 Voye sou WhatsApp (+509 3436 3143)</button>
-    </div>
-
     <div id="api-response" style="margin-top: 10px; font-size: 12px; color: #ff505d;"></div>
   </div>
 
@@ -177,26 +149,21 @@
         <option value="natcash">Natcom Natcash</option>
       </select>
 
-      <select id="bible-client-offer" style="margin-top: 8px;">
-        <option value="12 Liv Istorik (Jozye - Estè)">12 Liv Istorik (Jozye - Estè)</option>
-        <option value="Aksè Konplè Audio Bible">Aksè Konplè Audio Bible</option>
-      </select>
-
       <input type="text" id="client-name" placeholder="Non ak siyati w..." style="margin-top: 8px;">
       <input type="text" id="client-phone" placeholder="Nimewo telefòn ou fè peman an avè l..." style="margin-top: 8px;">
 
-      <div id="client-debug-status" style="margin-top: 10px; font-size: 12px; font-weight: bold; min-height: 24px; display: flex; align-items: center; justify-content: center; word-break: break-word;"></div>
+      <div id="client-debug-status" style="margin-top: 8px; font-size: 11px; color: #ff505d; font-weight: bold;"></div>
 
       <button class="btn" onclick="triggerUSSDMenu()">Rele *202# pou Fè Peman an</button>
       <button class="btn" id="submit-btn" style="background-color: #1976d2; color: #fff; margin-top: 8px;" onclick="submitPaymentRequest()">Voye Demann Debloke</button>
-      <button class="btn-outline" id="cancel-btn" onclick="closeMonCashModal()" style="margin-top: 8px; border-color: #ff505d; color: #ff505d;">Anile</button>
+      <button class="btn-outline" onclick="closeMonCashModal()" style="margin-top: 8px; border-color: #ff505d; color: #ff505d;">Anile</button>
     </div>
   </div>
 
   <div class="category-title">Liv Istorik Yo (12 Liv)</div>
   <div class="grid" id="books-grid"></div>
 
-  <!-- Panèl Modpas Pwopriyetè a -->
+  <!-- Espas Pwopriyetè Kache -->
   <div class="card-box" id="admin-login-box" style="display: none; border-color: #f5a94d; background-color: #2a2015; margin-top: 30px;">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;">🔑 Antre Modpas Pwopriyetè a:</div>
     <input type="password" id="admin-password" placeholder="Modpas ou...">
@@ -246,24 +213,21 @@
     const audioSource = document.getElementById('audio-source');
     const titlingDisplay = document.getElementById('selected-title');
     const OWNER_REF_CODE = "CORNERSTONE-OWNER";
-    const OWNER_WHATSAPP_NUMBER = "50934363143";
 
-    function normalizeRequestRow(row) {
+    function normalizeRequest(row) {
       return {
         id: row.id,
         clientName: row.client_name || row.clientName || "Kliyan San Non",
-        clientPhone: row.client_phone || row.clientPhone || row.phone || "Pa gen nimewo",
+        phone: row.client_phone || row.phone || "Pa gen nimewo",
         network: row.network || "moncash",
-        selectedOffer: row.selected_offer || row.selectedOffer || "12 Liv Istorik (Jozye - Estè)",
         parentRef: row.parent_ref || row.parentRef || "Okenn",
-        ownerPanelCode: row.owner_panel_code || row.ownerPanelCode || OWNER_REF_CODE,
         status: row.status || "pending",
         balance: Number(row.balance || 0),
         createdAt: row.created_at || row.createdAt || ""
       };
     }
 
-    function initializeAppUI() {
+    window.onload = function() {
       renderBooks();
       updateModalInfo();
 
@@ -273,10 +237,6 @@
         document.getElementById('owner-panel').style.display = 'none';
         document.getElementById('admin-login-box').style.display = 'none';
         checkClientStatusRealtime();
-      }
-
-      if (localStorage.getItem('cornerstone_last_local_pending')) {
-        document.getElementById('whatsapp-backup-box').style.display = 'block';
       }
 
       const urlParams = new URLSearchParams(window.location.search);
@@ -289,66 +249,40 @@
       } else {
         inputField.value = OWNER_REF_CODE;
       }
-    }
+    };
 
-    function renderBibleRequestsList(rows) {
-      const box = document.getElementById('admin-bible-requests');
-      if (!box) return;
-
-      if (!rows || rows.length === 0) {
-        box.innerHTML = "<p>Pa gen okenn demann pou kounye a.</p>";
-        return;
-      }
-
-      const items = rows.map(normalizeRequestRow);
-      items.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
-
-      box.innerHTML = "";
-      items.forEach((d) => {
-        const isConfirmed = (d.status === "confirmed" || d.status === "approved");
-        const card = document.createElement("div");
-        card.style.border = `1px solid ${isConfirmed ? '#2e7d32' : '#ffd700'}`;
-        card.style.background = "#18130e";
-        card.style.padding = "10px";
-        card.style.marginBottom = "8px";
-        card.style.borderRadius = "8px";
-        card.innerHTML = `
-          <div><b>Non:</b> <span style="color:#f5a94d;">${d.clientName}</span> | <b>Panel:</b> <span style="color:#97c373;">${d.ownerPanelCode}</span></div>
-          <div><b>Tel:</b> ${d.clientPhone} | <b>Rezo:</b> ${d.network}</div>
-          <div><b>Chwa:</b> ${d.selectedOffer}</div>
-          <div><b>Kòd:</b> ${d.id} | <b>Estati:</b> <b>${d.status}</b></div>
-          <div style="display:flex; gap:6px; margin-top:8px;">
-            ${!isConfirmed ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:6px; margin-top:0; font-size:11px; flex:1;" onclick="confirmBibleRequest('${d.id}', '${d.parentRef}')">Konfime Peman</button>` : `<div style="color:#97c373; font-size:11px; flex:1; align-self:center;">✔ Konfime</div>`}
-            <button class="btn-outline" style="border-color:#ff505d; color:#ff505d; padding:6px; margin-top:0; font-size:11px; width:auto;" onclick="deleteBibleRequest('${d.id}')">Siprime</button>
-          </div>
-        `;
-        box.appendChild(card);
-      });
-    }
-
-    function renderUsersList(rows) {
+    function renderClientsList(rows) {
       const listContainer = document.getElementById('pending-clients-list');
       if (!listContainer) return;
 
+      const items = (rows || [])
+        .map(normalizeRequest)
+        .filter((item) => item.id !== OWNER_REF_CODE)
+        .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+
+      if (items.length === 0) {
+        listContainer.innerHTML = "Pa gen okenn demann nan istorik la pou kounye a.";
+        return;
+      }
+
       let html = "";
-      (rows || []).map(normalizeRequestRow).forEach((data) => {
-        if (data.id !== OWNER_REF_CODE) {
-          const isApproved = (data.status === "approved" || data.status === "confirmed");
+      items.forEach((data) => {
+        const isApproved = (data.status === "approved" || data.status === "confirmed");
 
-          html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid ${isApproved ? '#2e7d32' : '#ff505d'};">
-            <div>Non: <b style="color:#f5a94d;">${data.clientName}</b> | Panel: <b style="color:#97c373;">${data.ownerPanelCode}</b></div>
-            <div>Nimewo: <b>${data.clientPhone}</b> | Kòd: <b>${data.id}</b></div>
-            <div>Parènaj: <b style="color:#f5a94d;">${data.parentRef}</b></div>
-            <div>Estati: <b>${isApproved ? '✔ Deja Debloke (Apwouve)' : '⏳ Ap tann Peman'}</b></div>
+        html += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid ${isApproved ? '#2e7d32' : '#ff505d'};">
+          <div>Non: <b style="color:#f5a94d;">${data.clientName}</b></div>
+          <div>Nimewo: <b>${data.phone}</b> | Kòd: <b>${data.id}</b></div>
+          <div>Parènaj: <b style="color:#f5a94d;">${data.parentRef}</b></div>
+          <div>Estati: <b>${isApproved ? '✔ Deja Debloke (Apwouve)' : '⏳ Ap tann Peman'}</b></div>
 
-            <div style="display: flex; gap: 6px; margin-top: 8px;">
-              ${!isApproved ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:6px; margin-top:0; font-size:11px; flex:1;" onclick="approveClient('${data.id}', '${data.parentRef}')">✔ Apwouve & Debloke</button>` : `<div style="color:#97c373; font-size:11px; flex:1; align-self:center;">Aksè Louvri</div>`}
-              <button class="btn-outline" style="border-color:#ff505d; color:#ff505d; padding:6px; margin-top:0; font-size:11px; width: auto;" onclick="deleteClientRecord('${data.id}')">🗑️ Siprime</button>
-            </div>
-          </div>`;
-        }
+          <div style="display: flex; gap: 6px; margin-top: 8px;">
+            ${!isApproved ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:6px; margin-top:0; font-size:11px; flex:1;" onclick="approveClient('${data.id}', '${data.parentRef}')">✔ Apwouve & Debloke</button>` : `<div style="color:#97c373; font-size:11px; flex:1; align-self:center;">Aksè Louvri</div>`}
+            <button class="btn-outline" style="border-color:#ff505d; color:#ff505d; padding:6px; margin-top:0; font-size:11px; width: auto;" onclick="deleteClientRecord('${data.id}')">🗑️ Siprime</button>
+          </div>
+        </div>`;
       });
-      listContainer.innerHTML = html || "Pa gen okenn demann nan istorik la pou kounye a.";
+
+      listContainer.innerHTML = html;
     }
 
     async function refreshAdminDataNow() {
@@ -356,9 +290,8 @@
       try {
         if (statusEl) {
           statusEl.style.color = "#f5a94d";
-          statusEl.textContent = "Ap rale dènye done yo nan Supabase...";
+          statusEl.textContent = "Ap chaje demann yo...";
         }
-
         const { data, error } = await supabaseClient
           .from("requests")
           .select("*")
@@ -366,18 +299,15 @@
 
         if (error) throw error;
 
-        const rows = data || [];
-        renderBibleRequestsList(rows);
-        renderUsersList(rows);
-
+        renderClientsList(data || []);
         if (statusEl) {
           statusEl.style.color = "#97c373";
-          statusEl.textContent = "✔ Rafrechi: " + rows.length + " dosye nan tab requests.";
+          statusEl.textContent = "✔ Mete ajou (" + (data ? data.length : 0) + " demann).";
         }
       } catch (e) {
         if (statusEl) {
           statusEl.style.color = "#ff505d";
-          statusEl.textContent = "❌ Erè rafrechi: " + e.message;
+          statusEl.textContent = "❌ Erè: " + e.message;
         }
       }
     }
@@ -387,25 +317,25 @@
         return;
       }
       const cleanParent = parentRefCode.trim();
-      const { data: existingParent } = await supabaseClient
+      const { data: parentRow } = await supabaseClient
         .from("requests")
         .select("id, balance")
         .eq("id", cleanParent)
         .maybeSingle();
 
-      const currentBalance = existingParent ? Number(existingParent.balance || 0) : 0;
+      const currentBal = parentRow ? Number(parentRow.balance || 0) : 0;
       await supabaseClient
         .from("requests")
         .upsert({
           id: cleanParent,
-          balance: currentBalance + bonusAmount
+          balance: currentBal + bonusAmount
         }, { onConflict: "id" });
     }
 
-    async function manualUnlockByCode() {
-      const codeInput = document.getElementById('manual-unlock-ref').value.trim().toUpperCase();
-      const parentInput = document.getElementById('manual-unlock-parent').value.trim().toUpperCase();
-      const statusEl = document.getElementById('manual-unlock-status');
+    async function quickUnlockClient() {
+      const codeInput = document.getElementById('quick-unlock-ref').value.trim().toUpperCase();
+      const parentInput = document.getElementById('quick-unlock-parent').value.trim().toUpperCase();
+      const statusEl = document.getElementById('quick-unlock-status');
 
       if (!codeInput) {
         statusEl.style.color = "#ff505d";
@@ -419,7 +349,6 @@
           .upsert({
             id: codeInput,
             status: "approved",
-            owner_panel_code: OWNER_REF_CODE,
             parent_ref: parentInput || OWNER_REF_CODE,
             created_at: new Date().toISOString()
           }, { onConflict: "id" });
@@ -431,46 +360,14 @@
         }
 
         statusEl.style.color = "#97c373";
-        statusEl.textContent = "✔ Kòd " + codeInput + " debloke avèk siksè!";
-        document.getElementById('manual-unlock-ref').value = "";
-        document.getElementById('manual-unlock-parent').value = "";
-        refreshAdminDataNow();
+        statusEl.textContent = "✔ " + codeInput + " debloke avèk siksè!";
+        document.getElementById('quick-unlock-ref').value = "";
+        document.getElementById('quick-unlock-parent').value = "";
+        await refreshAdminDataNow();
       } catch (e) {
         statusEl.style.color = "#ff505d";
         statusEl.textContent = "❌ Erè: " + e.message;
       }
-    }
-
-    function sendPendingRequestToWhatsApp() {
-      let raw = localStorage.getItem('cornerstone_last_local_pending');
-      let payload = null;
-      try {
-        payload = raw ? JSON.parse(raw) : null;
-      } catch (e) {
-        payload = null;
-      }
-
-      const name = (payload && payload.clientName) || document.getElementById('client-name').value.trim() || "Kliyan";
-      const phone = (payload && payload.clientPhone) || document.getElementById('client-phone').value.trim() || "Pa gen nimewo";
-      const network = (payload && payload.network) || document.getElementById('payment-network').value || "moncash";
-      const offer = (payload && payload.selectedOffer) || document.getElementById('bible-client-offer').value || "12 Liv Istorik (Jozye - Estè)";
-      const code = (payload && payload.reqId) || localStorage.getItem('my_personal_ref_code') || "REF-LOCAL";
-      const parentRef = (payload && payload.parentRef) || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
-      const panelCode = (payload && payload.ownerPanelCode) || OWNER_REF_CODE;
-
-      const msg = [
-        "Bonjour Cornerstone Bible Audio,",
-        "Mwen soumèt demann debloke mwen (1,000 Gdes) lye ak panel (" + panelCode + "):",
-        "- Non: " + name,
-        "- Tel peman: " + phone,
-        "- Rezo: " + network,
-        "- Chwa: " + offer,
-        "- Kod mwen: " + code,
-        "- Parennaj: " + parentRef
-      ].join("\n");
-
-      const url = "https://wa.me/" + OWNER_WHATSAPP_NUMBER + "?text=" + encodeURIComponent(msg);
-      window.open(url, "_blank");
     }
 
     function checkClientStatusRealtime() {
@@ -481,7 +378,7 @@
         clearInterval(clientStatusPollInterval);
       }
 
-      async function checkOnce() {
+      async function checkStatus() {
         try {
           const { data, error } = await supabaseClient
             .from("requests")
@@ -490,20 +387,18 @@
             .maybeSingle();
 
           if (!error && data && (data.status === "approved" || data.status === "confirmed")) {
-            localStorage.removeItem('cornerstone_last_local_pending');
-            document.getElementById('whatsapp-backup-box').style.display = 'none';
             activateClientUnlockedMode();
             if (clientStatusPollInterval) {
               clearInterval(clientStatusPollInterval);
             }
           }
         } catch (e) {
-          console.log("Erè tcheke estati:", e);
+          console.log("Erè estati:", e);
         }
       }
 
-      checkOnce();
-      clientStatusPollInterval = setInterval(checkOnce, 4000);
+      checkStatus();
+      clientStatusPollInterval = setInterval(checkStatus, 4000);
     }
 
     function updateModalInfo() {
@@ -527,8 +422,7 @@
     }
 
     async function verifyOwnerPassword() {
-      const inputVal = document.getElementById('admin-password').value.trim();
-      if (btoa(inputVal) === "Q09STkVSU1RPTkUyMDI2") {
+      if (document.getElementById('admin-password').value.trim() === "CORNERSTONE2026") {
         activateOwnerMode();
         alert("Byenveni Pwopriyetè!");
       } else {
@@ -536,12 +430,12 @@
       }
     }
 
-    function subscribeAdminRealtime() {
+    function subscribeAdminLive() {
       if (adminRealtimeChannel) {
         supabaseClient.removeChannel(adminRealtimeChannel);
       }
       adminRealtimeChannel = supabaseClient
-        .channel("requests-realtime-admin")
+        .channel("public-requests-live")
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "requests" },
@@ -560,48 +454,24 @@
       document.getElementById('owner-panel').style.display = "block";
 
       document.getElementById('owner-referral-link').value = window.location.origin + window.location.pathname + "?ref=" + OWNER_REF_CODE;
-      subscribeAdminRealtime();
+      subscribeAdminLive();
       await refreshAdminDataNow();
     }
 
-    async function confirmBibleRequest(reqId, parentRefCode) {
-      try {
-        const { error } = await supabaseClient
-          .from("requests")
-          .update({ status: "confirmed" })
-          .eq("id", reqId);
-
-        if (error) throw error;
-
-        if (parentRefCode && parentRefCode !== OWNER_REF_CODE && parentRefCode !== "Okenn") {
-          await creditParentBalance(parentRefCode, 250);
-        }
-
-        alert("Demann nan konfime ak siksè!");
-        refreshAdminDataNow();
-      } catch (e) {
-        alert("Echèk nan konfimasyon an: " + e.message);
-      }
-    }
-
-    async function deleteBibleRequest(reqId) {
-      if (confirm("Èske w sèten ou vle siprime demann sa a?")) {
+    async function deleteClientRecord(clientCode) {
+      if (confirm("Èske w sèten ou vle siprime kliyan sa a nan istorik la?")) {
         try {
           const { error } = await supabaseClient
             .from("requests")
             .delete()
-            .eq("id", reqId);
+            .eq("id", clientCode);
 
           if (error) throw error;
-          refreshAdminDataNow();
+          await refreshAdminDataNow();
         } catch (e) {
           alert("Echèk nan sippresyon an: " + e.message);
         }
       }
-    }
-
-    async function deleteClientRecord(clientCode) {
-      await deleteBibleRequest(clientCode);
     }
 
     function switchToClientView() {
@@ -634,8 +504,8 @@
           await creditParentBalance(parentRefCode, 250);
         }
 
-        alert("✔ Demann nan apwouve ak siksè! Kliyan an ap debloke lè l rafrechi oswa tcheke estati a.");
-        refreshAdminDataNow();
+        alert("✔ Demann nan apwouve ak siksè!");
+        await refreshAdminDataNow();
       } catch (e) {
         alert("Echèk nan apwobasyon an: " + e.message);
       }
@@ -647,7 +517,6 @@
       document.getElementById('warning-msg').style.display = "none";
       document.getElementById('pay-btn').style.display = "none";
       document.getElementById('referral-input').style.display = "none";
-      document.getElementById('whatsapp-backup-box').style.display = "none";
       document.getElementById('share-btn-container').style.display = "block";
     }
 
@@ -684,86 +553,53 @@
       const clientName = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
       const network = document.getElementById('payment-network').value;
-      const selectedOffer = document.getElementById('bible-client-offer').value;
       const debugEl = document.getElementById('client-debug-status');
       const submitBtn = document.getElementById('submit-btn');
 
+      debugEl.style.color = "#f5a94d";
+      debugEl.textContent = "";
+
       if (clientName.length < 2) {
-        debugEl.style.color = "#ff505d";
         debugEl.textContent = "⚠ Tanpri antre non ak siyati w!";
         return;
       }
       if (phone.length < 8) {
-        debugEl.style.color = "#ff505d";
         debugEl.textContent = "⚠ Tanpri antre nimewo telefòn ou!";
         return;
       }
 
       submitBtn.disabled = true;
-      debugEl.style.color = "#f5a94d";
-      debugEl.innerHTML = `<div class="spinner"></div><span>Ap voye demann lan nan Supabase...</span>`;
-
       const codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
       const myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
-      const nowIso = new Date().toISOString();
-
-      const dbRow = {
-        id: myNewCode,
-        client_name: clientName,
-        client_phone: phone,
-        network: network,
-        selected_offer: selectedOffer,
-        parent_ref: codeInput,
-        owner_panel_code: OWNER_REF_CODE,
-        status: "pending",
-        balance: 0,
-        created_at: nowIso
-      };
-
-      const backupPayload = {
-        reqId: myNewCode,
-        clientName: clientName,
-        clientPhone: phone,
-        network: network,
-        selectedOffer: selectedOffer,
-        parentRef: codeInput,
-        ownerPanelCode: OWNER_REF_CODE,
-        createdAt: nowIso
-      };
+      localStorage.setItem('my_personal_ref_code', myNewCode);
 
       try {
         const { error } = await supabaseClient
           .from("requests")
-          .upsert(dbRow, { onConflict: "id" });
+          .upsert({
+            id: myNewCode,
+            balance: 0,
+            parent_ref: codeInput,
+            client_name: clientName,
+            client_phone: phone,
+            network: network,
+            status: "pending",
+            created_at: new Date().toISOString()
+          }, { onConflict: "id" });
 
         if (error) throw error;
 
-        localStorage.setItem('my_personal_ref_code', myNewCode);
-        localStorage.setItem('bible_req_id', myNewCode);
-        localStorage.setItem('cornerstone_last_local_pending', JSON.stringify(backupPayload));
-
         checkClientStatusRealtime();
 
-        debugEl.style.color = "#97c373";
-        debugEl.textContent = "✔ Anrejistre nan Supabase! (" + myNewCode + ")";
-
-        setTimeout(() => {
-          submitBtn.disabled = false;
-          closeMonCashModal();
-          document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
-          document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
-          document.getElementById('pay-btn').style.display = "none";
-          document.getElementById('whatsapp-backup-box').style.display = "block";
-          debugEl.textContent = "";
-        }, 1200);
+        submitBtn.disabled = false;
+        closeMonCashModal();
+        document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
+        document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
+        document.getElementById('pay-btn').style.display = "none";
       } catch (e) {
         submitBtn.disabled = false;
-        localStorage.setItem('my_personal_ref_code', myNewCode);
-        localStorage.setItem('bible_req_id', myNewCode);
-        localStorage.setItem('cornerstone_last_local_pending', JSON.stringify(backupPayload));
-        document.getElementById('whatsapp-backup-box').style.display = "block";
         debugEl.style.color = "#ff505d";
-        debugEl.textContent = "❌ Erè Supabase: " + e.message + " | Voye via WhatsApp oswa re-eseye.";
+        debugEl.textContent = "❌ Erè: " + e.message;
       }
     }
 
@@ -776,8 +612,6 @@
       const myShareLink = window.location.origin + window.location.pathname + "?ref=" + myCode;
       document.getElementById('api-response').innerHTML = "Kòd Parrenaj ou a se: <b>" + myCode + "</b><br>Pataje lyen sa a ak lòt moun:<br><input type='text' value='" + myShareLink + "' readonly style='font-size:11px;' onclick='this.select()'>";
     }
-
-    window.addEventListener("DOMContentLoaded", initializeAppUI);
   </script>
 </body>
 </html>
