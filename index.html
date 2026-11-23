@@ -190,7 +190,7 @@
     <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Ou dwe fè peman an epi voye demann lan bay pwopriyetè a pou valider l.</div>
     <div id="active-ref-badge" style="font-size: 11px; color: #97c373; margin-top: 6px; display: none;"></div>
 
-    <!-- Bwat Balans Prive Parenn nan Sèlman (Pa montre kòb pwopriyetè a) -->
+    <!-- Bwat Balans Prive Parenn nan Sèlman -->
     <div class="client-wallet-box" id="client-wallet-box">
       <div style="font-size: 11px; color: #c59b77;">💰 Balans Komisyon Parrenaj ou (250 Gdes pa fiyèl debloke):</div>
       <div style="font-size: 18px; font-weight: bold; color: #97c373; margin-top: 2px;" id="client-live-balance">0 Gdes</div>
@@ -287,6 +287,7 @@
     let isUnlocked = false;
     let clientStatusPollInterval = null;
     let adminRealtimeChannel = null;
+    let computedReferrerBalancesMap = new Map();
 
     const grid = document.getElementById('books-grid');
     const player = document.getElementById('audio-player');
@@ -314,6 +315,20 @@
         balance: Number(row.balance || 0),
         createdAt: row.created_at || row.createdAt || ""
       };
+    }
+
+    function getPaidOutMap() {
+      try {
+        return JSON.parse(localStorage.getItem('cornerstone_paid_commissions') || '{}');
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function setPaidOutAmount(refCode, amount) {
+      const map = getPaidOutMap();
+      map[refCode] = Number(amount || 0);
+      localStorage.setItem('cornerstone_paid_commissions', JSON.stringify(map));
     }
 
     function setClientLockedDefaultView(parentRefValue) {
@@ -385,19 +400,19 @@
       window.location.href = `tel:*202%23`;
     }
 
-    async function markReferrerPaid(refCode) {
+    async function markReferrerPaid(refCode, earnedGrossAmount) {
       if (!confirm("Èske w deja voye kòb balans lan bay parenn " + refCode + " la ? Balans lan ap mete a 0 Gdes.")) {
         return;
       }
       try {
-        const { error } = await supabaseClient
+        setPaidOutAmount(refCode, earnedGrossAmount);
+        await supabaseClient
           .from("requests")
           .upsert({
             id: refCode,
             balance: 0
           }, { onConflict: "id" });
 
-        if (error) throw error;
         localStorage.removeItem('last_paid_ref_code');
         await refreshAdminDataNow();
       } catch (e) {
@@ -466,13 +481,25 @@
         }
       });
 
+      const paidOutMap = getPaidOutMap();
+      computedReferrerBalancesMap = new Map();
+
       const referrersList = Array.from(referrersMap.values()).filter(
         (r) => r.clientsCount > 0 || r.storedBalance > 0
       );
 
       let totalReferralsBonus = 0;
+
       referrersList.forEach((r) => {
-        totalReferralsBonus += Number(r.storedBalance || 0);
+        const grossCommission = r.approvedCount * REFERRAL_BONUS;
+        const alreadyPaid = Number(paidOutMap[r.refCode] || 0);
+        const computedRemaining = Math.max(0, grossCommission - alreadyPaid);
+        const finalBal = computedRemaining > 0 ? computedRemaining : (alreadyPaid === 0 ? Math.max(computedRemaining, r.storedBalance) : computedRemaining);
+
+        r.grossCommission = grossCommission;
+        r.remainingBalance = finalBal;
+        computedReferrerBalancesMap.set(r.refCode, finalBal);
+        totalReferralsBonus += finalBal;
       });
 
       const totalGrossMoney = approvedClients.length * OFFER_PRICE;
@@ -494,12 +521,13 @@
 
       let refHtml = "";
       referrersList.forEach((r) => {
-        const displayBal = Number(r.storedBalance || 0);
+        const displayBal = r.remainingBalance;
         const fiyelNames = r.clients
           .map((c) => `${c.name} (${c.approved ? "✔ Debloke" : "⏳ Ap tann"})`)
           .join(", ");
         const safePhone = r.phone ? r.phone : "Pa gen nimewo";
         const isJustDialed = (lastPaidRef === r.refCode && displayBal > 0);
+        const netShort = r.networkLabel.split(" ")[1] || "TLF";
 
         refHtml += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid ${isJustDialed ? '#97c373' : '#f5a94d'};">
           <div>Parenn: <b style="color:#f5a94d;">${r.refCode}</b> ${r.referrerName ? `— <b>${r.referrerName}</b>` : ""}</div>
@@ -513,14 +541,17 @@
             <button class="copy-square-btn" title="Kopye nimewo parenn nan" onclick="copyReferrerPhone('${r.phone.replace(/'/g, "")}')">📋</button>
           </div>
 
-          <div style="margin-top:8px;">Balans Parenn: <b style="color:#97c373; font-size:14px;">${displayBal.toLocaleString()} Gdes</b> | Fiyèl debloke: <b>${r.approvedCount}/${r.clientsCount}</b></div>
+          <div style="margin-top:8px;">Balans Parenn: <b style="color:${displayBal > 0 ? '#97c373' : '#f5a94d'}; font-size:14px;">${displayBal.toLocaleString()} Gdes</b> | Fiyèl debloke: <b>${r.approvedCount}/${r.clientsCount}</b></div>
           <div style="font-size:11px; color:#c59b77; margin-top:4px;">Fiyèl yo: ${fiyelNames || "Okenn"}</div>
 
           ${isJustDialed ? `<div style="font-size:11px; color:#97c373; margin-top:6px;">📲 Ou te peze *202# pou parenn sa a (${r.networkLabel}). Peze bouton vèt la pou make balans lan peye.</div>` : ""}
 
           <div style="display:flex; gap:6px; margin-top:8px;">
-            <button class="btn" style="background:#f5a94d; color:#221b14; padding:8px; margin-top:0; font-size:12px; flex:1;" onclick="dialUSSDForReferrer('${r.refCode}', '${r.phone.replace(/'/g, "")}', '${r.networkLabel}', ${displayBal})">📞 *202# (${r.networkLabel.split(" ")[1] || "TLF"})</button>
-            ${displayBal > 0 ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:8px; margin-top:0; font-size:11px; width:auto;" onclick="markReferrerPaid('${r.refCode}')">✅ Peye (0 Gdes)</button>` : `<span style="color:#97c373; font-size:11px; align-self:center;">✔ Peye</span>`}
+            <button class="btn" style="background:#f5a94d; color:#221b14; padding:8px; margin-top:0; font-size:12px; flex:1;" onclick="dialUSSDForReferrer('${r.refCode}', '${r.phone.replace(/'/g, "")}', '${r.networkLabel}', ${displayBal})">📞 *202# (${netShort})</button>
+            ${displayBal > 0
+              ? `<button class="btn" style="background:#2e7d32; color:#fff; padding:8px; margin-top:0; font-size:11px; width:auto;" onclick="markReferrerPaid('${r.refCode}', ${r.grossCommission})">✅ Peye (${displayBal.toLocaleString()} Gdes)</button>`
+              : `<span style="color:#97c373; font-size:11px; align-self:center; padding:0 6px;">✔ Balans Peye</span>`
+            }
           </div>
         </div>`;
       });
@@ -660,16 +691,33 @@
 
       async function checkStatus() {
         try {
-          const { data, error } = await supabaseClient
+          const { data: myRow, error } = await supabaseClient
             .from("requests")
             .select("status, balance")
             .eq("id", myCode)
             .maybeSingle();
 
-          if (!error && data) {
-            if (data.status === "approved" || data.status === "confirmed") {
-              activateClientUnlockedMode(Number(data.balance || 0));
+          if (!error && myRow && (myRow.status === "approved" || myRow.status === "confirmed")) {
+            let liveBal = Number(myRow.balance || 0);
+
+            if (localStorage.getItem('is_referral_wallet_owner') === 'true') {
+              const { data: childrenRows } = await supabaseClient
+                .from("requests")
+                .select("id, status, parent_ref")
+                .eq("parent_ref", myCode);
+
+              const approvedChildrenCount = (childrenRows || []).filter(
+                (c) => c.status === "approved" || c.status === "confirmed"
+              ).length;
+              const paidOutMap = getPaidOutMap();
+              const alreadyPaid = Number(paidOutMap[myCode] || 0);
+              const calcBal = Math.max(0, approvedChildrenCount * REFERRAL_BONUS - alreadyPaid);
+              if (calcBal > liveBal) {
+                liveBal = calcBal;
+              }
             }
+
+            activateClientUnlockedMode(liveBal);
           }
         } catch (e) {
           console.log("Erè estati:", e);
@@ -799,7 +847,6 @@
       document.getElementById('referral-input').style.display = "none";
       document.getElementById('share-btn-container').style.display = "block";
 
-      // Pa janm montre bwat komisyon parenn nan lè pwopriyetè a ap gade vi kliyan
       const isOwnerSession = localStorage.getItem('cornerstone_owner') === 'true';
       const isReferralWalletOwner = localStorage.getItem('is_referral_wallet_owner') === 'true';
       const walletBox = document.getElementById('client-wallet-box');
