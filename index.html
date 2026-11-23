@@ -220,6 +220,7 @@
         clientName: row.client_name || row.clientName || "Kliyan San Non",
         phone: row.client_phone || row.phone || "Pa gen nimewo",
         network: row.network || "moncash",
+        selectedOffer: row.selected_offer || "12 Liv Istorik (1,000 Gdes)",
         parentRef: row.parent_ref || row.parentRef || "Okenn",
         status: row.status || "pending",
         balance: Number(row.balance || 0),
@@ -350,6 +351,7 @@
             id: codeInput,
             status: "approved",
             parent_ref: parentInput || OWNER_REF_CODE,
+            selected_offer: "12 Liv Istorik (1,000 Gdes)",
             created_at: new Date().toISOString()
           }, { onConflict: "id" });
 
@@ -582,7 +584,9 @@
             parent_ref: codeInput,
             client_name: clientName,
             client_phone: phone,
+            phone: phone,
             network: network,
+            selected_offer: "12 Liv Istorik (1,000 Gdes)",
             status: "pending",
             created_at: new Date().toISOString()
           }, { onConflict: "id" });
