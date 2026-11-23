@@ -55,6 +55,11 @@
     .btn { background-color: #f5a94d; border: none; color: #221b14; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     .btn-outline { background-color: transparent; color: #f5a94d; border: 1px solid #f5a94d; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
 
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+    .stat-card { background: #18130e; border: 1px solid #332025; border-radius: 8px; padding: 10px; }
+    .stat-label { font-size: 11px; color: #c59b77; }
+    .stat-value { font-size: 16px; font-weight: bold; color: #f5a94d; margin-top: 4px; }
+
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -92,13 +97,39 @@
     <button class="btn" style="background-color: #1976d2; color: #fff; margin-top: 12px; font-size: 13px;" onclick="refreshAdminDataNow()">🔄 Rafrechi Demann Yo</button>
     <div id="admin-refresh-status" style="font-size: 11px; color: #97c373; margin-top: 4px;"></div>
 
-    <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 10px; font-size: 13px;" onclick="switchToClientView()">👁️ Wè koòdone kliyan an</button>
+    <!-- Rezime Finansye Pwopriyetè -->
+    <div class="stats-grid">
+      <div class="stat-card" style="border-color: #f5a94d;">
+        <div class="stat-label">Kòb Antre Dirèk (Pwopriyetè)</div>
+        <div class="stat-value" id="owner-direct-earnings">0 Gdes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Kliyan Debloke (Apwouve)</div>
+        <div class="stat-value" id="owner-approved-count">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Komisyon Parenn Yo</div>
+        <div class="stat-value" id="owner-referrals-total">0 Gdes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Kòb Jeneral Antre</div>
+        <div class="stat-value" id="owner-total-gross">0 Gdes</div>
+      </div>
+    </div>
 
-    <div style="font-size: 12px; color: #f4d7cf; margin-top: 10px;">Lyen Parrenaj ou a:</div>
+    <button class="btn" style="background-color: #2e7d32; color: #fff; margin-top: 12px; font-size: 13px;" onclick="switchToClientView()">👁️ Wè koòdone kliyan an</button>
+
+    <div style="font-size: 12px; color: #f4d7cf; margin-top: 10px;">Lyen Parrenaj Dirèk ou a:</div>
     <input type="text" id="owner-referral-link" readonly onclick="this.select()">
 
+    <!-- Parenn, Fiyèl Yo & Balans Yo -->
+    <div class="category-title" style="margin-top: 15px;">👥 Parenn, Fiyèl Yo & Balans Yo:</div>
+    <div id="referrers-summary-list" style="font-size: 13px; margin-top: 8px; max-height: 240px; overflow-y: auto;">
+      Poko gen parenn ki gen fiyèl debloke.
+    </div>
+
     <!-- Debloke Rapid pa Kòd REF -->
-    <div style="background: #18130e; border: 1px solid #f5a94d; padding: 10px; border-radius: 8px; margin-top: 12px;">
+    <div style="background: #18130e; border: 1px solid #f5a94d; padding: 10px; border-radius: 8px; margin-top: 14px;">
       <div style="font-size: 12px; color: #f9c077; font-weight: bold;">⚡ Debloke Rapid pa Kòd REF:</div>
       <input type="text" id="quick-unlock-ref" placeholder="Ex: REF-48291">
       <input type="text" id="quick-unlock-parent" placeholder="Kòd parènaj kliyan an (opsyonèl)">
@@ -120,6 +151,7 @@
   <div class="card-box" id="payment-section">
     <div style="font-size: 14px; font-weight: bold; color: #f5a94d;" id="access-status">🔒 Debloke 12 Liv Istorik Yo (1,000 Gdes)</div>
     <div style="font-size: 12px; color: #ff505d; margin-top: 4px;" id="warning-msg">Ou dwe fè peman an epi voye demann lan bay pwopriyetè a pou valider l.</div>
+    <div id="active-ref-badge" style="font-size: 11px; color: #97c373; margin-top: 6px; display: none;"></div>
 
     <input type="text" id="referral-input" placeholder="Kòd parrenaj..." style="display:none;">
 
@@ -204,6 +236,10 @@
       { id: 'este', title: 'ESTÈ', file: 'https://archive.org/download/e-ste-1-12-1/17_EST%C3%88.mp3' }
     ];
 
+    const OFFER_PRICE = 1000;
+    const REFERRAL_BONUS = 250;
+    const OWNER_REF_CODE = "CORNERSTONE-OWNER";
+
     let isUnlocked = false;
     let clientStatusPollInterval = null;
     let adminRealtimeChannel = null;
@@ -212,7 +248,6 @@
     const player = document.getElementById('audio-player');
     const audioSource = document.getElementById('audio-source');
     const titlingDisplay = document.getElementById('selected-title');
-    const OWNER_REF_CODE = "CORNERSTONE-OWNER";
 
     function normalizeRequest(row) {
       return {
@@ -221,44 +256,172 @@
         phone: row.client_phone || row.phone || "Pa gen nimewo",
         network: row.network || "moncash",
         selectedOffer: row.selected_offer || "12 Liv Istorik (1,000 Gdes)",
-        parentRef: row.parent_ref || row.parentRef || "Okenn",
+        parentRef: (row.parent_ref || row.parentRef || OWNER_REF_CODE).trim(),
         status: row.status || "pending",
         balance: Number(row.balance || 0),
         createdAt: row.created_at || row.createdAt || ""
       };
     }
 
+    function setClientLockedDefaultView(parentRefValue) {
+      isUnlocked = false;
+      document.getElementById('access-status').textContent = "🔒 Debloke 12 Liv Istorik Yo (1,000 Gdes)";
+      document.getElementById('warning-msg').style.display = "block";
+      document.getElementById('warning-msg').textContent = "Ou dwe fè peman an epi voye demann lan bay pwopriyetè a pou valider l.";
+      document.getElementById('pay-btn').style.display = "block";
+      document.getElementById('share-btn-container').style.display = "none";
+
+      const badgeEl = document.getElementById('active-ref-badge');
+      if (parentRefValue && parentRefValue !== OWNER_REF_CODE) {
+        badgeEl.style.display = "block";
+        badgeEl.textContent = "🔗 Envited pa kòd parènaj: " + parentRefValue;
+      } else {
+        badgeEl.style.display = "none";
+      }
+    }
+
     window.onload = function() {
       renderBooks();
       updateModalInfo();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const refCode = urlParams.get('ref');
+      const inputField = document.getElementById('referral-input');
+
+      let effectiveParentRef = OWNER_REF_CODE;
+      if (refCode && refCode.trim() !== "") {
+        effectiveParentRef = refCode.trim().toUpperCase();
+        inputField.value = effectiveParentRef;
+        localStorage.setItem('my_parent_ref', effectiveParentRef);
+        // Si yon nouvo lyen parrenaj ouvri, nou pa kite ansyen kòd kliyan lòt sesyon bloke sou li
+        localStorage.removeItem('my_personal_ref_code');
+      } else {
+        inputField.value = localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
+      }
 
       if (localStorage.getItem('cornerstone_owner') === 'true') {
         activateOwnerMode();
       } else {
         document.getElementById('owner-panel').style.display = 'none';
         document.getElementById('admin-login-box').style.display = 'none';
+        setClientLockedDefaultView(effectiveParentRef);
         checkClientStatusRealtime();
-      }
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const refCode = urlParams.get('ref');
-      const inputField = document.getElementById('referral-input');
-
-      if (refCode && refCode.trim() !== "") {
-        inputField.value = refCode.trim();
-        localStorage.setItem('my_parent_ref', refCode.trim());
-      } else {
-        inputField.value = OWNER_REF_CODE;
       }
     };
 
+    function renderOwnerStatsAndReferrers(rows) {
+      const allRows = (rows || []).map(normalizeRequest);
+      const clientItems = allRows.filter((item) => item.id !== OWNER_REF_CODE);
+      const approvedClients = clientItems.filter(
+        (item) => item.status === "approved" || item.status === "confirmed"
+      );
+
+      // Kòb dirèk pwopriyetè a (chak fiyèl ki debloke anba CORNERSTONE-OWNER = 1,000 Gdes)
+      const directOwnerUnlocks = approvedClients.filter(
+        (item) => !item.parentRef || item.parentRef === OWNER_REF_CODE || item.parentRef === "Okenn"
+      ).length;
+      const ownerDirectAmount = directOwnerUnlocks * OFFER_PRICE;
+
+      // Rasanble parenn yo (REF-...) ak fiyèl yo + balans yo
+      const referrersMap = new Map();
+
+      // Mete balans ki deja anrejistre nan tab la pou chak kòd REF-...
+      allRows.forEach((row) => {
+        if (row.id && row.id.startsWith("REF-")) {
+          referrersMap.set(row.id, {
+            refCode: row.id,
+            referrerName: row.clientName !== "Kliyan San Non" ? row.clientName : "",
+            clientsCount: 0,
+            approvedCount: 0,
+            computedBonus: 0,
+            storedBalance: Number(row.balance || 0),
+            clients: []
+          });
+        }
+      });
+
+      // Konte fiyèl yo pou chak parenn
+      clientItems.forEach((client) => {
+        const pRef = client.parentRef;
+        if (pRef && pRef !== OWNER_REF_CODE && pRef !== "Okenn") {
+          if (!referrersMap.has(pRef)) {
+            referrersMap.set(pRef, {
+              refCode: pRef,
+              referrerName: "",
+              clientsCount: 0,
+              approvedCount: 0,
+              computedBonus: 0,
+              storedBalance: 0,
+              clients: []
+            });
+          }
+          const entry = referrersMap.get(pRef);
+          entry.clientsCount += 1;
+          const isApp = (client.status === "approved" || client.status === "confirmed");
+          if (isApp) {
+            entry.approvedCount += 1;
+            entry.computedBonus += REFERRAL_BONUS;
+          }
+          entry.clients.push({
+            name: client.clientName,
+            code: client.id,
+            approved: isApp
+          });
+        }
+      });
+
+      const referrersList = Array.from(referrersMap.values()).filter(
+        (r) => r.clientsCount > 0 || r.storedBalance > 0
+      );
+
+      let totalReferralsBonus = 0;
+      referrersList.forEach((r) => {
+        const effectiveBalance = Math.max(r.storedBalance, r.computedBonus);
+        totalReferralsBonus += effectiveBalance;
+      });
+
+      const totalGrossMoney = approvedClients.length * OFFER_PRICE;
+
+      document.getElementById('owner-direct-earnings').textContent = ownerDirectAmount.toLocaleString() + " Gdes";
+      document.getElementById('owner-approved-count').textContent = String(approvedClients.length);
+      document.getElementById('owner-referrals-total').textContent = totalReferralsBonus.toLocaleString() + " Gdes";
+      document.getElementById('owner-total-gross').textContent = totalGrossMoney.toLocaleString() + " Gdes";
+
+      const refContainer = document.getElementById('referrers-summary-list');
+      if (!refContainer) return;
+
+      if (referrersList.length === 0) {
+        refContainer.innerHTML = "Poko gen parenn ki gen fiyèl oswa balans pou kounye a.";
+        return;
+      }
+
+      let refHtml = "";
+      referrersList.forEach((r) => {
+        const displayBal = Math.max(r.storedBalance, r.computedBonus);
+        const fiyelNames = r.clients
+          .map((c) => `${c.name} (${c.approved ? "✔ Debloke" : "⏳ Ap tann"})`)
+          .join(", ");
+
+        refHtml += `<div style="background:#18130e; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid #f5a94d;">
+          <div>Parenn: <b style="color:#f5a94d;">${r.refCode}</b> ${r.referrerName ? `— <b>${r.referrerName}</b>` : ""}</div>
+          <div>Fiyèl ki pase sou li: <b>${r.clientsCount}</b> (<b>${r.approvedCount}</b> debloke)</div>
+          <div>Balans Parenn: <b style="color:#97c373; font-size:14px;">${displayBal.toLocaleString()} Gdes</b></div>
+          <div style="font-size:11px; color:#c59b77; margin-top:4px;">Fiyèl yo: ${fiyelNames || "Okenn"}</div>
+        </div>`;
+      });
+
+      refContainer.innerHTML = refHtml;
+    }
+
     function renderClientsList(rows) {
+      renderOwnerStatsAndReferrers(rows);
+
       const listContainer = document.getElementById('pending-clients-list');
       if (!listContainer) return;
 
       const items = (rows || [])
         .map(normalizeRequest)
-        .filter((item) => item.id !== OWNER_REF_CODE)
+        .filter((item) => item.id !== OWNER_REF_CODE && item.clientName !== "Kliyan San Non")
         .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
 
       if (items.length === 0) {
@@ -303,7 +466,7 @@
         renderClientsList(data || []);
         if (statusEl) {
           statusEl.style.color = "#97c373";
-          statusEl.textContent = "✔ Mete ajou (" + (data ? data.length : 0) + " demann).";
+          statusEl.textContent = "✔ Mete ajou (" + (data ? data.length : 0) + " liy).";
         }
       } catch (e) {
         if (statusEl) {
@@ -313,11 +476,11 @@
       }
     }
 
-    async function creditParentBalance(parentRefCode, bonusAmount = 250) {
+    async function creditParentBalance(parentRefCode, bonusAmount = REFERRAL_BONUS) {
       if (!parentRefCode || parentRefCode === OWNER_REF_CODE || parentRefCode === "Okenn" || parentRefCode.trim() === "") {
         return;
       }
-      const cleanParent = parentRefCode.trim();
+      const cleanParent = parentRefCode.trim().toUpperCase();
       const { data: parentRow } = await supabaseClient
         .from("requests")
         .select("id, balance")
@@ -358,7 +521,7 @@
         if (error) throw error;
 
         if (parentInput && parentInput !== OWNER_REF_CODE) {
-          await creditParentBalance(parentInput, 250);
+          await creditParentBalance(parentInput, REFERRAL_BONUS);
         }
 
         statusEl.style.color = "#97c373";
@@ -503,7 +666,7 @@
         if (error) throw error;
 
         if (parentRefCode && parentRefCode !== OWNER_REF_CODE && parentRefCode !== "Okenn") {
-          await creditParentBalance(parentRefCode, 250);
+          await creditParentBalance(parentRefCode, REFERRAL_BONUS);
         }
 
         alert("✔ Demann nan apwouve ak siksè!");
@@ -571,7 +734,7 @@
       }
 
       submitBtn.disabled = true;
-      const codeInput = document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE;
+      const codeInput = (document.getElementById('referral-input').value.trim() || localStorage.getItem('my_parent_ref') || OWNER_REF_CODE).toUpperCase();
       const myNewCode = "REF-" + Math.floor(10000 + Math.random() * 90000);
       localStorage.setItem('my_personal_ref_code', myNewCode);
 
@@ -598,6 +761,7 @@
         submitBtn.disabled = false;
         closeMonCashModal();
         document.getElementById('access-status').textContent = "⏳ Demann ou an ap tann konfimasyon pwopriyetè a...";
+        document.getElementById('warning-msg').style.display = "block";
         document.getElementById('warning-msg').textContent = "Lè pwopriyetè a konfime lajan an, liv yo ap louvri otomatikman.";
         document.getElementById('pay-btn').style.display = "none";
       } catch (e) {
